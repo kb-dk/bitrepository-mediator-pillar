@@ -1,4 +1,4 @@
-package org.bitrepository.template;
+package org.bitrepository;
 
 import java.util.Arrays;
 import java.util.concurrent.Callable;

@@ -1,4 +1,4 @@
-package org.bitrepository.template;
+package org.bitrepository;
 
 import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
