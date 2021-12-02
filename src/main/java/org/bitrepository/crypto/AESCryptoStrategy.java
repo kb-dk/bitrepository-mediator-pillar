@@ -50,7 +50,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
         } catch (InvalidKeyException e) {
             throw new IllegalStateException("Invalid key provided for encryption", e);
         } catch (InvalidAlgorithmParameterException e) {
-            throw new IllegalStateException("");
+            throw new IllegalStateException("Bad parameters provided for encryption", e);
         }
         doTranscipher(inputFile, encryptedOutputFile);
     }
@@ -62,7 +62,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
         } catch (InvalidKeyException e) {
             throw new IllegalStateException("Invalid key provided for decryption", e);
         } catch (InvalidAlgorithmParameterException e) {
-            throw new IllegalStateException("");
+            throw new IllegalStateException("Bad parameters provided for decryption", e);
         }
         doTranscipher(encryptedInputFile, decryptedOutputFile);
     }
@@ -86,7 +86,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
             } catch (IllegalBlockSizeException e) {
                 throw new IllegalStateException("Bad data length provided to AES", e);
             } catch (BadPaddingException e) {
-                throw new IllegalStateException("BadPadding should never be thrown when in encryption mode..", e);
+                throw new IllegalStateException("Bad padding.. did you use correct key for cipher?", e);
             }
             if (outputBytes != null) {
                 outputStream.write(outputBytes);
@@ -128,5 +128,13 @@ public class AESCryptoStrategy implements CryptoStrategy {
         byte[] iv = new byte[16];
         new SecureRandom().nextBytes(iv);
         return new IvParameterSpec(iv);
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public IvParameterSpec getIV() {
+        return iv;
     }
 }

@@ -13,6 +13,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestAESCryptoStrategy {
     private String testPassword = "12345678";
@@ -54,5 +55,16 @@ public class TestAESCryptoStrategy {
         }
 
         assertNotEquals(inputContent, encryptedContent);
+    }
+
+    @Test
+    public void testWrongPasswordGivesBadDecryption() throws IOException {
+        Path encryptedFile = tempDir.resolve("encryptedFile");
+        Path decryptedFile = tempDir.resolve("decryptedFile");
+        AESCryptoStrategy encryption = new AESCryptoStrategy(testPassword);
+        AESCryptoStrategy decryption = new AESCryptoStrategy("87654321");
+
+        encryption.encrypt(inputFile, encryptedFile);
+        assertThrows(IllegalStateException.class, () -> decryption.decrypt(encryptedFile, decryptedFile));
     }
 }
