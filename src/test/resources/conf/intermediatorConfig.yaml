@@ -1,0 +1,4 @@
+pillar:
+  componentID: "test-pillar"
+crypto:
+  algorithm: "AES"

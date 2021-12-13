@@ -1,19 +1,18 @@
 package org.bitrepository;
 
-import dk.kb.util.yaml.YAML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Pillar {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private YAML config;
+    private Configuration config;
 
-    public Pillar(YAML config) {
+    public Pillar(Configuration config) {
         log.debug("Running constructor HelloWorld()");
         this.config = config;
     }
 
     public void start() {
-        System.out.println(config.getString("crypto.encryptionAlgo"));
+        System.out.println(config.getCryptoAlgorithm());
     }
 }

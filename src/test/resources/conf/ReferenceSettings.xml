@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  #%L
+  Bitrepository Core
+  %%
+  Copyright (C) 2010 - 2012 The State and University Library, The Royal Library and The State Archives, Denmark
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as 
+  published by the Free Software Foundation, either version 2.1 of the 
+  License, or (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Lesser Public License for more details.
+  
+  You should have received a copy of the GNU General Lesser Public 
+  License along with this program.  If not, see
+  <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  #L%
+  -->
+
+<ReferenceSettings xmlns="http://bitrepository.org/settings/ReferenceSettings.xsd">
+  <GeneralSettings>
+    <!--  
+      Defines the class that the different clients uses to construct their private destination.
+      The setting is optional, and if left out defaults to DefaultReceiverDestinationIDFactory. 
+      Currently the following classes are available:
+      - DefaultReceiverDestinationIDFactory (The default)
+      - UserSpecificReceiverDestinationIDFactory
+    -->   
+    <ReceiverDestinationIDFactoryClass>org.bitrepository.protocol.messagebus.destination.DefaultReceiverDestinationIDFactory</ReceiverDestinationIDFactoryClass>
+  </GeneralSettings>
+
+  <ClientSettings>
+    <!-- 
+      The interval at which conversations are cleaned up. 
+      Unit in milliseconds.       
+    -->
+    <MediatorCleanupInterval>1000</MediatorCleanupInterval>
+
+    <!-- 
+      The maximum amount of time a whole conversation may take. 
+      This has some relation to Timeouts in RepositorySettings under ClientSettings. As such
+      when writing the configuration, the values there should be taken into consideration. 
+    -->
+    <ConversationTimeout>3600000</ConversationTimeout>
+    
+    <!--
+      The maximum number of retries allowed before a file transfer is considered failed. The default is not to retry.
+      If 0, only the initial file transfer will be attempted. 
+      If 2, a total of 3 attempts will be made before it is considered a failure.  
+     -->
+    <OperationRetryCount>2</OperationRetryCount>
+    
+    <!--
+      The factory class for generating the ID of the commandline client.      
+      Currently the following classes are available:
+      org.bitrepository.client.componentid.DefaultCommandlineComponentID (the default)
+      org.bitrepository.client.componentid.UniqueCommandlineComponentID
+     -->
+    <ComponentIDFactoryClass>org.bitrepository.client.componentid.DefaultCommandlineComponentID</ComponentIDFactoryClass>
+    
+    <!--
+      The maximum number of results per page when clients are paging through large result sets. 
+      If not set, the default is 10000 results per page.  
+     -->
+     <MaxPageSize>10000</MaxPageSize>
+  </ClientSettings>
+
+  <!-- 
+    Settings for the Reference and Checksum pillars. 
+  -->
+  <PillarSettings> 
+    <!-- 
+      ID of the pillar
+    -->
+    <PillarID>test-pillar</PillarID>
+    
+    <!--
+      The type of pillar. Must be either 'FILE' or 'CHECKSUM' for a FilePillar or ChecksumPillar respectively.
+      The ChecksumPillar does not have any actual files, it only contains the checksum database, where the checksums
+      of the files are stored.
+      The FilePillar contains both the checksum database and archives for storing the actual files. 
+     -->
+    <PillarType>FILE</PillarType>
+
+    <!--
+      The directories for the collections for this pillar.
+     -->
+    <CollectionDirs>
+      <!-- 
+          The list of collection ids to have its data archived with the following list of directories.
+          Each collection will have its files archived in its own sub-directory with the collection name.
+          A collection is only able to be used in one 'CollectionDir'.    
+
+          If no collection ids are defined, then it will be used as default directory for the collections, which
+          does not have a specific set of directories defined.              
+        -->
+      <CollectionID>TwoPillarCollection</CollectionID>
+      
+      <!-- 
+        Paths to the base directory for file storage and checksum files.
+      -->
+      <FileDirs>test-archive</FileDirs>
+    </CollectionDirs>
+
+    <!--
+      The minimum amounts of bytes available on storage prior to accepting a PutFileRequest. 
+    -->    
+    <MinimumSizeLeft>1000000000</MinimumSizeLeft>
+
+    <!-- 
+      Time estimate for how long it will take the pillar to start the delivery of a file
+      when requested. 
+      Time in milliseconds. 
+    -->
+    <TimeToStartDeliver>1000</TimeToStartDeliver>
+    
+    <!--
+      The number of milliseconds for a checksum to become outdated in the ChecksumStore.
+      This is not used by the ChecksumPillar, since it anyway would not be able to 
+      recalculate the checksum. 
+     -->
+    <MaxAgeForChecksums>3600000</MaxAgeForChecksums>
+    
+    <!-- 
+      The time between running the workflow for ensuring that the checksum are valid, 
+      regarding checksum age and the age of the last modified timestamp of the file.
+     -->
+    <RecalculateOldChecksumsInterval>3600000</RecalculateOldChecksumsInterval>
+
+    <!-- 
+      Database specification object for the data about the AuditTrailContributer database.
+    -->
+    <AuditTrailContributerDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:auditcontributerdb</DatabaseURL>
+    </AuditTrailContributerDatabase>
+
+    <!-- 
+      Database specification object for the data about the ChecksumDatabase.
+    -->
+    <ChecksumDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:checksumdb</DatabaseURL>
+    </ChecksumDatabase>
+    
+    <!-- 
+      Setting of how severe alarms needs to be before they are sent. 
+      Available levels:
+        - EMERGENCY - will only send an Alarm for the severest protocol issues (e.g. invalid message 
+        or certificate).
+        - ERROR - sends an Alarm in the case of checksum errors or if a request does not uphold the 
+        contract in RepositorySettings (e.g. does not contain the required checksums).
+        - WARNING - Sends an Alarm whenever an operation or identification fails (e.g. missing file, 
+        file already exist, etc.)
+    -->
+    <AlarmLevel>ERROR</AlarmLevel>
+    
+    <!--
+      Settings for whether the ChecksumPillar should download the file regarding the PutFile operation,
+      or it should only use the checksum given for validation.
+      It has the following values:
+      - ALWAYS - the ChecksumPillar must always download the file during the PutFile operation, and then
+      calculate the checksum of that file.
+      - NEVER - the ChecksumPillar must never download the file. It must only use the checksum given
+      in the ChecksumForNewFile element.
+      - DOWNLOAD_WHEN_MISSING_FROM_MESSAGE - if the ChecksumForNewFile element is within the PutFileRequest 
+      then the ChecksumPillar must use the checksum. If the element is missing from the message, then 
+      then file must be downloaded for calculating the checksum.
+     -->
+    <ChecksumPillarFileDownload>DOWNLOAD_WHEN_MISSING_FROM_MESSAGE</ChecksumPillarFileDownload>
+    
+    <!--
+      Classpath for the FileStore backend of the ReferencePillar.
+              Default value, when undefined is: 
+              'org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager'.
+     -->
+    <FileStoreClass>org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager</FileStoreClass>
+  </PillarSettings>
+
+  <!-- 
+    Settings for the DeleteFileClient
+    Currently this section is empty
+  -->
+  <DeleteFileSettings></DeleteFileSettings>
+
+  <!-- 
+    Settings for the GetAuditTrailsClient
+    Currently this section is empty
+  -->
+  <GetAuditTrailSettings></GetAuditTrailSettings>
+
+  <!-- 
+    Settings for the GetChecksumsFileClient
+    Currently this section is empty
+  -->
+  <GetChecksumsSettings></GetChecksumsSettings>
+
+  <!-- 
+    Settings for the GetFileClient
+    Currently this section is empty
+  -->
+  <GetFileSettings></GetFileSettings>
+
+  <!-- 
+    Settings for the GetFileIDsClient
+    Currently this section is empty
+  -->
+  <GetFileIDsSettings></GetFileIDsSettings>
+
+  <!-- 
+    Settings for the GetStatusClient
+    Currently this section is empty
+  -->
+  <GetStatusSettings></GetStatusSettings>
+
+  <!-- 
+    Settings for the PutFileClient
+  -->
+  <PutFileSettings>
+    <!--
+    Should the putClient attempt to put files to the pillars, even if only a subset of the pillars
+    are available. Note this will break integrity, but will make the storage of files possible when pillars
+    are unavailable for puts.
+    -->
+    <PartialPutsAllow>true</PartialPutsAllow  >
+  </PutFileSettings>
+
+  <!-- 
+    Settings for the ReplaceFileClient
+    Currently this section is empty
+  -->
+  <ReplaceFileSettings></ReplaceFileSettings>
+
+  <!-- Settings for the AlarmService -->
+  <AlarmServiceSettings>
+    <!-- ID of the service -->
+    <ID>alarm-service</ID>
+
+    <!--  
+      Configuration for sending mails upon reception an alarm. 
+      The element is optional, if missing alarm notifications won't be sent by mail. 
+    -->
+    <MailingConfiguration> 
+      <!-- Recepient of the alarm notification mails -->
+      <MailReceiver>foo@example.com</MailReceiver> 
+      <!-- The sender of the alarm notification mails -->
+      <MailSender>foo@example.com</MailSender> 
+      <!-- Address for the (smtp) mailserver for sending mails -->
+      <MailServer>mail.server.com</MailServer> 
+    </MailingConfiguration>
+
+    <!-- 
+      Database specification object for the AlarmService database for persisting alarms .
+    -->
+    <AlarmServiceDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:alarmservicedb</DatabaseURL>
+    </AlarmServiceDatabase>
+  </AlarmServiceSettings>
+
+  <!-- Settings for the AuditTrailService -->
+  <AuditTrailServiceSettings>
+    <!-- ID of the service -->
+    <ID>audittrail-service</ID>
+    <!-- Setting to determine if a missing/non-responding contributor is an alarm situation -->
+    <SendAlarmOnMissingContributer>false</SendAlarmOnMissingContributer>
+
+    <!-- 
+      Database specification object for the AuditTrailService for persisting AuditTrails.
+    -->
+    <AuditTrailServiceDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:auditservicedb</DatabaseURL>
+    </AuditTrailServiceDatabase>
+
+    <!-- 
+      Defines the interval at which AuditTrails should be collected.
+      Timeunit in milliseconds. 
+    --> 
+    <CollectAuditInterval>3600000</CollectAuditInterval> 
+
+    <!-- 
+      Interval at which to check if its time to collect audit trails
+      Timeunit in milliseconds
+    -->
+    <TimerTaskCheckInterval>2000</TimerTaskCheckInterval>
+
+    <!-- Defines the configuration for audit trail preservation. If undefined no audit trail preservation
+    will be performed.-->
+    <AuditTrailPreservation>
+      <!--
+        The interval at which collected AuditTrails are backedup / preserved.
+        Timeunit in milliseconds
+      -->
+      <AuditTrailPreservationInterval>604800000</AuditTrailPreservationInterval>
+
+      <!--
+        The collection to use for storing the audit trail backup.
+      -->
+      <AuditTrailPreservationCollection>SomeCollection</AuditTrailPreservationCollection>
+
+      <!--
+        Directory for temporary storage of AuditTrails for preservation.
+      -->
+      <AuditTrailPreservationTemporaryDirectory>/tmp/</AuditTrailPreservationTemporaryDirectory>
+    </AuditTrailPreservation>
+  </AuditTrailServiceSettings>
+
+  <!-- Settings for the IntegrityService -->
+  <IntegrityServiceSettings>
+    <!-- ID of the service -->
+    <ID>integrity-service</ID>
+      <!--
+      The listing of workflow schedules.
+      -->
+      <Workflows>
+        <!--
+        The definition for the CompleteIntegrityCheck workflow.
+        -->
+        <Workflow>
+          <!--
+          The class containing the CompleteIntegrityCheck implementation.
+          -->
+          <WorkflowClass>org.bitrepository.integrityservice.workflow.CompleteIntegrityCheck</WorkflowClass>
+          <!--
+          When should the workflow be run.
+          -->
+          <Schedules>
+            <!--
+            Run every day on the TwoPillarCollection collection.
+            -->
+            <Schedule>
+              <WorkflowInterval>86400000</WorkflowInterval>  <Collections>
+              <CollectionID>TwoPillarCollection</CollectionID>
+            </Collections>
+            </Schedule>
+            <!--
+            Run every hour on the SinglePillarCollection collection.
+            -->
+            <Schedule>
+              <WorkflowInterval>360000</WorkflowInterval>  <Collections>
+              <CollectionID>SinglePillarCollection</CollectionID>
+            </Collections>
+            </Schedule>
+          </Schedules>
+        </Workflow>
+      </Workflows>
+
+    <!-- 
+      Database specification object for the cache of integrity service database.
+    -->
+    <IntegrityDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:integritydb</DatabaseURL>
+    </IntegrityDatabase>
+
+    <!--
+        The number of milliseconds a file has to be known by the system before it is sat to missing. 
+        This is to avoid false negatives for a reporting a file missing on a pillar,
+        when it is just not finished with the PutFile operation. (1 hour)
+    -->
+    <TimeBeforeMissingFileCheck>3600000</TimeBeforeMissingFileCheck> 
+    
+    <!-- 
+      Database specification object for the Integrity service's audit trail information.
+    -->
+    <AuditTrailContributerDatabase>
+    
+      <!-- 
+        The classpath for the driver for the database.  
+        -->
+      <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
+      
+      <!--
+        The URL for the database. 
+        -->
+      <DatabaseURL>jdbc:derby:auditcontributerdb</DatabaseURL>
+    </AuditTrailContributerDatabase>
+    <!--
+      Path to the directory that should store integrity reports. 
+      Directory must be write and readable by integrity service.
+     -->
+    <IntegrityReportsDir>/var/integrity-reports/</IntegrityReportsDir>
+  </IntegrityServiceSettings>
+
+  <!-- Settings for the Monitoring / Status service -->
+  <MonitoringServiceSettings>
+    <!-- ID for the service -->
+    <ID>monitoring-service</ID>
+    <!-- 
+      Interval at which status is requested. 
+      Timeunit in milliseconds.
+    -->
+    <CollectionInterval>60000</CollectionInterval> <!-- 1 minute -->
+    <!-- 
+      The maximum number of times a component may fail to respond before 
+      it being marked as unresponsive 
+    -->    
+    <MaxRetries>3</MaxRetries>
+  </MonitoringServiceSettings>
+  
+  <!-- Settings for the file exchange. -->
+  <FileExchangeSettings>
+    <!-- The type of protocol -->
+    <ProtocolType>HTTP</ProtocolType>
+    <!-- The name of the server -->
+    <ServerName>sandkasse-01.kb.dk</ServerName>
+    <!-- The port number -->
+    <Port>80</Port>
+    <!-- The path on the server. -->
+    <Path>/dav</Path>
+  </FileExchangeSettings>
+</ReferenceSettings>
