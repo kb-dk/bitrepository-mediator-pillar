@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 
+import org.bitrepository.common.settings.Settings;
+import org.bitrepository.common.settings.SettingsProvider;
+import org.bitrepository.common.settings.XMLFileSettingsLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,17 +18,20 @@ public class PillarMain implements Callable<Integer>{
         
     private static final Logger log = LoggerFactory.getLogger(PillarMain.class);
 
-    @CommandLine.Parameters(index = "0", type = String.class, defaultValue = "src/main/conf/")
+    @CommandLine.Parameters(index = "0", type = String.class, defaultValue = "src/test/resources/conf") // TODO remove defaults
     private String configPath;
 
-    @CommandLine.Parameters(index = "1", type = String.class, defaultValue = "src/main/conf/client-01.pem") // Default for now
+    @CommandLine.Parameters(index = "1", type = String.class, defaultValue = "src/test/resources/conf/client-01.pem") // Default for now
     private String keyfilePath;
 
     @Override
     public Integer call() throws Exception {
-        YAML config = new YAML(configPath + "intermediatorConfig.yaml"); // TODO probably move
+        YAML intermediatorConfig = new YAML(configPath + "/intermediatorConfig.yaml"); // TODO probably move
+        SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(configPath), null);
+        Settings settings = settingsProvider.getSettings();
+        Configuration configuration = new Configuration(intermediatorConfig, settings);
 
-        Pillar pillar = new Pillar(config);
+        IntermediatorPillar pillar = new IntermediatorPillar(configuration);
         pillar.start();
         return 0;
     }

@@ -15,6 +15,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -36,7 +37,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private IvParameterSpec iv;
     private Cipher cipher;
 
-    public AESCryptoStrategy(String password) {
+    public AESCryptoStrategy(String password) { // TODO gonna need to provide key, salt and IV through here or in methods
         this.salt = generateSalt();
         this.secretKey = getKeyFromPassword(password, salt);
         this.iv = generateIv();
@@ -107,7 +108,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private SecretKey getKeyFromPassword(String password, String salt) {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGO);
-            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), HASHING_ITERATIONS, KEY_LENGTH);
+            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), HASHING_ITERATIONS, KEY_LENGTH);
             SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
                     .getEncoded(), "AES");
             return secret;

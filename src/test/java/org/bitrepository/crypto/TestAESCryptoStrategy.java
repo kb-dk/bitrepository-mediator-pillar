@@ -58,7 +58,7 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
-    public void testWrongPasswordGivesBadDecryption() throws IOException {
+    public void testWrongPasswordGivesBadDecryption() {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");
         AESCryptoStrategy encryption = new AESCryptoStrategy(testPassword);
