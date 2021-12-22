@@ -1,4 +1,4 @@
-package org.bitrepository.crypto;
+package dk.kb.bitrepository.crypto;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;

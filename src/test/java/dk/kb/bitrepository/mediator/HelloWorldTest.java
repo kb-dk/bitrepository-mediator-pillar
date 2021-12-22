@@ -1,4 +1,4 @@
-package org.bitrepository;
+package dk.kb.bitrepository;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

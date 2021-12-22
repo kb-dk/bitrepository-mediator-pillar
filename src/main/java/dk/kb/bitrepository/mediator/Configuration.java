@@ -1,4 +1,4 @@
-package org.bitrepository;
+package dk.kb.bitrepository;
 
 import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;
@@ -10,15 +10,11 @@ import java.util.List;
 
 public class Configuration {
     private final YAML intermediatorConf;
-    private final Settings pillarSettings;
-    //private final RepositorySettings repoSettings;
-    //private final ReferenceSettings refSettings;
+    private final Settings pillarSpecificConfiguration;
 
-    public Configuration(YAML intermediatorConf, Settings pillarSettings) {
+    public Configuration(YAML intermediatorConf, Settings pillarSpecificConfiguration) {
         this.intermediatorConf = intermediatorConf;
-        this.pillarSettings = pillarSettings;
-        //this.repoSettings = pillarSettings.getRepositorySettings();
-        //this.refSettings = pillarSettings.getReferenceSettings();
+        this.pillarSpecificConfiguration = pillarSpecificConfiguration;
     }
 
     public String getComponentID() {
@@ -34,7 +30,7 @@ public class Configuration {
      * TODO singular vs. plural
      */
     public List<Collection> getCollections() {
-        return pillarSettings.getCollections();
+        return pillarSpecificConfiguration.getCollections();
     }
 
     /**
@@ -45,17 +41,21 @@ public class Configuration {
         return getRepositorySettings().getProtocolSettings().getAlarmDestination();
     }
 
+    public Settings getPillarSpecificConfiguration() {
+        return pillarSpecificConfiguration;
+    }
+
     /**
      * @return The settings specific to the reference code for a collection.
      */
     public ReferenceSettings getReferenceSettings() {
-        return pillarSettings.getReferenceSettings();
+        return pillarSpecificConfiguration.getReferenceSettings();
     }
 
     /**
      * @return The standard settings for a collection.
      */
     public RepositorySettings getRepositorySettings() {
-        return pillarSettings.getRepositorySettings();
+        return pillarSpecificConfiguration.getRepositorySettings();
     }
 }
