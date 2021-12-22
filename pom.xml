@@ -8,14 +8,14 @@
     <version>22</version>
   </parent>
 
-  <groupId>org.bitrepository</groupId>
-  <artifactId>intermediator-pillar</artifactId>
+  <groupId>dk.kb</groupId>
+  <artifactId>mediator-pillar</artifactId>
   <version>0.1-SNAPSHOT</version>
 
   <scm>
-    <url>https://sbprojects.statsbiblioteket.dk/stash/projects/ARK/repos/stand-alone-java-template/browse</url>
-    <connection>scm:git:ssh://git@sbprojects.statsbiblioteket.dk:7999/ark/stand-alone-java-template.git</connection>
-    <developerConnection>scm:git:ssh://git@sbprojects.statsbiblioteket.dk:7999/ark/stand-alone-java-template.git</developerConnection>
+    <url>https://github.com/kb-dk/bitrepository-mediator-pillar</url>
+    <connection>scm:git:ssh://git@github.com:kb-dk/bitrepository-mediator-pillar.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:kb-dk/bitrepository-mediator-pillar.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
 

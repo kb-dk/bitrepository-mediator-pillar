@@ -1,4 +1,4 @@
-package dk.kb.bitrepository;
+package dk.kb.bitrepository.mediator;
 
 public class ConfigConstants {
     public static final String COMPONENT_ID = "pillar.componentID";

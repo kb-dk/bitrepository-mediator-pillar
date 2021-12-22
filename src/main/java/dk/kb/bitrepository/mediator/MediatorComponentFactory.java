@@ -1,4 +1,4 @@
-package dk.kb.bitrepository;
+package dk.kb.bitrepository.mediator;
 
 import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;

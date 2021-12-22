@@ -84,7 +84,7 @@
         The URL for connecting to the messagebus (network). For encrypted communication with 
         the messagebus, use ssl:// as protocol. For unencrypted, use tcp://
       -->
-      <URL>failover:(ssl://enrcypted-messagebus:61601?keepAlive=true, tcp://unencrypted-messagebus:12345?keepAlive=true)</URL>
+      <URL>failover:(tcp://localhost:61616?keepAlive=true)</URL>
     </MessageBusConfiguration>
   </ProtocolSettings>
 

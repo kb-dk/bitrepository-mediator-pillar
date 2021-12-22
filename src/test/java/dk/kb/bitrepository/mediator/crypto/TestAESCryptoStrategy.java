@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.crypto;
+package dk.kb.bitrepository.mediator.crypto;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;

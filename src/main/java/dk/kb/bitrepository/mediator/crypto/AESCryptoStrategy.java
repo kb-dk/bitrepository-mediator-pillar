@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.crypto;
 
-import dk.kb.bitrepository.mediator.CryptoStrategy;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
