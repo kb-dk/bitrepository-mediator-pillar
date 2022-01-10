@@ -4,6 +4,8 @@ import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
+import org.bitrepository.protocol.activemq.ActiveMQMessageBus;
+import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.security.BasicMessageAuthenticator;
 import org.bitrepository.protocol.security.BasicMessageSigner;
 import org.bitrepository.protocol.security.BasicOperationAuthorizor;
@@ -34,8 +36,9 @@ public class MediatorComponentFactory {
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile, String pillarID) throws IOException {
         Configuration configuration = loadConfiguration(pillarID, pathToConfiguration);
         SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration.getPillarSpecificConfiguration());
+        MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSpecificConfiguration(), securityManager);
 
-        return new MediatorPillar(configuration);
+        return new MediatorPillar(messageBus, configuration);
     }
 
     private Configuration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
