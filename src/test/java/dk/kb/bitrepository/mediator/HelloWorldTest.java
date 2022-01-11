@@ -17,16 +17,6 @@ import static org.mockito.Mockito.when;
 
 
 public class HelloWorldTest {
-
-    /*@Tag("fast")
-    @Test
-    @DisplayName("Hello from Mr. Hyde")
-    public void mrHyde() throws IOException{
-        Pillar myHello = new Pillar();
-        String message = myHello.start("Mr. Hyde",50,"Dr. Jekyll");
-        System.out.println(message);       
-        assertEquals("Hello Mr. Hyde, you are 50 says Dr. Jekyll", message);    
-    }*/
     
     @Tag("fast")
     @Test
@@ -63,7 +53,7 @@ public class HelloWorldTest {
     }
 
 
-    @Tag("slow")
+    /*@Tag("slow")
     @Test
     public void sleeper() {
         try {
@@ -72,6 +62,6 @@ public class HelloWorldTest {
             e.printStackTrace();
         }
         assertTrue(true);
-    }
+    }*/
     
 }
