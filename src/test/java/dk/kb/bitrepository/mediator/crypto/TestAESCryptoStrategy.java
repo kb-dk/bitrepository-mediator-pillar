@@ -1,5 +1,7 @@
 package dk.kb.bitrepository.mediator.crypto;
 
+import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

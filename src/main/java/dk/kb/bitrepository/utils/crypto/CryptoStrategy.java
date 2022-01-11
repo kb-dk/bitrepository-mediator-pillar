@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.mediator.crypto;
+package dk.kb.bitrepository.utils.crypto;
 
 import java.nio.file.Path;
 
