@@ -22,7 +22,7 @@ public class MessageRequestMediator implements MessageMediator {
     public List<RequestHandler<? extends MessageRequest>> createMessageHandlers() {
         // TODO probably put handlers in some kind of factory instead
         List<RequestHandler<? extends MessageRequest>> handlers = new ArrayList<>();
-        handlers.add(new IdentifyPillarsForGetFileRequestHandler());
+        handlers.add(new IdentifyPillarsForGetFileRequestHandler(context));
         return handlers;
     }
 

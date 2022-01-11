@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.DelegatingMessageHandler;
 import dk.kb.bitrepository.mediator.communication.IdentifyPillarsForGetFileRequestHandler;
+import dk.kb.util.yaml.YAML;
 import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
@@ -25,7 +26,8 @@ public class Something {
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);*/
         SecurityManager securityManager = new NoOpSecurityManager();
         MessageBus bus = ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager);
-        bus.addListener("Testination", new DelegatingMessageHandler(List.of(new IdentifyPillarsForGetFileRequestHandler())));
+        PillarContext context = new PillarContext(new Configuration(new YAML("src/test/resources/conf/mediatorConfig.yaml"), settings), bus);
+        bus.addListener("Testination", new DelegatingMessageHandler(List.of(new IdentifyPillarsForGetFileRequestHandler(context))));
         IdentifyPillarsForGetFileRequest request = new IdentifyPillarsForGetFileRequest();
         request.setMinVersion(ProtocolVersionLoader.loadProtocolVersion().getMinVersion());
         request.setVersion(ProtocolVersionLoader.loadProtocolVersion().getVersion());

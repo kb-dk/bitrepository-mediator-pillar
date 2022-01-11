@@ -1,12 +1,19 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
+import dk.kb.bitrepository.mediator.utils.RequestValidator;
 import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.FileIDValidator;
 import org.bitrepository.protocol.MessageContext;
 
 public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
-    FileIDValidator
+    RequestValidator validator;
+
+    public IdentifyPillarsForGetFileRequestHandler(PillarContext context) {
+        validator = new RequestValidator();
+    }
+
     @Override
     public Class<IdentifyPillarsForGetFileRequest> getRequestClass() {
         return IdentifyPillarsForGetFileRequest.class;
@@ -14,10 +21,8 @@ public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHand
 
     @Override
     protected void validateRequest(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) {
-        if(!request.isSetCollectionID()) {
-            throw new IllegalArgumentException(request.getClass().getSimpleName() +
-                    "'s requires a CollectionID");
-        }
+        validator.validateCollectionIdIsSet(request);
+        validator.validateFileIDFormat(request.getFileID());
     }
 
     @Override
