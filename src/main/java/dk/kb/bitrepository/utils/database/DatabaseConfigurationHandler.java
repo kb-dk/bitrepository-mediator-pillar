@@ -11,11 +11,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-public class ConfigurationHandler {
+public class DatabaseConfigurationHandler {
     private final String path = "src/main/java/dk/kb/bitrepository/utils/database/configurations.properties";
     PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
     Properties properties = null;
-    // TODO: Missing logger
+    // TODO: Missing logger + documentation
 
     public void initConfig(String dbName, String dbURL) {
         boolean configExists = Files.exists(Paths.get(path));
