@@ -7,12 +7,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class DatabaseUtils {
+    private static final String ENC_PARAMS = "enc_parameters";
+    private static final String FILES = "files";
     private static String databaseURL;
     private static String password;
     private static String username;
@@ -22,8 +21,12 @@ public class DatabaseUtils {
     public DatabaseUtils() {
     }
 
+    public static void main(String[] args) {
+        insertInto("test", "test2", "test", "test", "test");
+    }
+
     public static void initConfigs() {
-        DatabaseConfigurationHandler configs = new DatabaseConfigurationHandler();
+        ConfigurationHandler configs = new ConfigurationHandler();
         try {
             username = configs.getProperty("username");
             password = configs.getProperty("password");
@@ -34,17 +37,38 @@ public class DatabaseUtils {
         }
     }
 
-    public static Connection connect() throws SQLException {
-        if (databaseURL == null) {
-            initConfigs();
-        }
-        return DriverManager.getConnection(databaseURL, username, password);
-    }
-
     public static void createTables() {
         String filePath = "src/main/java/dk/kb/bitrepository/utils/database/create_tables.sql";
         String[] queries = parseSQL(filePath);
         executeSQL(queries);
+    }
+
+    public static void insertInto(String collectionID, String fileID, String salt, String iv, String iterations) {
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS);
+
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
+            System.out.println("Connection established to the database; trying to execute query.");
+            statement.setString(1, collectionID);
+            statement.setString(2, fileID);
+            statement.setString(3, salt);
+            statement.setString(4, iv);
+            statement.setString(5, iterations);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            //log.error("Error in executing SQL query: ", e);
+            System.out.println("Error in executing SQL query:\n" + e);
+        }
+    }
+
+    public static void insertInto() {
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES);
+    }
+
+    private static Connection connect() throws SQLException {
+        if (databaseURL == null) {
+            initConfigs();
+        }
+        return DriverManager.getConnection(databaseURL, username, password);
     }
 
     private static String[] parseSQL(String filePath) {
@@ -71,7 +95,7 @@ public class DatabaseUtils {
         return queries;
     }
 
-    public static void executeSQL(String[] query) {
+    private static void executeSQL(String[] query) {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             System.out.println("Connection established to the database; trying to execute query.");
             for (String s : query) {

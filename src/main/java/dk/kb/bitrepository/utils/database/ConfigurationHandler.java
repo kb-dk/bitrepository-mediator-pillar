@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 
-public class DatabaseConfigurationHandler {
+public class ConfigurationHandler {
     private final String path = "src/main/java/dk/kb/bitrepository/utils/database/configurations.properties";
     PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
     Properties properties = null;

@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DatabaseSetup {
-    private static final DatabaseConfigurationHandler configs = new DatabaseConfigurationHandler();
+    private static final ConfigurationHandler configs = new ConfigurationHandler();
     //TODO: Use the logger + documentation
     private static final Logger log = LoggerFactory.getLogger(DatabaseSetup.class);
 
