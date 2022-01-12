@@ -7,20 +7,20 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class DatabaseConstructor {
-    private static final Logger log = LoggerFactory.getLogger(DatabaseConstructor.class);
-    private static final String dbName = "testdb"; //TODO: Not hardcoded but dynamic
-    private static final String username = "masj"; //TODO: Not hardcoded
-    private static final String password = "masj"; //TODO: Not hardcoded
-    private static final String databaseURL = "jdbc:postgresql://localhost:5432/" + dbName;
+public class Initializer {
+    private final Logger log = LoggerFactory.getLogger(Initializer.class);
+    private final String dbName;
 
-    public static void main(String[] args) throws IOException {
-
+    public Initializer(String databaseName, ) {
+        this.dbName = databaseName;
     }
 
-    private static String[] parseSQL(String filePath) {
+    private String[] parseSQL(String filePath) {
         String[] queries = new String[0];
 
         try {
@@ -43,7 +43,7 @@ public class DatabaseConstructor {
         return queries;
     }
 
-    public static void executeSQL(String[] query) {
+    public void executeSQL(String[] query) {
         try (Connection connection = connect();
              Statement statement = connection.createStatement()) {
             System.out.println("Connection established to the database; trying to execute query.");
@@ -63,11 +63,16 @@ public class DatabaseConstructor {
         }
     }
 
-    public static Connection connect() throws SQLException {
+    public Connection connect() throws SQLException {
+        String databaseURL = "jdbc:postgresql://localhost:5432/" + dbName;
+        //TODO: Not hardcoded
+        String password = "masj";
+        //TODO: Not hardcoded
+        String username = "masj";
         return DriverManager.getConnection(databaseURL, username, password);
     }
 
-    public static void createTables(String query) {
+    public void createTables(String query) {
         String filePath = "src/main/java/dk/kb/bitrepository/utils/database/create_tables.sql";
         String[] queries = parseSQL(filePath);
         executeSQL(queries);
