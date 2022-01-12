@@ -75,12 +75,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.ibatis</groupId>
-            <artifactId>ibatis-sqlmap</artifactId>
-            <version>2.0.6</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.30</version>
@@ -106,6 +100,12 @@
             <artifactId>activemq-broker</artifactId>
             <version>5.15.13</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>RELEASE</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -135,7 +135,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>dk.kb.bitrepository.utils.database.Initializer</mainClass>
+                    <mainClass>dk.kb.bitrepository.utils.database.Utils</mainClass>
                 </configuration>
             </plugin>
 
