@@ -1,5 +1,6 @@
-package dk.kb.bitrepository.utils.database;
+package dk.kb.bitrepository.database;
 
+import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,21 +9,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.util.Date;
 
 public class DatabaseUtils {
-    private static final String ENC_PARAMS = "enc_parameters";
-    private static final String FILES = "files";
     private static String databaseURL;
     private static String password;
     private static String username;
     private final Logger log = LoggerFactory.getLogger(getClass());
-    // TODO: Missing logger + documentation
+    // TODO: Missing logger + documentation + automatic tests
 
     public DatabaseUtils() {
     }
 
     public static void main(String[] args) {
-        insertInto("test", "test2", "test", "test", "test");
+        // DatabaseQueries.insertInto("collection1", "file1", "salt", "iv", "0");
     }
 
     public static void initConfigs() {
@@ -30,7 +30,7 @@ public class DatabaseUtils {
         try {
             username = configs.getProperty("username");
             password = configs.getProperty("password");
-            databaseURL = configs.getProperty("url") + configs.getProperty("name");
+            databaseURL = configs.getProperty("url") + ":" + configs.getProperty("port") + "/" + configs.getProperty("name");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,33 +38,12 @@ public class DatabaseUtils {
     }
 
     public static void createTables() {
-        String filePath = "src/main/java/dk/kb/bitrepository/utils/database/create_tables.sql";
+        String filePath = "src/main/java/dk/kb/bitrepository/database/create_tables.sql";
         String[] queries = parseSQL(filePath);
-        executeSQL(queries);
+        executeSQLFromFile(queries);
     }
 
-    public static void insertInto(String collectionID, String fileID, String salt, String iv, String iterations) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS);
-
-        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; trying to execute query.");
-            statement.setString(1, collectionID);
-            statement.setString(2, fileID);
-            statement.setString(3, salt);
-            statement.setString(4, iv);
-            statement.setString(5, iterations);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
-        }
-    }
-
-    public static void insertInto() {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES);
-    }
-
-    private static Connection connect() throws SQLException {
+    static Connection connect() throws SQLException {
         if (databaseURL == null) {
             initConfigs();
         }
@@ -95,15 +74,15 @@ public class DatabaseUtils {
         return queries;
     }
 
-    private static void executeSQL(String[] query) {
+    private static void executeSQLFromFile(String[] query) {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
             System.out.println("Connection established to the database; trying to execute query.");
             for (String s : query) {
                 //Remove spaces to not execute empty statements
                 if (!s.trim().equals("")) {
                     // Execute the query
+                    //TODO: Detect "table already exists"?
                     statement.executeUpdate(s);
-                    System.out.println(">>" + s);
                 }
             }
             statement.close();
@@ -112,5 +91,45 @@ public class DatabaseUtils {
             //log.error("Error in executing SQL query: ", e);
             System.out.println("Error in executing SQL query: " + e);
         }
+    }
+
+    /**
+     * Prepare a statement given a query string and some args.
+     * <p>
+     * NB: the provided connection is not closed.
+     *
+     * @param dbConnection The connection to the database.
+     * @param query        a query string  (must not be null or empty)
+     * @param args         some args to insert into this query string (must not be null)
+     * @return a prepared statement
+     * @throws SQLException          If unable to prepare a statement
+     * @throws IllegalStateException if any of the args is of an unknown type
+     */
+    public static PreparedStatement createPreparedStatement(Connection dbConnection, String query, Object... args) throws SQLException {
+        //log.trace("Preparing the statement: '" + query + "' with arguments '" + Arrays.asList(args) + "'");
+        PreparedStatement s = dbConnection.prepareStatement(query);
+        int i = 1;
+        for (Object arg : args) {
+            if (arg instanceof String) {
+                s.setString(i, (String) arg);
+            } else if (arg instanceof Integer) {
+                s.setInt(i, (Integer) arg);
+            } else if (arg instanceof Long) {
+                s.setLong(i, (Long) arg);
+            } else if (arg instanceof Boolean) {
+                s.setBoolean(i, (Boolean) arg);
+            } else if (arg instanceof java.util.Date) {
+                s.setTimestamp(i, new Timestamp(((Date) arg).getTime()));
+            } else {
+                if (arg == null) {
+                    throw new IllegalStateException("Cannot handle a null as argument for SQL query. We can only " + "handle string, int, long, date or boolean args for query: " + query);
+                } else {
+                    throw new IllegalStateException("Cannot handle type '" + arg.getClass().getName() + "'. We can only " + "handle string, int, long, date or boolean args for query: " + query);
+                }
+            }
+            i++;
+        }
+
+        return s;
     }
 }

@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.utils.database;
+package dk.kb.bitrepository.database.configs;
 
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
@@ -12,17 +12,17 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class ConfigurationHandler {
-    private final String path = "src/main/java/dk/kb/bitrepository/utils/database/configurations.properties";
+    private final String configPath = "src/main/java/dk/kb/bitrepository/database/configs/configurations.properties";
     PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
     Properties properties = null;
     // TODO: Missing logger + documentation
 
-    public void initConfig(String dbName, String dbURL) {
-        boolean configExists = Files.exists(Paths.get(path));
+    public void initConfig(String dbName, String dbURL, String port) {
+        boolean configExists = Files.exists(Paths.get(configPath));
         if (!configExists) {
             System.out.println("Config file doesn't exist - creating it now.");
             try {
-                Files.createFile(Paths.get(path));
+                Files.createFile(Paths.get(configPath));
             } catch (IOException e) {
                 System.out.println("Couldn't create the config file at the given path." + e);
             }
@@ -33,9 +33,11 @@ public class ConfigurationHandler {
             initEncryptor();
         }
 
-        System.out.println("Trying to set database name and URL.");
+        System.out.println("Trying to set driver info, database name and URL.");
+        storeProperty("db.driver", "org.postgresql.Driver");
         storeProperty("db.name", dbName);
         storeProperty("db.url", dbURL);
+        storeProperty("db.port", port);
         System.out.println("Database name and URL has been added to the config file.");
     }
 
@@ -48,7 +50,7 @@ public class ConfigurationHandler {
         encryptor.setPassword(ENC_PW);
         properties = new EncryptableProperties(encryptor);
         try {
-            properties.load(new FileInputStream(path));
+            properties.load(new FileInputStream(configPath));
         } catch (IOException e) {
             System.out.println("An error occurred trying to load the config file. " + e);
         }
@@ -67,7 +69,7 @@ public class ConfigurationHandler {
     private void storeProperty(String key, String input) {
         properties.setProperty(key, input);
         try {
-            properties.store(new FileWriter(path), "Configurations for the JDBC database.");
+            properties.store(new FileWriter(configPath), "Configurations for the JDBC database.");
         } catch (IOException e) {
             System.out.println("An error occurred trying to write to the config file. " + e);
         }
