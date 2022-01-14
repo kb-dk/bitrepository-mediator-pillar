@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.database;
 
 public abstract class DatabaseData {
+    //FIXME: Better to not have this abstract class?
 
     abstract String getCollectionID();
 

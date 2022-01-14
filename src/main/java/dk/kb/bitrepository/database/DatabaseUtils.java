@@ -21,10 +21,6 @@ public class DatabaseUtils {
     public DatabaseUtils() {
     }
 
-    public static void main(String[] args) {
-        // DatabaseQueries.insertInto("collection1", "file1", "salt", "iv", "0");
-    }
-
     public static void initConfigs() {
         ConfigurationHandler configs = new ConfigurationHandler();
         try {

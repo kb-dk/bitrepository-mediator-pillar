@@ -1,5 +1,7 @@
 package dk.kb.bitrepository.database;
 
+import java.sql.Timestamp;
+
 /**
  * Container for the constants of the database.
  * All the names of the tables and the fields in these tables.
@@ -40,11 +42,11 @@ public final class DatabaseConstants {
     /**
      * The name of the received timestamp field in the file table.
      */
-    public final static String FILES_TIMESTAMP = "received_timestamp";
+    public final static Timestamp FILES_RECEIVED_TIMESTAMP = Timestamp.valueOf("2022-01-01 00:00:00.000");
     /**
      * The name of the encrypted timestamp field in the file table.
      */
-    public final static String FILES_ENCRYPTED_TIMESTAMP = "encrypted_timestamp";
+    public final static Timestamp FILES_ENCRYPTED_TIMESTAMP = Timestamp.valueOf("2022-01-02 00:00:00.000");
     /**
      * The name of the checksum field in the file table.
      */
@@ -56,7 +58,7 @@ public final class DatabaseConstants {
     /**
      * The name of the checksum timestamp field in the file table.
      */
-    public final static String FILES_CHECKSUM_TIMESTAMP = "checksum_timestamp";
+    public final static Timestamp FILES_CHECKSUM_TIMESTAMP = Timestamp.valueOf("2022-01-03 00:00:00.000");
 
     /**
      * Private constructor to prevent instantiation of this constants class.

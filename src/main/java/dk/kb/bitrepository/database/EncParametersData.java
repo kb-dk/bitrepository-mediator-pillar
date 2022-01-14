@@ -1,27 +1,31 @@
 package dk.kb.bitrepository.database;
 
-public class EncParameters extends DatabaseData {
+public class EncParametersData extends DatabaseData {
     private String collectionID;
     private String fileID;
     private String salt;
     private String iv;
     private String iterations;
 
-    public EncParameters() {
+    public EncParametersData() {
     }
 
+    @Override
     public String getCollectionID() {
         return collectionID;
     }
 
+    @Override
     public void setCollectionID(String collectionID) {
         this.collectionID = collectionID;
     }
 
+    @Override
     public String getFileID() {
         return fileID;
     }
 
+    @Override
     public void setFileID(String fileID) {
         this.fileID = fileID;
     }

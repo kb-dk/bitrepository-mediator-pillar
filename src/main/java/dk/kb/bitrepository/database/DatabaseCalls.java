@@ -7,6 +7,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.database.DatabaseUtils.connect;
 
 public class DatabaseCalls {
@@ -26,7 +28,7 @@ public class DatabaseCalls {
      * @param iterations    The number of iterations.
      */
     public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", DatabaseConstants.ENC_PARAMS_TABLE);
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
             System.out.println("Connection established to the database; readying statement.");
             statement.setString(1, collection_id);
@@ -54,17 +56,19 @@ public class DatabaseCalls {
      * @param enc_checksum        The checksum of the encrypted file.
      * @param checksum_timestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collection_id, String file_id, String received_timestamp, String encrypted_timestamp, String checksum, String enc_checksum, String checksum_timestamp) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", DatabaseConstants.FILES_TABLE);
+    public static void insertInto(String collection_id, String file_id, Timestamp received_timestamp,
+                                  Timestamp encrypted_timestamp, String checksum, String enc_checksum,
+                                  Timestamp checksum_timestamp) {
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
             System.out.println("Connection established to the database; readying statement.");
             statement.setString(1, collection_id);
             statement.setString(2, file_id);
-            statement.setString(3, received_timestamp);
-            statement.setString(4, encrypted_timestamp);
+            statement.setTimestamp(3, received_timestamp);
+            statement.setTimestamp(4, encrypted_timestamp);
             statement.setString(5, checksum);
             statement.setString(6, enc_checksum);
-            statement.setString(7, checksum_timestamp);
+            statement.setTimestamp(7, checksum_timestamp);
             System.out.println("Executing the query.");
             statement.executeUpdate();
             System.out.println("Query has been executed successfully!");
@@ -78,13 +82,11 @@ public class DatabaseCalls {
      * @param collectionID The collection ID which is part of the primary key
      * @param fileID       The file ID which is part of the primary key
      * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE
-     * @param conditions   Unused atm. //TODO: Introduce additional conditions
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
-    public static List<DatabaseData> select(String collectionID, String fileID, String table, String... conditions) {
+    public static List<DatabaseData> select(String collectionID, String fileID, String table) {
         List<DatabaseData> resultList = new ArrayList<>();
         String query = String.format("SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
-        //query = query.replace("*", specifics[0]);
         query = query.replace("?", collectionID);
         query = query.replace("@", fileID);
 
@@ -95,18 +97,29 @@ public class DatabaseCalls {
             System.out.println("Query executed successfully!");
 
             while (result.next()) {
-                //TODO: Can only create enc_parameter data, needs to also do files
-                // Maybe overload the method?
-                // Then maybe DatabaseData abstract method is not needed
-                EncParameters data = new EncParameters();
+                if (table.equals(ENC_PARAMS_TABLE)) {
+                    EncParametersData data = new EncParametersData();
 
-                data.setCollectionID(result.getString(1));
-                data.setFileID(result.getString(2));
-                data.setSalt(result.getString(3));
-                data.setIv(result.getString(4));
-                data.setIterations(result.getString(5));
+                    data.setCollectionID(result.getString(1));
+                    data.setFileID(result.getString(2));
+                    data.setSalt(result.getString(3));
+                    data.setIv(result.getString(4));
+                    data.setIterations(result.getString(5));
 
-                resultList.add(data);
+                    resultList.add(data);
+                } else if (table.equals(FILES_TABLE)) {
+                    FilesData data = new FilesData();
+
+                    data.setCollectionID(result.getString(1));
+                    data.setFileID(result.getString(2));
+                    data.setReceivedTimestamp(result.getTimestamp(3));
+                    data.setEncryptedTimestamp(result.getTimestamp(4));
+                    data.setChecksum(result.getString(5));
+                    data.setEncChecksum(result.getString(6));
+                    data.setChecksumTimestamp(result.getTimestamp(7));
+
+                    resultList.add(data);
+                }
             }
             result.close();
 
@@ -114,7 +127,6 @@ public class DatabaseCalls {
                 System.out.println("No results found.");
                 return resultList;
             }
-
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
             System.out.println("Error in executing SQL query:\n" + e);

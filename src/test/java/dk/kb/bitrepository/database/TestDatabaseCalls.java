@@ -34,12 +34,12 @@ public class TestDatabaseCalls {
 
         // Check that the information is correct
         if (!result.isEmpty()) {
-            if (result.get(0) instanceof EncParameters) {
+            if (result.get(0) instanceof EncParametersData) {
                 assertThat(result.get(0).getCollectionID(), is(COLLECTION_ID));
                 assertThat(result.get(0).getFileID(), is(FILE_ID));
-                assertThat(((EncParameters) result.get(0)).getSalt(), is(ENC_PARAMS_SALT));
-                assertThat(((EncParameters) result.get(0)).getIv(), is(ENC_PARAMS_IV));
-                assertThat(((EncParameters) result.get(0)).getIterations(), is(ENC_PARAMS_ITERATIONS));
+                assertThat(((EncParametersData) result.get(0)).getSalt(), is(ENC_PARAMS_SALT));
+                assertThat(((EncParametersData) result.get(0)).getIv(), is(ENC_PARAMS_IV));
+                assertThat(((EncParametersData) result.get(0)).getIterations(), is(ENC_PARAMS_ITERATIONS));
             }
         }
         // Delete the information using the composite key (collection_id, file_id)
@@ -52,4 +52,39 @@ public class TestDatabaseCalls {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    public void TestInsertSelectAndDeleteForFilesTable() {
+        String table = FILES_TABLE;
+        // Perform a SELECT query
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
+
+        // Assert that the query returned an empty object - since it should not already exist
+        assertTrue(result.isEmpty());
+
+        // Insert some information
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP,
+                FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+
+        // Get the information from the table with a SELECT query
+        result = select(COLLECTION_ID, FILE_ID, table);
+
+        // Check that the information is correct
+        if (!result.isEmpty()) {
+            if (result.get(0) instanceof EncParametersData) {
+                assertThat(result.get(0).getCollectionID(), is(COLLECTION_ID));
+                assertThat(result.get(0).getFileID(), is(FILE_ID));
+                assertThat(((EncParametersData) result.get(0)).getSalt(), is(ENC_PARAMS_SALT));
+                assertThat(((EncParametersData) result.get(0)).getIv(), is(ENC_PARAMS_IV));
+                assertThat(((EncParametersData) result.get(0)).getIterations(), is(ENC_PARAMS_ITERATIONS));
+            }
+        }
+        // Delete the information using the composite key (collection_id, file_id)
+        delete(COLLECTION_ID, FILE_ID, table);
+
+        // Perform a SELECT query again
+        result = select(COLLECTION_ID, FILE_ID, table);
+
+        // Assert that the query returned an empty object since it should have been deleted
+        assertTrue(result.isEmpty());
+    }
 }
