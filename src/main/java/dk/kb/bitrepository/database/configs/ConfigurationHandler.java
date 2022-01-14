@@ -27,8 +27,7 @@ public class ConfigurationHandler {
      * @param port   The port to use with the URL to connect to the Database.
      */
     public void initConfig(String dbName, String dbURL, String port) {
-        boolean configExists = Files.exists(Paths.get(configPath));
-        if (!configExists) {
+        if (!configExists()) {
             System.out.println("Config file doesn't exist - creating it now.");
             try {
                 Files.createFile(Paths.get(configPath));
@@ -112,6 +111,14 @@ public class ConfigurationHandler {
             initEncryptor();
         }
         return properties.getProperty("db." + key);
+    }
+
+    /**
+     * Used to check if the configuration file exists.
+     * @return Returns true if the configs file exists.
+     */
+    public boolean configExists() {
+        return Files.exists(Paths.get(configPath));
     }
 
 }

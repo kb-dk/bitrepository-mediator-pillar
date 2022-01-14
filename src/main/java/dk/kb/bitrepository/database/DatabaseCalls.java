@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,19 +57,19 @@ public class DatabaseCalls {
      * @param enc_checksum        The checksum of the encrypted file.
      * @param checksum_timestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collection_id, String file_id, Timestamp received_timestamp,
-                                  Timestamp encrypted_timestamp, String checksum, String enc_checksum,
-                                  Timestamp checksum_timestamp) {
+    public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp,
+                                  OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
+                                  OffsetDateTime checksum_timestamp) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
             System.out.println("Connection established to the database; readying statement.");
             statement.setString(1, collection_id);
             statement.setString(2, file_id);
-            statement.setTimestamp(3, received_timestamp);
-            statement.setTimestamp(4, encrypted_timestamp);
+            statement.setObject(3, received_timestamp);
+            statement.setObject(4, encrypted_timestamp);
             statement.setString(5, checksum);
             statement.setString(6, enc_checksum);
-            statement.setTimestamp(7, checksum_timestamp);
+            statement.setObject(7, checksum_timestamp);
             System.out.println("Executing the query.");
             statement.executeUpdate();
             System.out.println("Query has been executed successfully!");
@@ -112,11 +113,11 @@ public class DatabaseCalls {
 
                     data.setCollectionID(result.getString(1));
                     data.setFileID(result.getString(2));
-                    data.setReceivedTimestamp(result.getTimestamp(3));
-                    data.setEncryptedTimestamp(result.getTimestamp(4));
+                    data.setReceivedTimestamp(result.getObject(3, OffsetDateTime.class));
+                    data.setEncryptedTimestamp(result.getObject(4, OffsetDateTime.class));
                     data.setChecksum(result.getString(5));
-                    data.setEncChecksum(result.getString(6));
-                    data.setChecksumTimestamp(result.getTimestamp(7));
+                    data.setEncryptedChecksum(result.getString(6));
+                    data.setChecksumTimestamp(result.getObject(7, OffsetDateTime.class));
 
                     resultList.add(data);
                 }
@@ -149,6 +150,23 @@ public class DatabaseCalls {
             statement.setString(1, collectionID);
             statement.setString(2, fileID);
             System.out.println("Executing >>" + query);
+            statement.executeUpdate();
+            System.out.println("Query has been executed successfully!");
+        } catch (SQLException e) {
+            //log.error("Error in executing SQL query: ", e);
+            System.out.println("Error in executing SQL query:\n" + e);
+        }
+    }
+
+    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime new_enc_timestamp) {
+        String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
+
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
+            System.out.println("Connection established to the database; readying statement.");
+            statement.setObject(1, new_enc_timestamp);
+            statement.setString(2, collectionID);
+            statement.setString(3, fileID);
+            System.out.println("Executing >>" + statement);
             statement.executeUpdate();
             System.out.println("Query has been executed successfully!");
         } catch (SQLException e) {

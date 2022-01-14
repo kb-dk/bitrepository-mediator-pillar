@@ -1,6 +1,6 @@
 package dk.kb.bitrepository.database;
 
-import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 /**
  * Container for the constants of the database.
@@ -42,11 +42,19 @@ public final class DatabaseConstants {
     /**
      * The name of the received timestamp field in the file table.
      */
-    public final static Timestamp FILES_RECEIVED_TIMESTAMP = Timestamp.valueOf("2022-01-01 00:00:00.000");
+    public final static String FILES_RECEIVED_TIMESTAMP_NAME = "received_timestamp";
+    /**
+     * A mock-up received timestamp, used for testing.
+     */
+    public final static OffsetDateTime FILES_RECEIVED_TIMESTAMP = OffsetDateTime.MIN;
+    /**
+     * A mock-up encrypted timestamp, used for testing.
+     */
+    public final static OffsetDateTime FILES_ENCRYPTED_TIMESTAMP = OffsetDateTime.MIN;
     /**
      * The name of the encrypted timestamp field in the file table.
      */
-    public final static Timestamp FILES_ENCRYPTED_TIMESTAMP = Timestamp.valueOf("2022-01-02 00:00:00.000");
+    public final static String FILES_ENCRYPTED_TIMESTAMP_NAME = "encrypted_timestamp";
     /**
      * The name of the checksum field in the file table.
      */
@@ -54,11 +62,11 @@ public final class DatabaseConstants {
     /**
      * The name of the encrypted checksum field in the file table.
      */
-    public final static String FILES_ENC_CHECKSUM = "enc_checksum";
+    public final static String FILES_ENC_CHECKSUM = "encrypted_checksum";
     /**
      * The name of the checksum timestamp field in the file table.
      */
-    public final static Timestamp FILES_CHECKSUM_TIMESTAMP = Timestamp.valueOf("2022-01-03 00:00:00.000");
+    public final static OffsetDateTime FILES_CHECKSUM_TIMESTAMP = OffsetDateTime.MIN;
 
     /**
      * Private constructor to prevent instantiation of this constants class.

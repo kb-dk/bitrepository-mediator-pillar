@@ -1,15 +1,16 @@
 package dk.kb.bitrepository.database;
 
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 public class FilesData extends DatabaseData {
     private String collectionID;
     private String fileID;
-    private Timestamp receivedTimestamp;
-    private Timestamp encryptedTimestamp;
+    private OffsetDateTime receivedTimestamp;
+    private OffsetDateTime encryptedTimestamp;
     private String checksum;
-    private String encChecksum;
-    private Timestamp checksumTimestamp;
+    private String encryptedChecksum;
+    private OffsetDateTime checksumTimestamp;
 
     @Override
     String getCollectionID() {
@@ -31,19 +32,19 @@ public class FilesData extends DatabaseData {
         this.fileID = fileID;
     }
 
-    public Timestamp getReceivedTimestamp() {
+    public OffsetDateTime getReceivedTimestamp() {
         return receivedTimestamp;
     }
 
-    public void setReceivedTimestamp(Timestamp receivedTimestamp) {
+    public void setReceivedTimestamp(OffsetDateTime receivedTimestamp) {
         this.receivedTimestamp = receivedTimestamp;
     }
 
-    public Timestamp getEncryptedTimestamp() {
+    public OffsetDateTime getEncryptedTimestamp() {
         return encryptedTimestamp;
     }
 
-    public void setEncryptedTimestamp(Timestamp encryptedTimestamp) {
+    public void setEncryptedTimestamp(OffsetDateTime encryptedTimestamp) {
         this.encryptedTimestamp = encryptedTimestamp;
     }
 
@@ -55,19 +56,19 @@ public class FilesData extends DatabaseData {
         this.checksum = checksum;
     }
 
-    public String getEncChecksum() {
-        return encChecksum;
+    public String getEncryptedChecksum() {
+        return encryptedChecksum;
     }
 
-    public void setEncChecksum(String encChecksum) {
-        this.encChecksum = encChecksum;
+    public void setEncryptedChecksum(String encryptedChecksum) {
+        this.encryptedChecksum = encryptedChecksum;
     }
 
-    public Timestamp getChecksumTimestamp() {
+    public OffsetDateTime getChecksumTimestamp() {
         return checksumTimestamp;
     }
 
-    public void setChecksumTimestamp(Timestamp checksumTimestamp) {
+    public void setChecksumTimestamp(OffsetDateTime checksumTimestamp) {
         this.checksumTimestamp = checksumTimestamp;
     }
 }
