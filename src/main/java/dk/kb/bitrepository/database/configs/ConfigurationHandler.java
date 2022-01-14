@@ -13,10 +13,19 @@ import java.util.Properties;
 
 public class ConfigurationHandler {
     private final String configPath = "src/main/java/dk/kb/bitrepository/database/configs/configurations.properties";
-    PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
-    Properties properties = null;
-    // TODO: Missing logger + documentation
+    private final PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
+    private Properties properties = null;
+    // TODO: Missing logger
 
+    /**
+     * Initializes the config file. If the file doesn't exist, it will be created.
+     * When the file is sure to exist, information like Database Name, URL, Port and Driver
+     * will be stored in the config file.
+     *
+     * @param dbName The name of the Database.
+     * @param dbURL  The URL path of the Database.
+     * @param port   The port to use with the URL to connect to the Database.
+     */
     public void initConfig(String dbName, String dbURL, String port) {
         boolean configExists = Files.exists(Paths.get(configPath));
         if (!configExists) {
@@ -41,6 +50,9 @@ public class ConfigurationHandler {
         System.out.println("Database name and URL has been added to the config file.");
     }
 
+    /**
+     * Initializes the encryptor that will be used to encrypt data before it is stored in the config file.
+     */
     private void initEncryptor() {
         encryptor.setAlgorithm("PBEWithHmacSHA512AndAES_256");
         encryptor.setIvGenerator(new RandomIvGenerator());
@@ -56,6 +68,12 @@ public class ConfigurationHandler {
         }
     }
 
+    /**
+     * This method encrypts the 'username' and 'password' using Jasypt, and stores it in the config file.
+     *
+     * @param username Username to encrypt and store.
+     * @param password Password to encrypt and store.
+     */
     public void encryptLoginInformation(String username, String password) {
         if (!encryptor.isInitialized()) {
             initEncryptor();
@@ -66,6 +84,12 @@ public class ConfigurationHandler {
         storeProperty("db.password", encryptedPassword);
     }
 
+    /**
+     * Used to store a property in the config file.
+     *
+     * @param key   The key to store under, e.g. 'db.username'.
+     * @param input The input to be stored under the chosen key.
+     */
     private void storeProperty(String key, String input) {
         properties.setProperty(key, input);
         try {

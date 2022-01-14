@@ -1,8 +1,6 @@
 package dk.kb.bitrepository.database;
 
 public abstract class DatabaseData {
-    String collectionID = "";
-    String fileID = "";
 
     abstract String getCollectionID();
 

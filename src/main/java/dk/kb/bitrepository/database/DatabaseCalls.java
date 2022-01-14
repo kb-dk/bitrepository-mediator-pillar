@@ -17,32 +17,58 @@ public class DatabaseCalls {
     }
 
     /**
-     * This method will insert either into the enc_parameter or files table.
-     * <p>
-     * The query values are 'collectionID, fileID, salt, iv, iterations' for the enc_parameters table.
-     * The query values are 'collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum,
-     * encChecksum, checksumTimestamp' for the files table.
+     * Performs the INSERT query into the enc_parameter table.
      *
-     * @param values A list of values to insert into the table. Must fit the above-mentioned values.
+     * @param collection_id The Collection ID, part of the primary key.
+     * @param file_id       The File ID, part of the primary key.
+     * @param salt          The Salt used in the encryption.
+     * @param iv            The initialization vector used in the encryption.
+     * @param iterations    The number of iterations.
      */
-    public static void insertInto(String... values) {
-        String query = "";
-        if (values.length == 5) {
-            query = String.format("INSERT INTO %s VALUES(/?/?)", DatabaseConstants.ENC_PARAMS_TABLE);
-        } else if (values.length == 7) {
-            query = String.format("INSERT INTO %s VALUES(/?/?)", DatabaseConstants.FILES_TABLE);
-        } else {
-            System.out.println("All columns must have a valid value.");
-            System.exit(0);
-        }
-        query = query.replace("/?/", "?, ".repeat(values.length - 1));
-        System.out.println(query);
+    public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", DatabaseConstants.FILES_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; trying to execute query.");
-            for (int i = 0; i < values.length; i++) {
-                statement.setString(i + 1, values[i]);
-            }
+            System.out.println("Connection established to the database; readying statement.");
+            statement.setString(1, collection_id);
+            statement.setString(2, file_id);
+            statement.setString(3, salt);
+            statement.setString(4, iv);
+            statement.setString(5, iterations);
+            System.out.println("Executing the query.");
             statement.executeUpdate();
+            System.out.println("Query has been executed successfully!");
+        } catch (SQLException e) {
+            //log.error("Error in executing SQL query: ", e);
+            System.out.println("Error in executing SQL query:\n" + e);
+        }
+    }
+
+    /**
+     * Performs the INSERT query into the 'files' table.
+     *
+     * @param collection_id       The Collection ID, part of the primary key.
+     * @param file_id             The File ID, part of the primary key.
+     * @param received_timestamp  The timestamp for when the file was received.
+     * @param encrypted_timestamp The timestamp for when the file was encrypted.
+     * @param checksum            The checksum of the un-encrypted file.
+     * @param enc_checksum        The checksum of the encrypted file.
+     * @param checksum_timestamp  The timestamp for when the checksum was computed.
+     */
+    public static void insertInto(String collection_id, String file_id, String received_timestamp,
+                                  String encrypted_timestamp, String checksum, String enc_checksum, String checksum_timestamp) {
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", DatabaseConstants.FILES_TABLE);
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
+            System.out.println("Connection established to the database; readying statement.");
+            statement.setString(1, collection_id);
+            statement.setString(2, file_id);
+            statement.setString(3, received_timestamp);
+            statement.setString(4, encrypted_timestamp);
+            statement.setString(5, checksum);
+            statement.setString(6, enc_checksum);
+            statement.setString(7, checksum_timestamp);
+            System.out.println("Executing the query.");
+            statement.executeUpdate();
+            System.out.println("Query has been executed successfully!");
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
             System.out.println("Error in executing SQL query:\n" + e);
@@ -69,6 +95,9 @@ public class DatabaseCalls {
             ResultSet result = statement.executeQuery(query);
 
             while (result.next()) {
+                //TODO: Can only create enc_parameter data, needs to also do files
+                // Maybe overload the method?
+                // Then maybe DatabaseData abstract method is not needed
                 EncParameters data = new EncParameters();
 
                 data.setCollectionID(result.getString(1));
