@@ -1,47 +1,55 @@
 package dk.kb.bitrepository.database;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.List;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.getFile;
-import static dk.kb.bitrepository.database.DatabaseCalls.insertInto;
-import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.database.DatabaseCalls.*;
+import static dk.kb.bitrepository.database.DatabaseConstants.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestDatabaseCalls {
-    private static final String collection_id = "collection_id_test";
-    private static final String file_id = "file_id_test";
-    private static final String salt = "salt_test";
-    private static final String iv = "iv_test";
-    private static final String iterations = "iterations_test";
-
-    private static final String received_ts = "received_ts_test";
-    private static final String encrypted_ts = "encrypted_ts_test";
-    private static final String checksum = "checksum_test";
-    private static final String encrypted_checksum = "enc_checksum_test";
-    private static final String checksum_ts = "checksum_ts_test";
-
-    @Test
-    void TestInsertIntoEncParameters() {
-        insertInto(collection_id, file_id, salt, iv, iterations);
+    @Before
+    public void setUp() throws Exception {
+        // Drop tables
+        // Run database setup
     }
 
     @Test
-    void TestGetFile() {
-        // Insert
+    public void TestInsertSelectAndDeleteForEncParametersTable() {
+        // Perform a SELECT query
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
-        List<DatabaseData> result = getFile("collection1", "file1", ENC_PARAMS_TABLE);
+        // Assert that the query returned an empty object - since it should not already exist
+        assertTrue(result.isEmpty());
+
+        // Insert some information
+        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+
+        // Get the information from the table with a SELECT query
+        result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+
+        // Check that the information is correct
         if (!result.isEmpty()) {
             if (result.get(0) instanceof EncParameters) {
-                assertThat(result.get(0).getFileID(), is("file1"));
-                assertThat(((EncParameters) result.get(0)).getIv(), is("iv"));
-                assertEquals("collection1", result.get(0).getCollectionID(), "Expected collectionID to be 'collection1'");
+                assertThat(result.get(0).getCollectionID(), is(COLLECTION_ID));
+                assertThat(result.get(0).getFileID(), is(FILE_ID));
+                assertThat(((EncParameters) result.get(0)).getSalt(), is(ENC_PARAMS_SALT));
+                assertThat(((EncParameters) result.get(0)).getIv(), is(ENC_PARAMS_IV));
+                assertThat(((EncParameters) result.get(0)).getIterations(), is(ENC_PARAMS_ITERATIONS));
             }
         }
+        // Delete the information using the composite key (collection_id, file_id)
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
-        // Clean-up
+        // Perform a SELECT query again
+        result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+
+        // Assert that the query returned an empty object since it should have been deleted
+        assertTrue(result.isEmpty());
     }
+
 }

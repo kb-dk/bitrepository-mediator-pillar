@@ -26,7 +26,7 @@ public class DatabaseCalls {
      * @param iterations    The number of iterations.
      */
     public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", DatabaseConstants.FILES_TABLE);
+        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", DatabaseConstants.ENC_PARAMS_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
             System.out.println("Connection established to the database; readying statement.");
             statement.setString(1, collection_id);
@@ -54,8 +54,7 @@ public class DatabaseCalls {
      * @param enc_checksum        The checksum of the encrypted file.
      * @param checksum_timestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collection_id, String file_id, String received_timestamp,
-                                  String encrypted_timestamp, String checksum, String enc_checksum, String checksum_timestamp) {
+    public static void insertInto(String collection_id, String file_id, String received_timestamp, String encrypted_timestamp, String checksum, String enc_checksum, String checksum_timestamp) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", DatabaseConstants.FILES_TABLE);
         try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
             System.out.println("Connection established to the database; readying statement.");
@@ -82,7 +81,7 @@ public class DatabaseCalls {
      * @param conditions   Unused atm. //TODO: Introduce additional conditions
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
-    public static List<DatabaseData> getFile(String collectionID, String fileID, String table, String... conditions) {
+    public static List<DatabaseData> select(String collectionID, String fileID, String table, String... conditions) {
         List<DatabaseData> resultList = new ArrayList<>();
         String query = String.format("SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
         //query = query.replace("*", specifics[0]);
@@ -93,6 +92,7 @@ public class DatabaseCalls {
             System.out.println("Connection established to the database.");
             System.out.println("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
+            System.out.println("Query executed successfully!");
 
             while (result.next()) {
                 //TODO: Can only create enc_parameter data, needs to also do files
@@ -111,7 +111,8 @@ public class DatabaseCalls {
             result.close();
 
             if (resultList.isEmpty()) {
-                throw new IllegalStateException("No results from " + statement);
+                System.out.println("No results found.");
+                return resultList;
             }
 
         } catch (SQLException e) {
@@ -120,5 +121,27 @@ public class DatabaseCalls {
         }
 
         return resultList;
+    }
+
+    /**
+     * Performs the DELETE query in the chosen table where collection_id and file_id fits the chosen parameters.
+     *
+     * @param collectionID The CollectionID of the index to be deleted.
+     * @param fileID       The FileID of the index to be deleted.
+     * @param table        The table to delete from.
+     */
+    public static void delete(String collectionID, String fileID, String table) {
+        String query = String.format("DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
+        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
+            System.out.println("Connection established to the database; readying statement.");
+            statement.setString(1, collectionID);
+            statement.setString(2, fileID);
+            System.out.println("Executing >>" + query);
+            statement.executeUpdate();
+            System.out.println("Query has been executed successfully!");
+        } catch (SQLException e) {
+            //log.error("Error in executing SQL query: ", e);
+            System.out.println("Error in executing SQL query:\n" + e);
+        }
     }
 }

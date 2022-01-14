@@ -5,19 +5,20 @@ package dk.kb.bitrepository.database;
  * All the names of the tables and the fields in these tables.
  */
 public final class DatabaseConstants {
+    // Shared Constants
+    /**
+     * The name of the collection id field in both tables.
+     */
+    public final static String COLLECTION_ID = "collection_id";
+    /**
+     * The name of the file id field in both tables.
+     */
+    public final static String FILE_ID = "file_id";
     // Encrypted Parameters Constants
     /**
      * The name of the enc parameters table.
      */
     public final static String ENC_PARAMS_TABLE = "enc_parameters";
-    /**
-     * The name of the collection id field in the enc parameters table.
-     */
-    public final static String ENC_PARAMS_COLLECTION_ID = "collection_id";
-    /**
-     * The name of the file id field in the enc parameters table.
-     */
-    public final static String ENC_PARAMS_FILE_ID = "file_id";
     /**
      * The name of the salt field in the enc parameters table.
      */
@@ -36,14 +37,6 @@ public final class DatabaseConstants {
      * The name of the file table.
      */
     public final static String FILES_TABLE = "files";
-    /**
-     * The name of the file id field in the file table.
-     */
-    public final static String FILES_FILE_ID = "file_id";
-    /**
-     * The name of the collection id field in the file table.
-     */
-    public final static String FILES_COLLECTION_ID = "collection_id";
     /**
      * The name of the received timestamp field in the file table.
      */
