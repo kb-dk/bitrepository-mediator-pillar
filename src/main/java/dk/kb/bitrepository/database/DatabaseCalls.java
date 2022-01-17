@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.database;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,6 @@ import static dk.kb.bitrepository.database.DatabaseUtils.createPreparedStatement
 
 public class DatabaseCalls {
     private static final Logger log = LoggerFactory.getLogger(DatabaseCalls.class);
-    //TODO: Missing logger
 
     public DatabaseCalls() {
     }
@@ -31,12 +31,7 @@ public class DatabaseCalls {
      */
     public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
-        try (Connection connection = connect()) {
-            prepareStatement(query, connection, collection_id, file_id, salt, iv, iterations);
-        } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing 'insert' SQL query:\n" + e);
-        }
+        executeQuery(query, collection_id, file_id, salt, iv, iterations);
     }
 
     /**
@@ -54,13 +49,8 @@ public class DatabaseCalls {
                                   OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
                                   OffsetDateTime checksum_timestamp) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
-        try (Connection connection = connect()) {
-            prepareStatement(query, connection, collection_id, file_id, received_timestamp, encrypted_timestamp,
-                    checksum, enc_checksum, checksum_timestamp);
-        } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing 'insert' SQL query:\n" + e);
-        }
+        executeQuery(query, collection_id, file_id, received_timestamp, encrypted_timestamp,
+                checksum, enc_checksum, checksum_timestamp);
     }
 
     /**
@@ -78,11 +68,10 @@ public class DatabaseCalls {
         query = query.replace("@", fileID);
 
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
-            System.out.println("Connection established to the database.");
-            System.out.println("Executing >>" + query);
+            log.info("Connection established to the database.");
+            log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
-            System.out.println("Query executed successfully!");
-
+            log.info("Query executed successfully!");
             while (result.next()) {
                 if (table.equals(ENC_PARAMS_TABLE)) {
                     EncParametersData data = new EncParametersData();
@@ -109,14 +98,15 @@ public class DatabaseCalls {
                 }
             }
             result.close();
+            log.info("All results have been processed.");
 
             if (resultList.isEmpty()) {
-                System.out.println("No results found.");
+                log.warn("No results found.");
                 return resultList;
             }
         } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing 'select' SQL query:\n" + e);
+            log.error("Error in executing SQL query:\n", e);
+            System.out.println("Error in executing SQL query:\n" + e);
         }
 
         return resultList;
@@ -131,12 +121,9 @@ public class DatabaseCalls {
      */
     public static void delete(String collectionID, String fileID, String table) {
         String query = String.format("DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
-        try (Connection connection = connect()) {
-            prepareStatement(query, connection, collectionID, fileID);
-        } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing 'delete' SQL query:\n" + e);
-        }
+
+        executeQuery(query, collectionID, fileID);
+
     }
 
     /**
@@ -151,12 +138,21 @@ public class DatabaseCalls {
                                        OffsetDateTime new_timestamp) {
         String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
                 timestampColumn);
+        executeQuery(query, new_timestamp, collectionID, fileID);
+    }
 
+    /**
+     * Helper method to execute the given query with the given arguments.
+     *
+     * @param query The query to execute.
+     * @param args  The arguments to put in the given query.
+     */
+    private static void executeQuery(String query, @NotNull Object... args) {
         try (Connection connection = connect()) {
-            prepareStatement(query, connection, new_timestamp, collectionID, fileID);
+            prepareStatement(query, connection, args);
         } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing 'update' SQL query:\n" + e);
+            log.error("Error in executing SQL query:\n", e);
+            System.out.println("Error in executing SQL query:\n" + e);
         }
     }
 
@@ -168,12 +164,12 @@ public class DatabaseCalls {
      * @param args       The arguments to be set in the statement.
      * @throws SQLException Throws an exception if the connection to the Database fails.
      */
-    private static void prepareStatement(String query, Connection connection, Object... args) throws SQLException {
-        System.out.println("Connection established to the database; readying statement.");
+    private static void prepareStatement(String query, Connection connection, @NotNull Object... args) throws SQLException {
+        log.info("Connection established to the database; readying statement.");
         PreparedStatement statement = createPreparedStatement(connection, query, args);
-        System.out.println("Executing >>" + statement);
+        log.info("Executing >>" + statement);
         statement.executeUpdate();
-        System.out.println("Query has been executed successfully!");
+        log.info("Query has been executed successfully!");
         statement.close();
     }
 }

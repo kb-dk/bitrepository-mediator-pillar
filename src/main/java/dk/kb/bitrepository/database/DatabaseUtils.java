@@ -15,12 +15,14 @@ public class DatabaseUtils {
     private static String databaseURL;
     private static String password;
     private static String username;
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    // TODO: Missing logger + documentation + automatic tests
+    private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
     public DatabaseUtils() {
     }
 
+    /**
+     * Initializes the configurations in the code, by extracting them from the configurations file.
+     */
     public static void initConfigs() {
         ConfigurationHandler configs = new ConfigurationHandler();
         try {
@@ -29,16 +31,26 @@ public class DatabaseUtils {
             databaseURL = configs.getProperty("url") + ":" + configs.getProperty("port") + "/" + configs.getProperty("name");
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Could not load the configurations from the configurations file.", e);
         }
     }
 
+    /**
+     * Creates the tables as defined in the 'create_tables.sql' file, using the
+     * {@link #parseSQL(String filePath) parseSQL} method.
+     */
     public static void createTables() {
         String filePath = "src/main/java/dk/kb/bitrepository/database/create_tables.sql";
         String[] queries = parseSQL(filePath);
-        executeSQLFromFile(queries);
+        executeSQLFromStringArray(queries);
     }
 
+    /**
+     * Connects to the Database through the DriveManager using the configurations set by {@link #initConfigs() initConfigs}.
+     *
+     * @return The connection established.
+     * @throws SQLException Throws an error if the connection could not be established.
+     */
     static Connection connect() throws SQLException {
         if (databaseURL == null) {
             initConfigs();
@@ -46,6 +58,12 @@ public class DatabaseUtils {
         return DriverManager.getConnection(databaseURL, username, password);
     }
 
+    /**
+     * Parses SQL queries from a given .sql file to a String array.
+     *
+     * @param filePath The .sql files path.
+     * @return A string array containing the queries parsed from the file.
+     */
     private static String[] parseSQL(String filePath) {
         String[] queries = new String[0];
 
@@ -64,34 +82,35 @@ public class DatabaseUtils {
             // Splitting the string on ";" to separate requests.
             queries = stringBuilder.toString().split(";");
         } catch (IOException e) {
-            //log.error("Could not find file {}.", filePath, e);
-            System.out.println("No file exists at the provided path.");
+            log.error("No file exists at {}", filePath, e);
         }
         return queries;
     }
 
-    private static void executeSQLFromFile(String[] query) {
+    /**
+     * Executes all queries provided in a String array.
+     *
+     * @param query String array that contains the queries to be executed.
+     */
+    private static void executeSQLFromStringArray(String[] query) {
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
-            System.out.println("Connection established to the database; trying to execute query.");
+            log.info("Connection established to the database; trying to execute query.");
             for (String s : query) {
                 //Remove spaces to not execute empty statements
                 if (!s.trim().equals("")) {
-                    // Execute the query
-                    //TODO: Detect "table already exists"?
+                    //FIXME: Detect "table already exists"?
                     statement.executeUpdate(s);
                 }
             }
             statement.close();
-            System.out.println("Query executed successfully.");
+            log.info("Query executed successfully.");
         } catch (SQLException e) {
-            //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query: " + e);
+            log.error("Error in executing SQL query: ", e);
         }
     }
 
     /**
-     * Delete tables 'enc_parameters' and 'files'.
-     * Used in setup for testing.
+     * Delete tables 'enc_parameters' and 'files'. Used for testing purposes.
      *
      * @throws SQLException Throws a SQLException when failing to connect to the database server.
      */
@@ -138,7 +157,6 @@ public class DatabaseUtils {
             }
             i++;
         }
-
         return s;
     }
 }

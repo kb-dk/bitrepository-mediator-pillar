@@ -16,6 +16,7 @@ public final class DatabaseConstants {
      * The name of the file id field in both tables.
      */
     public final static String FILE_ID = "file_id";
+
     // Encrypted Parameters Constants
     /**
      * The name of the enc parameters table.
@@ -36,41 +37,41 @@ public final class DatabaseConstants {
 
     // Files Constants
     /**
-     * The name of the file table.
+     * The name of the files table.
      */
     public final static String FILES_TABLE = "files";
     /**
-     * The name of the received timestamp field in the file table.
+     * The name of the received timestamp field in the files table.
      */
-    public final static String FILES_RECEIVED_TIMESTAMP_NAME = "received_timestamp";
+    public final static String FILES_RECEIVED_TIMESTAMP = "received_timestamp";
     /**
      * A mock-up received timestamp, used for testing.
      */
-    public final static OffsetDateTime FILES_RECEIVED_TIMESTAMP = OffsetDateTime.MIN;
+    public final static OffsetDateTime FILES_RECEIVED_TIMESTAMP_MOCKUP = OffsetDateTime.MIN;
     /**
      * A mock-up encrypted timestamp, used for testing.
      */
-    public final static OffsetDateTime FILES_ENCRYPTED_TIMESTAMP = OffsetDateTime.MIN;
+    public final static OffsetDateTime FILES_ENCRYPTED_TIMESTAMP_MOCKUP = OffsetDateTime.MIN;
     /**
-     * The name of the encrypted timestamp field in the file table.
+     * The name of the encrypted timestamp field in the files table.
      */
-    public final static String FILES_ENCRYPTED_TIMESTAMP_NAME = "encrypted_timestamp";
+    public final static String FILES_ENCRYPTED_TIMESTAMP = "encrypted_timestamp";
     /**
      * The name of the checksum field in the file table.
      */
     public final static String FILES_CHECKSUM = "checksum";
     /**
-     * The name of the encrypted checksum field in the file table.
+     * The name of the encrypted checksum field in the files table.
      */
     public final static String FILES_ENC_CHECKSUM = "encrypted_checksum";
     /**
-     * The name of the checksum timestamp field.
+     * The name of the checksum timestamp field in the files table.
      */
-    public final static String FILES_CHECKSUM_TIMESTAMP_NAME = "checksum_timestamp";
+    public final static String FILES_CHECKSUM_TIMESTAMP = "checksum_timestamp";
     /**
-     * The name of the checksum timestamp field in the file table.
+     * A mock-up checksum timestamp, used for testing.
      */
-    public final static OffsetDateTime FILES_CHECKSUM_TIMESTAMP = OffsetDateTime.MIN;
+    public final static OffsetDateTime FILES_CHECKSUM_TIMESTAMP_MOCKUP = OffsetDateTime.MIN;
 
     /**
      * Private constructor to prevent instantiation of this constants class.

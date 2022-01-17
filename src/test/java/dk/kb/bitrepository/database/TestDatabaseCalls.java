@@ -68,7 +68,7 @@ public class TestDatabaseCalls {
     public void TestInsertSelectAndDeleteForFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
@@ -79,11 +79,11 @@ public class TestDatabaseCalls {
 
         assertThat(firstResult.getCollectionID(), is(COLLECTION_ID));
         assertThat(firstResult.getFileID(), is(FILE_ID));
-        assertThat(((FilesData) firstResult).getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP));
-        assertThat(((FilesData) firstResult).getEncryptedTimestamp(), is(FILES_ENCRYPTED_TIMESTAMP));
+        assertThat(((FilesData) firstResult).getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP_MOCKUP));
+        assertThat(((FilesData) firstResult).getEncryptedTimestamp(), is(FILES_ENCRYPTED_TIMESTAMP_MOCKUP));
         assertThat(((FilesData) firstResult).getChecksum(), is(FILES_CHECKSUM));
         assertThat(((FilesData) firstResult).getEncryptedChecksum(), is(FILES_ENC_CHECKSUM));
-        assertThat(((FilesData) firstResult).getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP));
+        assertThat(((FilesData) firstResult).getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP_MOCKUP));
 
         delete(COLLECTION_ID, FILE_ID, table);
     }
@@ -92,14 +92,14 @@ public class TestDatabaseCalls {
     public void TestUpdateEncryptedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getEncryptedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP_NAME, newTimestamp);
+        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP, newTimestamp);
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
@@ -113,14 +113,14 @@ public class TestDatabaseCalls {
     public void TestUpdateChecksumTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getChecksumTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP_NAME, newTimestamp);
+        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP, newTimestamp);
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
@@ -134,14 +134,14 @@ public class TestDatabaseCalls {
     public void TestUpdateReceivedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getReceivedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_NAME, newTimestamp);
+        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, newTimestamp);
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
