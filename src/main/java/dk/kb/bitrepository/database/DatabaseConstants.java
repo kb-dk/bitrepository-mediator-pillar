@@ -64,6 +64,10 @@ public final class DatabaseConstants {
      */
     public final static String FILES_ENC_CHECKSUM = "encrypted_checksum";
     /**
+     * The name of the checksum timestamp field.
+     */
+    public final static String FILES_CHECKSUM_TIMESTAMP_NAME = "checksum_timestamp";
+    /**
      * The name of the checksum timestamp field in the file table.
      */
     public final static OffsetDateTime FILES_CHECKSUM_TIMESTAMP = OffsetDateTime.MIN;

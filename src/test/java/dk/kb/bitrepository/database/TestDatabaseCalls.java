@@ -23,7 +23,7 @@ public class TestDatabaseCalls {
         // Drop tables
         dropTables();
         System.out.println("Database tables has been dropped.");
-        // Run database setup
+        // Create tables anew
         if (configs.configExists()) {
             DatabaseUtils.createTables();
             System.out.println("Tables have been created.");
@@ -34,18 +34,13 @@ public class TestDatabaseCalls {
 
     @Test
     public void TestInsertSelectAndDeleteForEncParametersTable() {
-        // Perform a SELECT query
         String table = ENC_PARAMS_TABLE;
-        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
-
-        // Assert that the query returned an empty object - since it should not already exist
-        assertTrue(result.isEmpty());
 
         // Insert some information
         insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
 
         // Get the information from the table with a SELECT query
-        result = select(COLLECTION_ID, FILE_ID, table);
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
         // Assert that there is now a result
         assertFalse(result.isEmpty());
@@ -72,27 +67,16 @@ public class TestDatabaseCalls {
     @Test
     public void TestInsertSelectAndDeleteForFilesTable() {
         String table = FILES_TABLE;
-        // Perform a SELECT query
+
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
-        // Assert that the query returned an empty object - since it should not already exist
-        assertTrue(result.isEmpty());
-
-        // Insert some information
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP,
-                FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
-
-        // Get the information from the table with a SELECT query
-        result = select(COLLECTION_ID, FILE_ID, table);
-
-        // Assert that there is now a result
         assertFalse(result.isEmpty());
 
-        // Assert that we get the correct data type
         DatabaseData firstResult = result.get(0);
         assertTrue("Result should be of EncParametersData type.", firstResult instanceof FilesData);
 
-        // Check that the information is correct
         assertThat(firstResult.getCollectionID(), is(COLLECTION_ID));
         assertThat(firstResult.getFileID(), is(FILE_ID));
         assertThat(((FilesData) firstResult).getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP));
@@ -101,24 +85,19 @@ public class TestDatabaseCalls {
         assertThat(((FilesData) firstResult).getEncryptedChecksum(), is(FILES_ENC_CHECKSUM));
         assertThat(((FilesData) firstResult).getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP));
 
-        cleanUp(COLLECTION_ID, FILE_ID, table);
-        result = select(COLLECTION_ID, FILE_ID, table);
-        assertTrue(result.isEmpty());
+        delete(COLLECTION_ID, FILE_ID, table);
     }
 
     @Test
     public void TestUpdateEncryptedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP,
-                FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
 
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getEncryptedTimestamp();
-        System.out.println(oldTimestamp);
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
-        System.out.println(newTimestamp);
 
         updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP_NAME, newTimestamp);
         result = select(COLLECTION_ID, FILE_ID, table);
@@ -127,12 +106,48 @@ public class TestDatabaseCalls {
         assertThat(firstResult.getEncryptedTimestamp(), is(newTimestamp));
         assertNotEquals(oldTimestamp, firstResult.getEncryptedTimestamp());
 
-        cleanUp(COLLECTION_ID, FILE_ID, table);
-        result = select(COLLECTION_ID, FILE_ID, table);
-        assertTrue(result.isEmpty());
+        delete(COLLECTION_ID, FILE_ID, table);
     }
 
-    private void cleanUp(String collectionID, String fileID, String table) {
-        delete(collectionID, fileID, table);
+    @Test
+    public void TestUpdateChecksumTimestampInFilesTable() {
+        String table = FILES_TABLE;
+
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
+
+        OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getChecksumTimestamp();
+        OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
+
+        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP_NAME, newTimestamp);
+        result = select(COLLECTION_ID, FILE_ID, table);
+        FilesData firstResult = (FilesData) result.get(0);
+
+        assertThat(firstResult.getChecksumTimestamp(), is(newTimestamp));
+        assertNotEquals(oldTimestamp, firstResult.getChecksumTimestamp());
+
+        delete(COLLECTION_ID, FILE_ID, table);
+    }
+
+    @Test
+    public void TestUpdateReceivedTimestampInFilesTable() {
+        String table = FILES_TABLE;
+
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, FILES_ENCRYPTED_TIMESTAMP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP);
+
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
+
+        OffsetDateTime oldTimestamp = ((FilesData) result.get(0)).getReceivedTimestamp();
+        OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
+
+        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_NAME, newTimestamp);
+        result = select(COLLECTION_ID, FILE_ID, table);
+        FilesData firstResult = (FilesData) result.get(0);
+
+        assertThat(firstResult.getReceivedTimestamp(), is(newTimestamp));
+        assertNotEquals(oldTimestamp, firstResult.getReceivedTimestamp());
+
+        delete(COLLECTION_ID, FILE_ID, table);
     }
 }

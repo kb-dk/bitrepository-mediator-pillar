@@ -50,10 +50,13 @@ public class DatabaseCalls {
      * @param enc_checksum        The checksum of the encrypted file.
      * @param checksum_timestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp, OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum, OffsetDateTime checksum_timestamp) {
+    public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp,
+                                  OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
+                                  OffsetDateTime checksum_timestamp) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
         try (Connection connection = connect()) {
-            prepareStatement(query, connection, collection_id, file_id, received_timestamp, encrypted_timestamp, checksum, enc_checksum, checksum_timestamp);
+            prepareStatement(query, connection, collection_id, file_id, received_timestamp, encrypted_timestamp,
+                    checksum, enc_checksum, checksum_timestamp);
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
             System.out.println("Error in executing 'insert' SQL query:\n" + e);
@@ -61,7 +64,7 @@ public class DatabaseCalls {
     }
 
     /**
-     * Performs a select query, and creates the appropriate object containing the resulting data.
+     * Performs a SELECT query, and creates the appropriate object containing the resulting data.
      *
      * @param collectionID The collection ID which is part of the primary key.
      * @param fileID       The file ID which is part of the primary key.
@@ -144,8 +147,10 @@ public class DatabaseCalls {
      * @param timestampColumn The timestamp column to update, use e.g. 'FILES_ENCRYPTED_TIMESTAMP_NAME' etc.
      * @param new_timestamp   The new timestamp that will replace the old one.
      */
-    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime new_timestamp) {
-        String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
+    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn,
+                                       OffsetDateTime new_timestamp) {
+        String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
+                timestampColumn);
 
         try (Connection connection = connect()) {
             prepareStatement(query, connection, new_timestamp, collectionID, fileID);
