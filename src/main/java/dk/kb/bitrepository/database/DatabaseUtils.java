@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 public class DatabaseUtils {
     private static String databaseURL;
@@ -90,18 +90,31 @@ public class DatabaseUtils {
     }
 
     /**
+     * Delete tables 'enc_parameters' and 'files'.
+     * Used in setup for testing.
+     *
+     * @throws SQLException Throws a SQLException when failing to connect to the database server.
+     */
+    static void dropTables() throws SQLException {
+        Connection connection = connect();
+        Statement statement = connection.createStatement();
+        statement.executeUpdate("DROP TABLE IF EXISTS enc_parameters");
+        statement.executeUpdate("DROP TABLE IF EXISTS files");
+    }
+
+    /**
      * Prepare a statement given a query string and some args.
      * <p>
      * NB: the provided connection is not closed.
      *
      * @param dbConnection The connection to the database.
-     * @param query        a query string  (must not be null or empty)
-     * @param args         some args to insert into this query string (must not be null)
+     * @param query        The query to run.
+     * @param args         The args to insert into this query string.
      * @return a prepared statement
      * @throws SQLException          If unable to prepare a statement
      * @throws IllegalStateException if any of the args is of an unknown type
      */
-    public static PreparedStatement createPreparedStatement(Connection dbConnection, String query, Object... args) throws SQLException {
+    static PreparedStatement createPreparedStatement(Connection dbConnection, String query, Object... args) throws SQLException {
         //log.trace("Preparing the statement: '" + query + "' with arguments '" + Arrays.asList(args) + "'");
         PreparedStatement s = dbConnection.prepareStatement(query);
         int i = 1;
@@ -114,8 +127,8 @@ public class DatabaseUtils {
                 s.setLong(i, (Long) arg);
             } else if (arg instanceof Boolean) {
                 s.setBoolean(i, (Boolean) arg);
-            } else if (arg instanceof java.util.Date) {
-                s.setTimestamp(i, new Timestamp(((Date) arg).getTime()));
+            } else if (arg instanceof OffsetDateTime) {
+                s.setObject(i, arg);
             } else {
                 if (arg == null) {
                     throw new IllegalStateException("Cannot handle a null as argument for SQL query. We can only " + "handle string, int, long, date or boolean args for query: " + query);

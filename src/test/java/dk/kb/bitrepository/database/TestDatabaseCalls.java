@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.database;
 
+import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,15 +10,26 @@ import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseCalls.*;
 import static dk.kb.bitrepository.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.database.DatabaseUtils.dropTables;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class TestDatabaseCalls {
+    private final ConfigurationHandler configs = new ConfigurationHandler();
+
     @Before
     public void setUp() throws Exception {
         // Drop tables
+        dropTables();
+        System.out.println("Database tables has been dropped.");
         // Run database setup
+        if (configs.configExists()) {
+            DatabaseUtils.createTables();
+            System.out.println("Tables have been created.");
+        } else {
+            System.out.println("Config has not been set up. Run DatabaseSetup before running any tests.");
+        }
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.List;
 import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.database.DatabaseUtils.connect;
+import static dk.kb.bitrepository.database.DatabaseUtils.createPreparedStatement;
 
 public class DatabaseCalls {
     private static final Logger log = LoggerFactory.getLogger(DatabaseCalls.class);
@@ -30,19 +31,11 @@ public class DatabaseCalls {
      */
     public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
-        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; readying statement.");
-            statement.setString(1, collection_id);
-            statement.setString(2, file_id);
-            statement.setString(3, salt);
-            statement.setString(4, iv);
-            statement.setString(5, iterations);
-            System.out.println("Executing the query.");
-            statement.executeUpdate();
-            System.out.println("Query has been executed successfully!");
+        try (Connection connection = connect()) {
+            prepareStatement(query, connection, collection_id, file_id, salt, iv, iterations);
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            System.out.println("Error in executing 'insert' SQL query:\n" + e);
         }
     }
 
@@ -57,32 +50,22 @@ public class DatabaseCalls {
      * @param enc_checksum        The checksum of the encrypted file.
      * @param checksum_timestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp,
-                                  OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
-                                  OffsetDateTime checksum_timestamp) {
+    public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp, OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum, OffsetDateTime checksum_timestamp) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
-        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; readying statement.");
-            statement.setString(1, collection_id);
-            statement.setString(2, file_id);
-            statement.setObject(3, received_timestamp);
-            statement.setObject(4, encrypted_timestamp);
-            statement.setString(5, checksum);
-            statement.setString(6, enc_checksum);
-            statement.setObject(7, checksum_timestamp);
-            System.out.println("Executing the query.");
-            statement.executeUpdate();
-            System.out.println("Query has been executed successfully!");
+        try (Connection connection = connect()) {
+            prepareStatement(query, connection, collection_id, file_id, received_timestamp, encrypted_timestamp, checksum, enc_checksum, checksum_timestamp);
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            System.out.println("Error in executing 'insert' SQL query:\n" + e);
         }
     }
 
     /**
-     * @param collectionID The collection ID which is part of the primary key
-     * @param fileID       The file ID which is part of the primary key
-     * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE
+     * Performs a select query, and creates the appropriate object containing the resulting data.
+     *
+     * @param collectionID The collection ID which is part of the primary key.
+     * @param fileID       The file ID which is part of the primary key.
+     * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE.
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
     public static List<DatabaseData> select(String collectionID, String fileID, String table) {
@@ -130,7 +113,7 @@ public class DatabaseCalls {
             }
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            System.out.println("Error in executing 'select' SQL query:\n" + e);
         }
 
         return resultList;
@@ -145,33 +128,47 @@ public class DatabaseCalls {
      */
     public static void delete(String collectionID, String fileID, String table) {
         String query = String.format("DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
-        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; readying statement.");
-            statement.setString(1, collectionID);
-            statement.setString(2, fileID);
-            System.out.println("Executing >>" + query);
-            statement.executeUpdate();
-            System.out.println("Query has been executed successfully!");
+        try (Connection connection = connect()) {
+            prepareStatement(query, connection, collectionID, fileID);
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            System.out.println("Error in executing 'delete' SQL query:\n" + e);
         }
     }
 
-    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime new_enc_timestamp) {
+    /**
+     * Updates the any timestamp column in the 'files' table in the Database.
+     *
+     * @param collectionID    The collection id, part of the primary key.
+     * @param fileID          The file id, part of the primary key.
+     * @param timestampColumn The timestamp column to update, use e.g. 'FILES_ENCRYPTED_TIMESTAMP_NAME' etc.
+     * @param new_timestamp   The new timestamp that will replace the old one.
+     */
+    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime new_timestamp) {
         String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
 
-        try (Connection connection = connect(); PreparedStatement statement = connection.prepareStatement(query)) {
-            System.out.println("Connection established to the database; readying statement.");
-            statement.setObject(1, new_enc_timestamp);
-            statement.setString(2, collectionID);
-            statement.setString(3, fileID);
-            System.out.println("Executing >>" + statement);
-            statement.executeUpdate();
-            System.out.println("Query has been executed successfully!");
+        try (Connection connection = connect()) {
+            prepareStatement(query, connection, new_timestamp, collectionID, fileID);
         } catch (SQLException e) {
             //log.error("Error in executing SQL query: ", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            System.out.println("Error in executing 'update' SQL query:\n" + e);
         }
+    }
+
+    /**
+     * Used to prepare the statement and execute the given query.
+     *
+     * @param query      The query to be executed.
+     * @param connection The database connect, used to prepare the statement.
+     * @param args       The arguments to be set in the statement.
+     * @throws SQLException Throws an exception if the connection to the Database fails.
+     */
+    private static void prepareStatement(String query, Connection connection, Object... args) throws SQLException {
+        System.out.println("Connection established to the database; readying statement.");
+        PreparedStatement statement = createPreparedStatement(connection, query, args);
+        System.out.println("Executing >>" + statement);
+        statement.executeUpdate();
+        System.out.println("Query has been executed successfully!");
+        statement.close();
     }
 }
