@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.mediator.crypto;
+package dk.kb.bitrepository.crypto;
 
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;

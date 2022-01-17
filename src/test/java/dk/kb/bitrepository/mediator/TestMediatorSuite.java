@@ -1,5 +1,6 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator;
 
+import dk.kb.bitrepository.database.TestDatabaseCalls;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -8,6 +9,6 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
         TestDatabaseCalls.class
 })
-public class TestSuite {
+public class TestMediatorSuite {
 
 }
