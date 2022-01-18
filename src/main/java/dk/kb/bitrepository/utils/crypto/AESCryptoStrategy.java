@@ -4,11 +4,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,11 +14,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
@@ -37,10 +29,17 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private IvParameterSpec iv;
     private Cipher cipher;
 
-    public AESCryptoStrategy(String password) { // TODO gonna need to provide key, salt and IV through here or in methods
+    public AESCryptoStrategy(String password) {
         this.salt = generateSalt();
         this.secretKey = getKeyFromPassword(password, salt);
         this.iv = generateIv();
+        this.cipher = initCipher();
+    }
+
+    public AESCryptoStrategy(String password, String salt, byte[] iv) {
+        this.salt = salt;
+        this.secretKey = getKeyFromPassword(password, salt);
+        this.iv = generateIv(iv);
         this.cipher = initCipher();
     }
 
@@ -131,10 +130,16 @@ public class AESCryptoStrategy implements CryptoStrategy {
         return new IvParameterSpec(iv);
     }
 
+    private IvParameterSpec generateIv(byte[] iv) {
+        return new IvParameterSpec(iv);
+    }
+
+    @Override
     public String getSalt() {
         return salt;
     }
 
+    @Override
     public IvParameterSpec getIV() {
         return iv;
     }

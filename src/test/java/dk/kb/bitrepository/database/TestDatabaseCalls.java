@@ -10,6 +10,8 @@ import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseCalls.*;
 import static dk.kb.bitrepository.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
+import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.database.DatabaseUtils.dropTables;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -46,12 +48,14 @@ public class TestDatabaseCalls {
         assertFalse(result.isEmpty());
 
         // Check that the information is correct
-        if (result.get(0) instanceof EncParametersData) {
-            assertThat(result.get(0).getCollectionID(), is(COLLECTION_ID));
-            assertThat(result.get(0).getFileID(), is(FILE_ID));
-            assertThat(((EncParametersData) result.get(0)).getSalt(), is(ENC_PARAMS_SALT));
-            assertThat(((EncParametersData) result.get(0)).getIv(), is(ENC_PARAMS_IV));
-            assertThat(((EncParametersData) result.get(0)).getIterations(), is(ENC_PARAMS_ITERATIONS));
+        EncryptedParametersData result0 = (EncryptedParametersData) result.get(0);
+
+        if (result0 != null) {
+            assertThat(result0.getCollectionID(), is(COLLECTION_ID));
+            assertThat(result0.getFileID(), is(FILE_ID));
+            assertThat(result0.getSalt(), is(ENC_PARAMS_SALT));
+            assertThat(result0.getIv(), is(ENC_PARAMS_IV));
+            assertThat(result0.getIterations(), is(ENC_PARAMS_ITERATIONS));
         }
 
         // Delete the information using the composite key (collection_id, file_id)
@@ -74,16 +78,16 @@ public class TestDatabaseCalls {
 
         assertFalse(result.isEmpty());
 
-        DatabaseData firstResult = result.get(0);
-        assertTrue("Result should be of EncParametersData type.", firstResult instanceof FilesData);
+        FilesData firstResult = (FilesData) result.get(0);
+        assertNotNull("Result should be of 'FilesData' type.", firstResult);
 
         assertThat(firstResult.getCollectionID(), is(COLLECTION_ID));
         assertThat(firstResult.getFileID(), is(FILE_ID));
-        assertThat(((FilesData) firstResult).getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP_MOCKUP));
-        assertThat(((FilesData) firstResult).getEncryptedTimestamp(), is(FILES_ENCRYPTED_TIMESTAMP_MOCKUP));
-        assertThat(((FilesData) firstResult).getChecksum(), is(FILES_CHECKSUM));
-        assertThat(((FilesData) firstResult).getEncryptedChecksum(), is(FILES_ENC_CHECKSUM));
-        assertThat(((FilesData) firstResult).getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP_MOCKUP));
+        assertThat(firstResult.getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP_MOCKUP));
+        assertThat(firstResult.getEncryptedTimestamp(), is(FILES_ENCRYPTED_TIMESTAMP_MOCKUP));
+        assertThat(firstResult.getChecksum(), is(FILES_CHECKSUM));
+        assertThat(firstResult.getEncryptedChecksum(), is(FILES_ENC_CHECKSUM));
+        assertThat(firstResult.getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP_MOCKUP));
 
         delete(COLLECTION_ID, FILE_ID, table);
     }

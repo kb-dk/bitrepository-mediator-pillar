@@ -11,6 +11,7 @@ import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.database.DatabaseData.*;
 import static dk.kb.bitrepository.database.DatabaseUtils.connect;
 import static dk.kb.bitrepository.database.DatabaseUtils.createPreparedStatement;
 
@@ -74,25 +75,39 @@ public class DatabaseCalls {
             log.info("Query executed successfully!");
             while (result.next()) {
                 if (table.equals(ENC_PARAMS_TABLE)) {
-                    EncParametersData data = new EncParametersData();
+                    EncryptedParametersData data = new EncryptedParametersData(
+                            result.getString(1),
+                            result.getString(2),
+                            result.getString(3),
+                            result.getBytes(4),
+                            result.getString(5)
+                    );
 
-                    data.setCollectionID(result.getString(1));
-                    data.setFileID(result.getString(2));
-                    data.setSalt(result.getString(3));
-                    data.setIv(result.getBytes(4));
-                    data.setIterations(result.getString(5));
+                    //data.setCollectionID(result.getString(1));
+                    //data.setFileID(result.getString(2));
+                    //data.setSalt(result.getString(3));
+                    //data.setIv(result.getString(4));
+                    //data.setIterations(result.getString(5));
 
                     resultList.add(data);
                 } else if (table.equals(FILES_TABLE)) {
-                    FilesData data = new FilesData();
+                    FilesData data = new FilesData(
+                            result.getString(1),
+                            result.getString(2),
+                            result.getObject(3, OffsetDateTime.class),
+                            result.getObject(4, OffsetDateTime.class),
+                            result.getString(5),
+                            result.getString(6),
+                            result.getObject(7, OffsetDateTime.class)
+                    );
 
-                    data.setCollectionID(result.getString(1));
-                    data.setFileID(result.getString(2));
-                    data.setReceivedTimestamp(result.getObject(3, OffsetDateTime.class));
-                    data.setEncryptedTimestamp(result.getObject(4, OffsetDateTime.class));
-                    data.setChecksum(result.getString(5));
-                    data.setEncryptedChecksum(result.getString(6));
-                    data.setChecksumTimestamp(result.getObject(7, OffsetDateTime.class));
+                    //data.setCollectionID(result.getString(1));
+                    //data.setFileID(result.getString(2));
+                    //data.setReceivedTimestamp(result.getObject(3, OffsetDateTime.class));
+                    //data.setEncryptedTimestamp(result.getObject(4, OffsetDateTime.class));
+                    //data.setChecksum(result.getString(5));
+                    //data.setEncryptedChecksum(result.getString(6));
+                    //data.setChecksumTimestamp(result.getObject(7, OffsetDateTime.class));
 
                     resultList.add(data);
                 }

@@ -7,7 +7,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({
-        TestDatabaseCalls.class
+        TestMessageReceivedHandler.class
 })
 public class TestMediatorSuite {
 
