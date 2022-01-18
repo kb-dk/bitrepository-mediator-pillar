@@ -34,18 +34,18 @@ public class MediatorComponentFactory {
     }
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile, String pillarID) throws IOException {
-        Configuration configuration = loadConfiguration(pillarID, pathToConfiguration);
-        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration.getPillarSpecificConfiguration());
-        MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSpecificConfiguration(), securityManager);
+        MediatorConfiguration configuration = loadConfiguration(pillarID, pathToConfiguration);
+        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration.getPillarSettings());
+        MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
 
         return new MediatorPillar(messageBus, configuration);
     }
 
-    private Configuration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
+    private MediatorConfiguration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
         YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml"); // TODO probably move
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);
         Settings settings = settingsProvider.getSettings();
-        return new Configuration(mediatorConfig, settings);
+        return new MediatorConfiguration(mediatorConfig, settings);
     }
 
     /**

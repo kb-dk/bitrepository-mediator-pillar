@@ -11,7 +11,7 @@ import javax.jms.JMSException;
 public class MediatorPillar {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final MessageBus messageBus;
-    private final Configuration config;
+    private final MediatorConfiguration config;
     private final MessageMediator messageMediator;
     private final PillarContext context;
 
@@ -25,7 +25,7 @@ public class MediatorPillar {
      * - GetFileIDs: Just check dao and respond with file IDs from there no?
      * - DeleteFile: Check dao if file exists, propagate message to pillar, and get response back from pillar to client
      */
-    public MediatorPillar(MessageBus messageBus, Configuration config) {
+    public MediatorPillar(MessageBus messageBus, MediatorConfiguration config) {
         log.debug("Creating mediator pillar");
         this.messageBus = messageBus;
         this.config = config;

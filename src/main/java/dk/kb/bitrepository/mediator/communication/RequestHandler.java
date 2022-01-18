@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
@@ -22,7 +23,7 @@ public interface RequestHandler<T extends MessageRequest> {
      * @param messageContext the message context
      * TODO @throws RequestHandlerException If something goes wrong while handling the
      */
-    void processRequest(T request, MessageContext messageContext); // throws RequestHandlerException
+    void processRequest(T request, MessageContext messageContext) throws RequestHandlerException; // throws RequestHandlerException
 
     /**
      * Used for creating responses signaling general failures to handle the request.

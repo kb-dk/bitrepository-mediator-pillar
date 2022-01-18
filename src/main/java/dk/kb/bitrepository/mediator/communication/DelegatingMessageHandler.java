@@ -14,8 +14,8 @@ import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class DelegatingMessageHandler implements MessageListener { // TODO should maybe be inside mediator as in reference code?
-    private static Logger log = LoggerFactory.getLogger(DelegatingMessageHandler.class);
-    private Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
+    private static final Logger log = LoggerFactory.getLogger(DelegatingMessageHandler.class);
+    private final Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
 
     public DelegatingMessageHandler(List<RequestHandler<? extends MessageRequest>> handlers) {
         handlerMap = new HashMap<>();
@@ -24,6 +24,7 @@ public class DelegatingMessageHandler implements MessageListener { // TODO shoul
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void onMessage(Message message, MessageContext messageContext) {
         if (message instanceof MessageRequest) {

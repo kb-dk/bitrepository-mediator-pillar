@@ -13,6 +13,8 @@ public class MessageRequestMediator implements MessageMediator {
     private final PillarContext context;
     private final DelegatingMessageHandler messageHandler;
 
+    // TODO considering letting this have all the functionality of the DelegatingMessageHandler
+    // atm. I don't see a use for having this intermediate class
     public MessageRequestMediator(MessageBus messageBus, PillarContext context) {
         this.messageBus = messageBus;
         this.context = context;

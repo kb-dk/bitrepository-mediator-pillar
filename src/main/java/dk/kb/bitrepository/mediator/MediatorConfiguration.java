@@ -8,13 +8,13 @@ import org.bitrepository.settings.repositorysettings.RepositorySettings;
 
 import java.util.List;
 
-public class Configuration {
+public class MediatorConfiguration {
     private final YAML intermediatorConf;
-    private final Settings pillarSpecificConfiguration;
+    private final Settings pillarSettings;
 
-    public Configuration(YAML intermediatorConf, Settings pillarSpecificConfiguration) {
+    public MediatorConfiguration(YAML intermediatorConf, Settings pillarSettings) {
         this.intermediatorConf = intermediatorConf;
-        this.pillarSpecificConfiguration = pillarSpecificConfiguration;
+        this.pillarSettings = pillarSettings;
     }
 
     public String getComponentID() {
@@ -30,7 +30,7 @@ public class Configuration {
      * TODO singular vs. plural
      */
     public List<Collection> getCollections() {
-        return pillarSpecificConfiguration.getCollections();
+        return pillarSettings.getCollections();
     }
 
     /**
@@ -41,21 +41,21 @@ public class Configuration {
         return getRepositorySettings().getProtocolSettings().getAlarmDestination();
     }
 
-    public Settings getPillarSpecificConfiguration() {
-        return pillarSpecificConfiguration;
+    public Settings getPillarSettings() {
+        return pillarSettings;
     }
 
     /**
      * @return The settings specific to the reference code for a collection.
      */
     public ReferenceSettings getReferenceSettings() {
-        return pillarSpecificConfiguration.getReferenceSettings();
+        return pillarSettings.getReferenceSettings();
     }
 
     /**
      * @return The standard settings for a collection.
      */
     public RepositorySettings getRepositorySettings() {
-        return pillarSpecificConfiguration.getRepositorySettings();
+        return pillarSettings.getRepositorySettings();
     }
 }

@@ -26,7 +26,7 @@ public class Something {
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);*/
         SecurityManager securityManager = new NoOpSecurityManager();
         MessageBus bus = ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager);
-        PillarContext context = new PillarContext(new Configuration(new YAML("src/test/resources/conf/mediatorConfig.yaml"), settings), bus);
+        PillarContext context = new PillarContext(new MediatorConfiguration(new YAML("src/test/resources/conf/mediatorConfig.yaml"), settings), bus);
         bus.addListener("Testination", new DelegatingMessageHandler(List.of(new IdentifyPillarsForGetFileRequestHandler(context))));
         IdentifyPillarsForGetFileRequest request = new IdentifyPillarsForGetFileRequest();
         request.setMinVersion(ProtocolVersionLoader.loadProtocolVersion().getMinVersion());
