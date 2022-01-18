@@ -4,7 +4,7 @@ public class EncParametersData extends DatabaseData {
     private String collectionID;
     private String fileID;
     private String salt;
-    private String iv;
+    private byte[] iv;
     private String iterations;
 
     public EncParametersData() {
@@ -38,11 +38,11 @@ public class EncParametersData extends DatabaseData {
         this.salt = salt;
     }
 
-    public String getIv() {
+    public byte[] getIv() {
         return iv;
     }
 
-    public void setIv(String iv) {
+    public void setIv(byte[] iv) {
         this.iv = iv;
     }
 

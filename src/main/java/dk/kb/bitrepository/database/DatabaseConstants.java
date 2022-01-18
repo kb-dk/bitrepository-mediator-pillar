@@ -2,6 +2,8 @@ package dk.kb.bitrepository.database;
 
 import java.time.OffsetDateTime;
 
+import static ch.qos.logback.core.encoder.ByteArrayUtil.hexStringToByteArray;
+
 /**
  * Container for the constants of the database.
  * All the names of the tables and the fields in these tables.
@@ -27,9 +29,9 @@ public final class DatabaseConstants {
      */
     public final static String ENC_PARAMS_SALT = "salt";
     /**
-     * The name of the initialization vector field in the enc parameters table.
+     * Mock-up of the initialization vector, used for testing.
      */
-    public final static String ENC_PARAMS_IV = "iv";
+    public final static byte[] ENC_PARAMS_IV = hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d");
     /**
      * The name of the iterations' field in the enc parameters table.
      */

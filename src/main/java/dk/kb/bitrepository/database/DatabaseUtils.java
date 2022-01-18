@@ -148,6 +148,8 @@ public class DatabaseUtils {
                 s.setBoolean(i, (Boolean) arg);
             } else if (arg instanceof OffsetDateTime) {
                 s.setObject(i, arg);
+            } else if (arg instanceof byte[]) {
+                s.setBytes(i, (byte[]) arg);
             } else {
                 if (arg == null) {
                     throw new IllegalStateException("Cannot handle a null as argument for SQL query. We can only " + "handle string, int, long, date or boolean args for query: " + query);

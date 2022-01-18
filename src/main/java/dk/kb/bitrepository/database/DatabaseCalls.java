@@ -29,7 +29,7 @@ public class DatabaseCalls {
      * @param iv            The initialization vector used in the encryption.
      * @param iterations    The number of iterations.
      */
-    public static void insertInto(String collection_id, String file_id, String salt, String iv, String iterations) {
+    public static void insertInto(String collection_id, String file_id, String salt, Object iv, String iterations) {
         String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
         executeQuery(query, collection_id, file_id, salt, iv, iterations);
     }
@@ -79,7 +79,7 @@ public class DatabaseCalls {
                     data.setCollectionID(result.getString(1));
                     data.setFileID(result.getString(2));
                     data.setSalt(result.getString(3));
-                    data.setIv(result.getString(4));
+                    data.setIv(result.getBytes(4));
                     data.setIterations(result.getString(5));
 
                     resultList.add(data);
