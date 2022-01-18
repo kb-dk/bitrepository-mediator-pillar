@@ -54,10 +54,8 @@ public class MessageReceivedHandler {
             AES = initAES(password);
         }
 
-        Path filePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test:"
-                + collectionID + ":" + fileID);
-        Path encryptedFilePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test_encrypted:"
-                + collectionID + ":" + fileID);
+        Path filePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test:" + collectionID + ":" + fileID);
+        Path encryptedFilePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test_encrypted:" + collectionID + ":" + fileID);
 
         boolean fileExist = Files.exists(filePath);
         if (fileExist) {
@@ -79,7 +77,7 @@ public class MessageReceivedHandler {
 
         // FIXME:
         //  Is this the correct way of computing checksum?
-        //  Load in the encrypted file and relay message to the encrypted pillar WITH the encrypted file
+        //  Relay message to the encrypted pillar w. the encrypted file
         String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
         String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
         OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
@@ -93,21 +91,42 @@ public class MessageReceivedHandler {
 
     }
 
+    /**
+     * Standard initialization of an AESCryptoStrategy.
+     *
+     * @param password The password to use in the encryption.
+     * @return Returns a standard AESCryptoStrategy instance.
+     */
     @NotNull
     private static CryptoStrategy initAES(String password) {
         return new AESCryptoStrategy(password);
     }
 
+    /**
+     * Using the overloaded constructor, in order to pass pre-determined salt and IV.
+     * Mainly used to create an AES instance for decryption.
+     *
+     * @param password The password that was previously used to encrypt.
+     * @param salt     The pre-determined salt.
+     * @param iv       The pre-determined IV.
+     * @return Returns an AESCryptoStrategy instance using pre-determined values.
+     */
     @NotNull
     private static CryptoStrategy initAES(String password, String salt, byte[] iv) {
         return new AESCryptoStrategy(password, salt, iv);
     }
 
-    private static void writeBytesToFile(byte[] file, Path filePath) {
+    /**
+     * Writes the given bytes to a file.
+     *
+     * @param input    The bytes to write.
+     * @param filePath The path to the file.
+     */
+    private static void writeBytesToFile(byte[] input, Path filePath) {
         try {
             File fileOut = new File(String.valueOf(filePath));
             OutputStream output = new FileOutputStream(fileOut);
-            output.write(file);
+            output.write(input);
             output.close();
             log.info("Object has successfully been written to a file.");
         } catch (FileNotFoundException e) {

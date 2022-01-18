@@ -18,8 +18,8 @@ import java.util.List;
 import static dk.kb.bitrepository.database.DatabaseCalls.delete;
 import static dk.kb.bitrepository.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.database.DatabaseData.*;
 import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
+import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.cleanupFiles;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.putFile;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
@@ -70,18 +70,22 @@ public class TestMessageReceivedHandler {
         AES.decrypt(Paths.get(encryptedFilePath), Paths.get(decryptedFilePath));
 
         // Assert that Checksums match
-        result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        FilesData firstFilesResult = (FilesData) result.get(0);
-        String newChecksum = generateChecksum(new File(decryptedFilePath), ChecksumType.MD5);
-        String newEncryptedChecksum = generateChecksum(new File(encryptedFilePath), ChecksumType.MD5);
+        {
+            result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+            FilesData firstFilesResult = (FilesData) result.get(0);
+            String newChecksum = generateChecksum(new File(decryptedFilePath), ChecksumType.MD5);
+            String newEncryptedChecksum = generateChecksum(new File(encryptedFilePath), ChecksumType.MD5);
 
-        assertEquals(newChecksum, firstFilesResult.getChecksum());
-        assertEquals(newEncryptedChecksum, firstFilesResult.getEncryptedChecksum());
+            assertEquals(newChecksum, firstFilesResult.getChecksum());
+            assertEquals(newEncryptedChecksum, firstFilesResult.getEncryptedChecksum());
+        }
 
-        // Assert that the decrypted file is equal to the originally created file
-        assertEquals(Files.readAllLines(Paths.get(decryptedFilePath)),
-                Files.readAllLines(Paths.get(filePath)));
-        // Assert that the decrypted file contains the chosen string
-        assertThat(Files.readString(Paths.get(decryptedFilePath)), is(testString));
+        // Assert that the decrypted file is equal to the originally created file,
+        // and that the decrypted file contains the chosen string
+        {
+            assertEquals(Files.readAllLines(Paths.get(decryptedFilePath)),
+                    Files.readAllLines(Paths.get(filePath)));
+            assertThat(Files.readString(Paths.get(decryptedFilePath)), is(testString));
+        }
     }
 }
