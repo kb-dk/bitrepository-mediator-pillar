@@ -1,119 +1,52 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.apache.commons.io.FileUtils;
-import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Clock;
-import java.time.OffsetDateTime;
-
-import static dk.kb.bitrepository.database.DatabaseCalls.insertInto;
-import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class MessageReceivedHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
+    private final ConfigurationHandler config;
+    private byte[] output;
 
-    public MessageReceivedHandler() {
+    public MessageReceivedHandler(ConfigurationHandler configurationHandler) {
+        this.config = configurationHandler;
     }
 
     //TODO: Must be asynchronous to not block up the mediator pillar
     public void handleReceivedMessage(MockupMessageObject message) {
         switch (message.getType()) {
-            case "PUT_FILE":
-                putFile(message.getPayload(), message.getCollectionID(), message.getFileID());
+            case PUT_FILE:
+                new PutFile(config).putFile(message.getPayload(), message.getCollectionID(), message.getFileID());
                 break;
-            case "GET_FILE":
-                getFile(message.getCollectionID(), message.getFileID());
+            case GET_FILE:
+                GetFile get = new GetFile(config, message);
+                output = get.execute();
                 break;
-            // TODO:... Rest of the cases here
+            case DELETE_FILE:
+                //
+                break;
+            case REPLACE_FILE:
+                //
+                break;
+            case GET_CHECKSUMS:
+                //
+                break;
             default:
                 log.error("Unsupported message type.");
                 break;
         }
     }
 
-    public static void putFile(byte[] file, String collectionID, String fileID, Object... encryptionParameters) {
-        OffsetDateTime fileReceivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        CryptoStrategy AES;
-        //FIXME: Put password in ENV?
-        String password = "testPassword";
-
-        if (encryptionParameters.length > 0) {
-            String salt = (String) encryptionParameters[0];
-            byte[] iv = (byte[]) encryptionParameters[1];
-            AES = initAES(password, salt, iv);
-        } else {
-            AES = initAES(password);
-        }
-
-        Path filePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test:" + collectionID + ":" + fileID);
-        Path encryptedFilePath = Paths.get("src/main/java/dk/kb/bitrepository/mediator/files/test_encrypted:" + collectionID + ":" + fileID);
-
-        boolean fileExist = Files.exists(filePath);
-        if (fileExist) {
-            log.warn("File already exists at {}.", filePath);
-            System.exit(0);
-        }
-
-        writeBytesToFile(file, filePath);
-
-        // TODO: Check encryption is done correctly from time to time, perhaps decrypt and compare checksums?
-        AES.encrypt(filePath, encryptedFilePath);
-        boolean encryptedFileExists = Files.exists(encryptedFilePath);
-        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-        if (!encryptedFileExists) {
-            log.error("Something went wrong during encryption, and the encrypted file does not exist.");
-            System.exit(0);
-        }
-
-        // FIXME:
-        //  Is this the correct way of computing checksum?
-        //  Relay message to the encrypted pillar w. the encrypted file
-        String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
-        String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
-        OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-        insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), "1");
-        insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
-        //cleanUpFiles();
-    }
-
-    public static void getFile(String collectionID, String filID) {
-
-    }
-
-    /**
-     * Standard initialization of an AESCryptoStrategy.
-     *
-     * @param password The password to use in the encryption.
-     * @return Returns a standard AESCryptoStrategy instance.
-     */
-    @NotNull
-    private static CryptoStrategy initAES(String password) {
-        return new AESCryptoStrategy(password);
-    }
-
-    /**
-     * Using the overloaded constructor, in order to pass pre-determined salt and IV.
-     * Mainly used to create an AES instance for decryption.
-     *
-     * @param password The password that was previously used to encrypt.
-     * @param salt     The pre-determined salt.
-     * @param iv       The pre-determined IV.
-     * @return Returns an AESCryptoStrategy instance using pre-determined values.
-     */
-    @NotNull
-    private static CryptoStrategy initAES(String password, String salt, byte[] iv) {
-        return new AESCryptoStrategy(password, salt, iv);
+    public byte[] getMessageOutput() {
+        return output;
     }
 
     /**
@@ -122,7 +55,7 @@ public class MessageReceivedHandler {
      * @param input    The bytes to write.
      * @param filePath The path to the file.
      */
-    private static void writeBytesToFile(byte[] input, Path filePath) {
+    static void writeBytesToFile(byte[] input, Path filePath) {
         try {
             File fileOut = new File(String.valueOf(filePath));
             OutputStream output = new FileOutputStream(fileOut);
@@ -137,9 +70,67 @@ public class MessageReceivedHandler {
     }
 
     /**
+     * Standard initialization of an AESCryptoStrategy.
+     *
+     * @param password The password to use in the encryption.
+     * @return Returns a standard AESCryptoStrategy instance.
+     */
+    @NotNull
+    static CryptoStrategy initAES(String password) {
+        return new AESCryptoStrategy(password);
+    }
+
+    /**
+     * Using the overloaded constructor, in order to pass pre-determined salt and IV.
+     * Mainly used to create an AES instance for decryption.
+     *
+     * @param password The password that was previously used to encrypt.
+     * @param salt     The pre-determined salt.
+     * @param iv       The pre-determined IV.
+     * @return Returns an AESCryptoStrategy instance using pre-determined values.
+     */
+    @NotNull
+    static CryptoStrategy initAES(String password, String salt, byte[] iv) {
+        return new AESCryptoStrategy(password, salt, iv);
+    }
+
+    /**
+     * Returns a string that represents the path to store the unencrypted file at.
+     *
+     * @param collectionID Collection ID of the file.
+     * @param fileID       File ID of the file.
+     * @return The string representation of the path, created from the unique collection ID and file ID.
+     */
+    public static String getFilePath(String collectionID, String fileID) {
+        return "src/main/java/dk/kb/bitrepository/mediator/files/file:" + collectionID + ":" + fileID;
+    }
+
+    /**
+     * Returns a string that represents the path to store the encrypted file at.
+     *
+     * @param collectionID Collection ID of the file.
+     * @param fileID       File ID of the file.
+     * @return The string representation of the path, created from the unique collection ID and file ID.
+     */
+    public static String getEncryptedFilePath(String collectionID, String fileID) {
+        return "src/main/java/dk/kb/bitrepository/mediator/files/file_encrypted:" + collectionID + ":" + fileID;
+    }
+
+    /**
+     * Returns a string that represents the path to store the decrypted file at.
+     *
+     * @param collectionID Collection ID of the file.
+     * @param fileID       File ID of the file.
+     * @return The string representation of the path, created from the unique collection ID and file ID.
+     */
+    public static String getDecryptedFilePath(String collectionID, String fileID) {
+        return "src/main/java/dk/kb/bitrepository/mediator/files/file_decrypted:" + collectionID + ":" + fileID;
+    }
+
+    /**
      * Helper method that is used to delete local files.
      */
-    public static void cleanupFiles() {
+    public void cleanupFiles() {
         File dir = new File("src/main/java/dk/kb/bitrepository/mediator/files/");
         try {
             FileUtils.cleanDirectory(dir);

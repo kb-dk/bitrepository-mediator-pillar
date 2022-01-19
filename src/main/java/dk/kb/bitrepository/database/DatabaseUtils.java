@@ -15,20 +15,21 @@ public class DatabaseUtils {
     private static String databaseURL;
     private static String password;
     private static String username;
+    private static ConfigurationHandler configs = null;
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
-    public DatabaseUtils() {
+    private DatabaseUtils() {
     }
 
     /**
      * Initializes the configurations in the code, by extracting them from the configurations file.
      */
-    public static void initConfigs() {
-        ConfigurationHandler configs = new ConfigurationHandler();
+    private static void initDatabaseConfigurations() {
+        configs = new ConfigurationHandler();
         try {
-            username = configs.getProperty("username");
-            password = configs.getProperty("password");
-            databaseURL = configs.getProperty("url") + ":" + configs.getProperty("port") + "/" + configs.getProperty("name");
+            username = configs.getUsername();
+            password = configs.getPassword();
+            databaseURL = configs.getDatabaseURL();
 
         } catch (IOException e) {
             log.error("Could not load the configurations from the configurations file.", e);
@@ -46,14 +47,15 @@ public class DatabaseUtils {
     }
 
     /**
-     * Connects to the Database through the DriveManager using the configurations set by {@link #initConfigs() initConfigs}.
+     * Connects to the Database through the DriveManager using the configurations set by {@link #initDatabaseConfigurations() initConfigs}.
      *
      * @return The connection established.
      * @throws SQLException Throws an error if the connection could not be established.
      */
     static Connection connect() throws SQLException {
-        if (databaseURL == null) {
-            initConfigs();
+        if (configs == null) {
+            log.info("Initializing configurations!");
+            initDatabaseConfigurations();
         }
         return DriverManager.getConnection(databaseURL, username, password);
     }

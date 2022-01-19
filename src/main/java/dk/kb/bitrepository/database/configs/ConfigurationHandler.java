@@ -3,6 +3,8 @@ package dk.kb.bitrepository.database.configs;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
 import org.jasypt.properties.EncryptableProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -13,9 +15,16 @@ import java.util.Properties;
 
 public class ConfigurationHandler {
     private final String configPath = "src/main/java/dk/kb/bitrepository/database/configs/configurations.properties";
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
     private Properties properties = null;
-    // TODO: Missing logger
+
+    public ConfigurationHandler(String dbName, String dbURL, String port) {
+        initConfigProperties(dbName, dbURL, port);
+    }
+
+    public ConfigurationHandler() {
+    }
 
     /**
      * Initializes the config file. If the file doesn't exist, it will be created.
@@ -26,27 +35,27 @@ public class ConfigurationHandler {
      * @param dbURL  The URL path of the Database.
      * @param port   The port to use with the URL to connect to the Database.
      */
-    public void initConfig(String dbName, String dbURL, String port) {
+    private void initConfigProperties(String dbName, String dbURL, String port) {
         if (!configExists()) {
-            System.out.println("Config file doesn't exist - creating it now.");
+            log.info("Config file doesn't exist - creating it now.");
             try {
                 Files.createFile(Paths.get(configPath));
             } catch (IOException e) {
-                System.out.println("Couldn't create the config file at the given path." + e);
+                log.error("Couldn't create the config file at the given path." + e);
             }
-            System.out.println("Config file has been created.");
+            log.info("Config file has been created.");
         }
 
         if (!encryptor.isInitialized()) {
             initEncryptor();
         }
 
-        System.out.println("Trying to set driver info, database name and URL.");
+        log.info("Trying to set driver info, database name and URL.");
         storeProperty("db.driver", "org.postgresql.Driver");
         storeProperty("db.name", dbName);
         storeProperty("db.url", dbURL);
         storeProperty("db.port", port);
-        System.out.println("Database name and URL has been added to the config file.");
+        log.info("Database name and URL has been added to the config file.");
     }
 
     /**
@@ -63,7 +72,7 @@ public class ConfigurationHandler {
         try {
             properties.load(new FileInputStream(configPath));
         } catch (IOException e) {
-            System.out.println("An error occurred trying to load the config file. " + e);
+            log.error("An error occurred trying to load the config file. ", e);
         }
     }
 
@@ -73,14 +82,16 @@ public class ConfigurationHandler {
      * @param username Username to encrypt and store.
      * @param password Password to encrypt and store.
      */
-    public void encryptLoginInformation(String username, String password) {
+    public void encryptLoginInformation(String username, String password, String AESPassword) {
         if (!encryptor.isInitialized()) {
             initEncryptor();
         }
         String encryptedUsername = "ENC(" + encryptor.encrypt(username) + ")";
         String encryptedPassword = "ENC(" + encryptor.encrypt(password) + ")";
+        String encryptedAESPassword = "ENC(" + encryptor.encrypt(AESPassword) + ")";
         storeProperty("db.username", encryptedUsername);
         storeProperty("db.password", encryptedPassword);
+        storeProperty("db.AESPassword", encryptedAESPassword);
     }
 
     /**
@@ -94,7 +105,7 @@ public class ConfigurationHandler {
         try {
             properties.store(new FileWriter(configPath), "Configurations for the JDBC database.");
         } catch (IOException e) {
-            System.out.println("An error occurred trying to write to the config file. " + e);
+            log.error("An error occurred trying to write to the config file. ", e);
         }
     }
 
@@ -106,7 +117,7 @@ public class ConfigurationHandler {
      * @param key Is the key to get, i.e. username
      * @return Returns the value of the property.
      */
-    public String getProperty(final String key) throws IOException {
+    private String getProperty(final String key) throws IOException {
         if (!encryptor.isInitialized()) {
             initEncryptor();
         }
@@ -115,10 +126,26 @@ public class ConfigurationHandler {
 
     /**
      * Used to check if the configuration file exists.
+     *
      * @return Returns true if the configs file exists.
      */
     public boolean configExists() {
         return Files.exists(Paths.get(configPath));
     }
 
+    public String getUsername() throws IOException {
+        return getProperty("username");
+    }
+
+    public String getPassword() throws IOException {
+        return getProperty("password");
+    }
+
+    public String getEncryptionPassword() throws IOException {
+        return getProperty("AESPassword");
+    }
+
+    public String getDatabaseURL() throws IOException {
+        return getProperty("url") + ":" + getProperty("port") + "/" + getProperty("name");
+    }
 }
