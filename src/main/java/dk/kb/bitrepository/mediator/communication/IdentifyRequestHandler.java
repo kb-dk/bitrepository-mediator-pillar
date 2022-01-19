@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
+import dk.kb.bitrepository.mediator.utils.RequestValidator;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.settings.Settings;
@@ -11,10 +12,12 @@ public abstract class IdentifyRequestHandler<T extends MessageRequest> implement
     protected static final String RESPONSE_FOR_POSITIVE_IDENTIFICATION = "Operation acknowledged and accepted.";
     private PillarContext context;
     private Settings settings;
+    protected RequestValidator requestValidator;
 
     public IdentifyRequestHandler(PillarContext context) {
         this.context = context;
         settings = context.getPillarSettings();
+        requestValidator = new RequestValidator(settings);
     }
 
     @Override
