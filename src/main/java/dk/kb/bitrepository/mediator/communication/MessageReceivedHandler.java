@@ -8,28 +8,28 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class MessageReceivedHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
-    private final ConfigurationHandler config;
-    private byte[] output;
+    private ConfigurationHandler config = null;
 
     public MessageReceivedHandler(ConfigurationHandler configurationHandler) {
         this.config = configurationHandler;
     }
 
     //TODO: Must be asynchronous to not block up the mediator pillar
-    public void handleReceivedMessage(MockupMessageObject message) {
+    public <T> Object handleReceivedMessage(MockupMessageObject message) {
         switch (message.getType()) {
             case PUT_FILE:
-                new PutFile(config).putFile(message.getPayload(), message.getCollectionID(), message.getFileID());
-                break;
+                return new PutFile(config, message).execute();
             case GET_FILE:
-                GetFile get = new GetFile(config, message);
-                output = get.execute();
-                break;
+                return new GetFile(config, message).execute();
             case DELETE_FILE:
                 //
                 break;
@@ -41,12 +41,8 @@ public class MessageReceivedHandler {
                 break;
             default:
                 log.error("Unsupported message type.");
-                break;
         }
-    }
-
-    public byte[] getMessageOutput() {
-        return output;
+        return null;
     }
 
     /**
@@ -55,10 +51,9 @@ public class MessageReceivedHandler {
      * @param input    The bytes to write.
      * @param filePath The path to the file.
      */
-    static void writeBytesToFile(byte[] input, Path filePath) {
+    public static void writeBytesToFile(byte[] input, Path filePath) {
         try {
-            File fileOut = new File(String.valueOf(filePath));
-            OutputStream output = new FileOutputStream(fileOut);
+            OutputStream output = Files.newOutputStream(filePath);
             output.write(input);
             output.close();
             log.info("Object has successfully been written to a file.");

@@ -54,7 +54,7 @@ public class DatabaseUtils {
      */
     static Connection connect() throws SQLException {
         if (configs == null) {
-            log.info("Initializing configurations!");
+            log.info("Initializing configurations.");
             initDatabaseConfigurations();
         }
         return DriverManager.getConnection(databaseURL, username, password);

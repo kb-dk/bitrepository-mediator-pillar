@@ -18,15 +18,22 @@ import static dk.kb.bitrepository.database.DatabaseCalls.insertInto;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.*;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
-public class PutFile {
+public class PutFile extends MessageResult<Boolean> {
     private final ConfigurationHandler config;
+    private final byte[] file;
+    private final String collectionID;
+    private final String fileID;
     private final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
-    public PutFile(ConfigurationHandler config) {
+    public PutFile(ConfigurationHandler config, MockupMessageObject message) {
         this.config = config;
+        this.file = message.getPayload();
+        this.collectionID = message.getCollectionID();
+        this.fileID = message.getFileID();
     }
 
-    public void putFile(byte[] file, String collectionID, String fileID) {
+    @Override
+    public Boolean execute() {
         OffsetDateTime fileReceivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         CryptoStrategy AES;
         String password = null;
@@ -56,7 +63,7 @@ public class PutFile {
 
         if (!encryptedFileExists) {
             log.error("Something went wrong during encryption, and the encrypted file does not exist.");
-            System.exit(0);
+            return Boolean.FALSE;
         }
 
         // FIXME:
@@ -64,10 +71,15 @@ public class PutFile {
         //  Relay message to the encrypted pillar w. the encrypted file
         String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
         String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
+
+        AES.encrypt(filePath, encryptedFilePath);
+
         OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
         insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), "1");
         insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
         //cleanUpFiles();
+
+        return Boolean.TRUE;
     }
 }

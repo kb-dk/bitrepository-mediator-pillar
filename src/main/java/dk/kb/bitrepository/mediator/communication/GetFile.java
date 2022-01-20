@@ -22,7 +22,7 @@ import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.*;
 
 public class GetFile extends MessageResult<byte[]> {
-    private MockupResponse response;
+    private final MockupResponse response;
     private final String collectionID;
     private final String fileID;
     private final ConfigurationHandler config;
@@ -32,18 +32,7 @@ public class GetFile extends MessageResult<byte[]> {
         this.config = config;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
-    }
-
-    /**
-     * For testing only.
-     *
-     * @param response A mockup response, used for testing.
-     */
-    public GetFile(ConfigurationHandler config, MockupMessageObject message, MockupResponse response) {
-        this.config = config;
-        this.response = response;
-        this.collectionID = message.getCollectionID();
-        this.fileID = message.getFileID();
+        this.response = message.getMockupResponse();
     }
 
     @Override
@@ -57,7 +46,7 @@ public class GetFile extends MessageResult<byte[]> {
         Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
         writeBytesToFile(fileBytes, encryptedFilePath);
 
-        // Get encrypted checksum from 'files' table.
+        // Get old - and generate new encrypted checksum
         List<DatabaseData> filesResult = select(collectionID, fileID, FILES_TABLE);
         FilesData firstFilesResult = (FilesData) filesResult.get(0);
         String newEncryptedChecksum = ChecksumUtils.generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
@@ -65,6 +54,7 @@ public class GetFile extends MessageResult<byte[]> {
 
         // Compared checksum of file from encrypted pillar with the encrypted checksum in local table.
         Path decryptedFilePath = Paths.get(getDecryptedFilePath(collectionID, fileID));
+        byte[] out = new byte[0];
         if (newEncryptedChecksum.equals(oldEncryptedChecksum)) {
             // Get the used encryption parameters from the 'enc_parameters' table.
             List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
@@ -77,17 +67,17 @@ public class GetFile extends MessageResult<byte[]> {
             } catch (IOException e) {
                 log.error("An error occurred when fetching the AES password from the configs.", e);
             }
+            // TODO: RETURN DECRYPTED FILE TO BitClient IF NOTHING GOES WRONG
+            //  ELSE THROW EXCEPTION / ALARM
+            try {
+                out = Files.readAllBytes(decryptedFilePath);
+            } catch (IOException e) {
+                log.error("Error occurred when trying to read file.", e);
+            }
+        } else {
+            // TODO: Handle this in a proper way
+            log.error("Checksums did not match!");
         }
-
-        // TODO: RETURN DECRYPTED FILE TO BitClient IF NOTHING GOES WRONG
-        //  ELSE THROW EXCEPTION / ALARM
-        byte[] out = new byte[0];
-        try {
-            out = Files.readAllBytes(decryptedFilePath);
-        } catch (IOException e) {
-            log.error("Error occurred when trying to read file.", e);
-        }
-
         return out;
     }
 

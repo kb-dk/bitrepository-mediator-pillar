@@ -26,7 +26,7 @@ public class TestAESCryptoStrategy {
     @BeforeEach
     public void setupTest() throws IOException {
         Path testFileResource = Path.of(testFilePath);
-        inputFile = tempDir.resolve(testFileResource.getFileName());
+        inputFile = tempDir.resolve(testFileResource);
         Files.copy(testFileResource, inputFile);
     }
 

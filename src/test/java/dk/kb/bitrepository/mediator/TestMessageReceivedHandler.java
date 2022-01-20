@@ -4,6 +4,7 @@ import dk.kb.bitrepository.database.DatabaseData;
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.communication.MessageReceivedHandler;
 import dk.kb.bitrepository.mediator.communication.MockupMessageObject;
+import dk.kb.bitrepository.mediator.communication.MockupResponse;
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -27,8 +29,7 @@ import static dk.kb.bitrepository.mediator.communication.MockupMessageType.GET_F
 import static dk.kb.bitrepository.mediator.communication.MockupMessageType.PUT_FILE;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class TestMessageReceivedHandler {
     private MockupMessageObject message;
@@ -65,7 +66,8 @@ public class TestMessageReceivedHandler {
     @Test
     public void testPutFile() throws IOException {
         message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
-        handler.handleReceivedMessage(message);
+        boolean handled = (boolean) handler.handleReceivedMessage(message);
+        assertTrue(handled);
 
         // Get the used encryption parameters from the 'enc_parameters' table
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
@@ -91,17 +93,41 @@ public class TestMessageReceivedHandler {
         // Assert that the decrypted file is equal to the originally created file,
         // and that the decrypted file contains the chosen string
         {
-            assertEquals(Files.readAllLines(Paths.get(decryptedFilePath)),
-                    Files.readAllLines(Paths.get(filePath)));
+            assertEquals(Files.readAllLines(Paths.get(decryptedFilePath)), Files.readAllLines(Paths.get(filePath)));
             assertThat(Files.readString(Paths.get(decryptedFilePath)), is(testString));
         }
     }
 
     @Test
-    public void testGetFile() {
-        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload);
-        handler.handleReceivedMessage(message);
+    public void testGetFile() throws IOException {
+        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
+        // Put file
+        boolean handled = (boolean) handler.handleReceivedMessage(message);
+        assertTrue(handled);
 
+        // Get salt and IV
+        List<DatabaseData> filesResult = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData firstFilesResult = (EncryptedParametersData) filesResult.get(0);
+        AESCryptoStrategy AES = new AESCryptoStrategy(encryptionPassword, firstFilesResult.getSalt(), firstFilesResult.getIv());
+        // Write payload to local file
+        writeBytesToFile(payload, Path.of(filePath));
+        // Encrypt the file
+        AES.encrypt(Path.of(filePath), Path.of(encryptedFilePath));
+        byte[] encryptedPayload = new byte[0];
+        // Read the encrypted file, and created encrypted payload
+        try {
+            encryptedPayload = Files.readAllBytes(Path.of(encryptedFilePath));
+        } catch (IOException e) {
+            System.out.println("Couldn't read the encrypted file." + e);
+        }
 
+        // Create a mockup message object with a mockup response containing the encrypted payload.
+        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload, new MockupResponse(encryptedPayload));
+        // Get file using the mockup
+        byte[] bytesReceived = (byte[]) handler.handleReceivedMessage(message);
+        writeBytesToFile(bytesReceived, Path.of(filePath + ":received"));
+
+        assertTrue(bytesReceived.length > 0);
+        assertEquals(Files.readAllLines(Path.of(filePath)), Files.readAllLines(Path.of(filePath + ":received")));
     }
 }
