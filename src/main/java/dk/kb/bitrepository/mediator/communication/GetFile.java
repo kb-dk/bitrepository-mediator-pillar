@@ -87,7 +87,7 @@ public class GetFile extends MessageResult<byte[]> {
     }
 
     private MockupResponse relayMessageToEncryptedPillar(String collectionID, String fileID) {
-        // Relay message to Encrypted Pillar
+        // TODO: Implement : Relay message to Encrypted Pillar
         return response;
     }
 }

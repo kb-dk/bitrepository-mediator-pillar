@@ -7,9 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
@@ -103,7 +104,10 @@ public class ConfigurationHandler {
     private void storeProperty(String key, String input) {
         properties.setProperty(key, input);
         try {
-            properties.store(new FileWriter(configPath), "Configurations for the JDBC database.");
+            properties.store(Files.newBufferedWriter(Path.of(configPath)), "Configurations for the JDBC database.");
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             log.error("An error occurred trying to write to the config file. ", e);
         }

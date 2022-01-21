@@ -8,6 +8,7 @@ import java.sql.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
@@ -32,7 +33,7 @@ public class DatabaseCalls {
      * @param iterations    The number of iterations.
      */
     public static void insertInto(String collection_id, String file_id, String salt, byte[] iv, int iterations) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
+        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
         executeQuery(query, collection_id, file_id, salt, iv, iterations);
     }
 
@@ -50,7 +51,7 @@ public class DatabaseCalls {
     public static void insertInto(String collection_id, String file_id, OffsetDateTime received_timestamp,
                                   OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
                                   OffsetDateTime checksum_timestamp) {
-        String query = String.format("INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
+        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
         executeQuery(query, collection_id, file_id, received_timestamp, encrypted_timestamp,
                 checksum, enc_checksum, checksum_timestamp);
     }
@@ -65,7 +66,7 @@ public class DatabaseCalls {
      */
     public static List<DatabaseData> select(String collectionID, String fileID, String table) {
         List<DatabaseData> resultList = new ArrayList<>();
-        String query = String.format("SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
+        String query = String.format(Locale.getDefault(), "SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
         query = query.replace("?", collectionID);
         query = query.replace("@", fileID);
 
@@ -122,7 +123,7 @@ public class DatabaseCalls {
      * @param table        The table to delete from.
      */
     public static void delete(String collectionID, String fileID, String table) {
-        String query = String.format("DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
+        String query = String.format(Locale.getDefault(), "DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
 
         executeQuery(query, collectionID, fileID);
 
@@ -138,7 +139,7 @@ public class DatabaseCalls {
      */
     public static void updateTimestamp(String collectionID, String fileID, String timestampColumn,
                                        OffsetDateTime new_timestamp) {
-        String query = String.format("UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
+        String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
                 timestampColumn);
         executeQuery(query, new_timestamp, collectionID, fileID);
     }

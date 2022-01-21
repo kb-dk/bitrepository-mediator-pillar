@@ -4,10 +4,9 @@ import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.time.OffsetDateTime;
 
@@ -70,19 +69,8 @@ public class DatabaseUtils {
         String[] queries = new String[0];
 
         try {
-            File file = new File(filePath);
-            FileReader reader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(reader);
-            StringBuilder stringBuilder = new StringBuilder();
-            String currentLine;
-
-            while ((currentLine = bufferedReader.readLine()) != null) {
-                stringBuilder.append(currentLine);
-            }
-            reader.close();
-
             // Splitting the string on ";" to separate requests.
-            queries = stringBuilder.toString().split(";");
+            queries = Files.readString(Path.of(filePath)).split(";");
         } catch (IOException e) {
             log.error("No file exists at {}", filePath, e);
         }
@@ -101,6 +89,7 @@ public class DatabaseUtils {
                 //Remove spaces to not execute empty statements
                 if (!s.trim().equals("")) {
                     //FIXME: Detect "table already exists"?
+                    log.info("Executing Query >>>{}", s);
                     statement.executeUpdate(s);
                 }
             }

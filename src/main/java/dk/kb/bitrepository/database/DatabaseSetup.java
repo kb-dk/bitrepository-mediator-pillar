@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class DatabaseSetup {
     private static ConfigurationHandler configs;
     private static final Logger log = LoggerFactory.getLogger(DatabaseSetup.class);
@@ -15,6 +18,9 @@ public class DatabaseSetup {
      * </p>
      * This will initialize the configurations file with encrypted username and passwords,
      * while the other information stays as cleartext.
+     * Example of parameters:
+     * </p>
+     * testdb jdbc:postgresql://localhost 5432 masj masj testestpw
      * </p
      * If the main method is run with 0 arguments, and a configurations file exists,
      * then it will simply create the tables 'files' and 'enc_parameters'.
@@ -33,7 +39,7 @@ public class DatabaseSetup {
             log.info("Configurations file has been created successfully.");
         }
 
-        if (configs.configExists()) {
+        if (Files.exists(Path.of("src/main/java/dk/kb/bitrepository/database/configs/configurations.properties"))) {
             DatabaseUtils.createTables();
             System.out.println("Tables have been created.");
             log.info("Tables 'files' and 'enc_parameters' created successfully.");
