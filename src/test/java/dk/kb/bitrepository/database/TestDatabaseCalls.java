@@ -1,11 +1,12 @@
 package dk.kb.bitrepository.database;
 
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseCalls.*;
@@ -13,15 +14,14 @@ import static dk.kb.bitrepository.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.database.DatabaseUtils.dropTables;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class TestDatabaseCalls {
-    private final ConfigurationHandler configs = new ConfigurationHandler();
+    private static final ConfigurationHandler configs = new ConfigurationHandler();
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         // Drop tables
         dropTables();
         System.out.println("Database tables has been dropped.");
@@ -51,11 +51,11 @@ public class TestDatabaseCalls {
         EncryptedParametersData result0 = (EncryptedParametersData) result.get(0);
 
         if (result0 != null) {
-            assertThat(result0.getCollectionID(), is(COLLECTION_ID));
-            assertThat(result0.getFileID(), is(FILE_ID));
-            assertThat(result0.getSalt(), is(ENC_PARAMS_SALT));
-            assertThat(result0.getIv(), is(ENC_PARAMS_IV));
-            assertThat(result0.getIterations(), is(ENC_PARAMS_ITERATIONS));
+            assertEquals(COLLECTION_ID, result0.getCollectionID());
+            assertEquals(FILE_ID, result0.getFileID());
+            assertEquals(ENC_PARAMS_SALT, result0.getSalt());
+            assertEquals(Arrays.toString(ENC_PARAMS_IV), Arrays.toString(result0.getIv()));
+            assertEquals(ENC_PARAMS_ITERATIONS, result0.getIterations());
         }
 
         // Delete the information using the composite key (collection_id, file_id)
@@ -79,15 +79,15 @@ public class TestDatabaseCalls {
         assertFalse(result.isEmpty());
 
         FilesData firstResult = (FilesData) result.get(0);
-        assertNotNull("Result should be of 'FilesData' type.", firstResult);
+        assertNotNull(firstResult, "Result should be of 'FilesData' type.");
 
-        assertThat(firstResult.getCollectionID(), is(COLLECTION_ID));
-        assertThat(firstResult.getFileID(), is(FILE_ID));
-        assertThat(firstResult.getReceivedTimestamp(), is(FILES_RECEIVED_TIMESTAMP_MOCKUP));
-        assertThat(firstResult.getEncryptedTimestamp(), is(FILES_ENCRYPTED_TIMESTAMP_MOCKUP));
-        assertThat(firstResult.getChecksum(), is(FILES_CHECKSUM));
-        assertThat(firstResult.getEncryptedChecksum(), is(FILES_ENC_CHECKSUM));
-        assertThat(firstResult.getChecksumTimestamp(), is(FILES_CHECKSUM_TIMESTAMP_MOCKUP));
+        assertEquals(COLLECTION_ID, firstResult.getCollectionID());
+        assertEquals(FILE_ID, firstResult.getFileID());
+        assertEquals(FILES_RECEIVED_TIMESTAMP_MOCKUP, firstResult.getReceivedTimestamp());
+        assertEquals(FILES_ENCRYPTED_TIMESTAMP_MOCKUP, firstResult.getEncryptedTimestamp());
+        assertEquals(FILES_CHECKSUM, firstResult.getChecksum());
+        assertEquals(FILES_ENC_CHECKSUM, firstResult.getEncryptedChecksum());
+        assertEquals(FILES_CHECKSUM_TIMESTAMP_MOCKUP, firstResult.getChecksumTimestamp());
 
         delete(COLLECTION_ID, FILE_ID, table);
     }
@@ -107,7 +107,7 @@ public class TestDatabaseCalls {
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
-        assertThat(firstResult.getEncryptedTimestamp(), is(newTimestamp));
+        assertEquals(firstResult.getEncryptedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getEncryptedTimestamp());
 
         delete(COLLECTION_ID, FILE_ID, table);
@@ -128,7 +128,7 @@ public class TestDatabaseCalls {
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
-        assertThat(firstResult.getChecksumTimestamp(), is(newTimestamp));
+        assertEquals(firstResult.getChecksumTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getChecksumTimestamp());
 
         delete(COLLECTION_ID, FILE_ID, table);
@@ -149,7 +149,7 @@ public class TestDatabaseCalls {
         result = select(COLLECTION_ID, FILE_ID, table);
         FilesData firstResult = (FilesData) result.get(0);
 
-        assertThat(firstResult.getReceivedTimestamp(), is(newTimestamp));
+        assertEquals(firstResult.getReceivedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getReceivedTimestamp());
 
         delete(COLLECTION_ID, FILE_ID, table);

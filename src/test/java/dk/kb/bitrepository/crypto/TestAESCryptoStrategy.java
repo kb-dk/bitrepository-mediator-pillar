@@ -3,7 +3,8 @@ package dk.kb.bitrepository.crypto;
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,22 +16,24 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayName("Test AES Cryptographic Strategy")
 public class TestAESCryptoStrategy {
     private String testPassword = "12345678";
-    private String testFilePath = getClass().getClassLoader().getResource("crypto/fileToEncrypt.txt").getPath();
-    private Path inputFile;
+    private static String testFilePath = TestAESCryptoStrategy.class.getClassLoader().getResource("crypto/fileToEncrypt.txt").getPath();
+    private static Path inputFile;
 
     @TempDir
-    Path tempDir;
+    static Path tempDir;
 
-    @BeforeEach
-    public void setupTest() throws IOException {
+    @BeforeAll
+    static void setup() throws IOException {
         Path testFileResource = Path.of(testFilePath);
         inputFile = tempDir.resolve(testFileResource);
         Files.copy(testFileResource, inputFile);
     }
 
     @Test
+    @DisplayName("Test that encrypting and decrypting results in the correct output.")
     public void testEncryptionDecryptionGivesOriginalOutput() throws IOException {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");

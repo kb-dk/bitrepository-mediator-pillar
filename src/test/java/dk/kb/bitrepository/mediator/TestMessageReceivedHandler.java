@@ -8,12 +8,14 @@ import dk.kb.bitrepository.mediator.communication.MockupResponse;
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,22 +29,23 @@ import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.
 import static dk.kb.bitrepository.mediator.communication.MockupMessageType.GET_FILE;
 import static dk.kb.bitrepository.mediator.communication.MockupMessageType.PUT_FILE;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Test MessageReceivedHandler")
 public class TestMessageReceivedHandler {
     private MockupMessageObject message;
-    private String encryptionPassword;
-    private String testString;
-    private MessageReceivedHandler handler;
-    private Path filePath;
-    private Path encryptedFilePath;
-    private Path decryptedFilePath;
-    private byte[] payload;
+    private static String encryptionPassword;
+    private static String testString;
+    private static MessageReceivedHandler handler;
+    private static Path filePath;
+    private static Path encryptedFilePath;
+    private static Path decryptedFilePath;
+    private static byte[] payload;
 
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeAll
+    static void setup() throws IOException {
         ConfigurationHandler config = new ConfigurationHandler();
         handler = new MessageReceivedHandler(config);
         encryptionPassword = config.getEncryptionPassword();
@@ -52,10 +55,10 @@ public class TestMessageReceivedHandler {
         decryptedFilePath = Path.of(getDecryptedFilePath(COLLECTION_ID, FILE_ID));
 
         testString = "test string";
-        payload = testString.getBytes();
+        payload = testString.getBytes(Charset.defaultCharset());
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
@@ -85,15 +88,15 @@ public class TestMessageReceivedHandler {
             String newChecksum = generateChecksum(new File(decryptedFilePath.toString()), ChecksumType.MD5);
             String newEncryptedChecksum = generateChecksum(new File(encryptedFilePath.toString()), ChecksumType.MD5);
 
-            assertEquals(newChecksum, firstFilesResult.getChecksum());
-            assertEquals(newEncryptedChecksum, firstFilesResult.getEncryptedChecksum());
+            assertEquals(firstFilesResult.getChecksum(), newChecksum);
+            assertEquals(firstFilesResult.getEncryptedChecksum(), newEncryptedChecksum);
         }
 
         // Assert that the decrypted file is equal to the originally created file,
         // and that the decrypted file contains the chosen string
         {
             assertEquals(Files.readAllLines(decryptedFilePath), Files.readAllLines(filePath));
-            assertThat(Files.readString(decryptedFilePath), is(testString));
+            assertEquals(testString, Files.readString(decryptedFilePath));
         }
         cleanupFiles();
     }

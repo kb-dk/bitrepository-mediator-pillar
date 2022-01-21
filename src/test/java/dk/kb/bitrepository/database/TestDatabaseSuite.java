@@ -1,13 +1,14 @@
 package dk.kb.bitrepository.database;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.Suite;
+import org.junit.platform.suite.api.SuiteDisplayName;
 import org.junit.runners.Suite.SuiteClasses;
 
-@RunWith(Suite.class)
 @SuiteClasses({
         TestDatabaseCalls.class
 })
+@Suite
+@SuiteDisplayName("Test Database Suite")
 public class TestDatabaseSuite {
 
 }
