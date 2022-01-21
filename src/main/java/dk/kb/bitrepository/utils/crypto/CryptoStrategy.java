@@ -11,4 +11,6 @@ public interface CryptoStrategy {
     String getSalt();
 
     IvParameterSpec getIV();
+
+    int getIterations();
 }

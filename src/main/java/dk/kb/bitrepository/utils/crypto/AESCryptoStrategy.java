@@ -22,8 +22,8 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private final Logger log = LoggerFactory.getLogger(AESCryptoStrategy.class);
     private final String SECRET_KEY_ALGO = "PBKDF2WithHmacSHA256"; // TODO figure out which of these to move to settings
     private final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
-    private final int HASHING_ITERATIONS = 100_000;
     private final int KEY_LENGTH = 256;
+    private int HASHING_ITERATIONS = 100_000;
     private String salt;
     private SecretKey secretKey; // TODO consider base64-encoding to string
     private IvParameterSpec iv;
@@ -41,6 +41,14 @@ public class AESCryptoStrategy implements CryptoStrategy {
         this.secretKey = getKeyFromPassword(password, salt);
         this.iv = generateIv(iv);
         this.cipher = initCipher();
+    }
+
+    public AESCryptoStrategy(String password, String salt, byte[] iv, int iterations) {
+        this.salt = salt;
+        this.secretKey = getKeyFromPassword(password, salt);
+        this.iv = generateIv(iv);
+        this.cipher = initCipher();
+        this.HASHING_ITERATIONS = iterations;
     }
 
     @Override
@@ -142,5 +150,10 @@ public class AESCryptoStrategy implements CryptoStrategy {
     @Override
     public IvParameterSpec getIV() {
         return iv;
+    }
+
+    @Override
+    public int getIterations() {
+        return HASHING_ITERATIONS;
     }
 }

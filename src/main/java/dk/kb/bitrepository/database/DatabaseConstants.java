@@ -35,7 +35,7 @@ public final class DatabaseConstants {
     /**
      * The name of the iterations' field in the enc parameters table.
      */
-    public final static String ENC_PARAMS_ITERATIONS = "iterations";
+    public final static int ENC_PARAMS_ITERATIONS = 1;
 
     // Files Constants
     /**

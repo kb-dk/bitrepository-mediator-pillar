@@ -4,6 +4,7 @@ import dk.kb.bitrepository.database.DatabaseData;
 import dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
+import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.utils.ChecksumUtils;
 import org.slf4j.Logger;
@@ -44,7 +45,11 @@ public class GetFile extends MessageResult<byte[]> {
 
         // Create the received file locally
         Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
-        writeBytesToFile(fileBytes, encryptedFilePath);
+        try {
+            writeBytesToFile(fileBytes, encryptedFilePath);
+        } catch (FileExistsException e) {
+            log.error("The file already exists.", e);
+        }
 
         // Get old - and generate new encrypted checksum
         List<DatabaseData> filesResult = select(collectionID, fileID, FILES_TABLE);

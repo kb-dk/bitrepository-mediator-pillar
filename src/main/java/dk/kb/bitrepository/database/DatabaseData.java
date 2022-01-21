@@ -7,7 +7,7 @@ public abstract class DatabaseData {
     String fileID;
     String salt;
     byte[] iv;
-    String iterations;
+    int iterations;
 
     OffsetDateTime receivedTimestamp;
     OffsetDateTime encryptedTimestamp;
@@ -16,7 +16,7 @@ public abstract class DatabaseData {
     OffsetDateTime checksumTimestamp;
 
     public static class EncryptedParametersData extends DatabaseData {
-        public EncryptedParametersData(String collectionID, String fileID, String salt, byte[] iv, String iterations) {
+        public EncryptedParametersData(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
             super(collectionID, fileID, salt, iv, iterations);
         }
 
@@ -28,7 +28,7 @@ public abstract class DatabaseData {
             return super.iv;
         }
 
-        public String getIterations() {
+        public int getIterations() {
             return super.iterations;
         }
     }
@@ -59,7 +59,7 @@ public abstract class DatabaseData {
         }
     }
 
-    DatabaseData(String collectionID, String fileID, String salt, byte[] iv, String iterations) {
+    DatabaseData(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
         this.collectionID = collectionID;
         this.fileID = fileID;
         this.salt = salt;

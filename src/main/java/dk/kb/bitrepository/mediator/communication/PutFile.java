@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Clock;
@@ -20,14 +19,14 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class PutFile extends MessageResult<Boolean> {
     private final ConfigurationHandler config;
-    private final byte[] file;
+    private final byte[] bytes;
     private final String collectionID;
     private final String fileID;
     private final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
     public PutFile(ConfigurationHandler config, MockupMessageObject message) {
         this.config = config;
-        this.file = message.getPayload();
+        this.bytes = message.getPayload();
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
     }
@@ -42,44 +41,28 @@ public class PutFile extends MessageResult<Boolean> {
         } catch (IOException e) {
             log.error("An error occurred when trying to get encryption password from configs.", e);
         }
-
         AES = initAES(password);
 
         Path filePath = Paths.get(getFilePath(collectionID, fileID));
         Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
+        boolean encryptionDone = createAndEncryptFileFromBytes(AES, bytes, filePath, encryptedFilePath);
+        if (encryptionDone) {
+            OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+            {
+                // TODO:  Relay message to the encrypted pillar w. the encrypted file
+            }
+            //FIXME: Is this the correct way of computing checksum?
+            String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
+            String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
 
-        boolean fileExist = Files.exists(filePath);
-        if (fileExist) {
-            log.warn("File already exists at {}.", filePath);
-            System.exit(0);
+            OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
+
+            insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), AES.getIterations());
+            insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
+            // cleanupFiles();
+
+            return Boolean.TRUE;
         }
-
-        MessageReceivedHandler.writeBytesToFile(file, filePath);
-
-        // TODO: Check encryption is done correctly from time to time, perhaps decrypt and compare checksums?
-        AES.encrypt(filePath, encryptedFilePath);
-        boolean encryptedFileExists = Files.exists(encryptedFilePath);
-        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-        if (!encryptedFileExists) {
-            log.error("Something went wrong during encryption, and the encrypted file does not exist.");
-            return Boolean.FALSE;
-        }
-
-        // FIXME:
-        //  Is this the correct way of computing checksum?
-        //  Relay message to the encrypted pillar w. the encrypted file
-        String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
-        String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
-
-        AES.encrypt(filePath, encryptedFilePath);
-
-        OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-        insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), "1");
-        insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
-        //cleanUpFiles();
-
-        return Boolean.TRUE;
+        return Boolean.FALSE;
     }
 }
