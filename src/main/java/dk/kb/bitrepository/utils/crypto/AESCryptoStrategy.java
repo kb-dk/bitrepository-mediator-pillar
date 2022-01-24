@@ -24,10 +24,10 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
     private final int KEY_LENGTH = 256;
     private int HASHING_ITERATIONS = 100_000;
-    private String salt;
-    private SecretKey secretKey; // TODO consider base64-encoding to string
-    private IvParameterSpec iv;
-    private Cipher cipher;
+    private final String salt;
+    private final SecretKey secretKey; // TODO consider base64-encoding to string
+    private final IvParameterSpec iv;
+    private final Cipher cipher;
 
     public AESCryptoStrategy(String password) {
         this.salt = generateSalt();
@@ -76,8 +76,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
     }
 
     private void doTranscipher(Path inputFile, Path encryptedOutputFile) {
-        try (InputStream inputStream = Files.newInputStream(inputFile);
-             OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
+        try (InputStream inputStream = Files.newInputStream(inputFile); OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -116,8 +115,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGO);
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), HASHING_ITERATIONS, KEY_LENGTH);
-            SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
-                    .getEncoded(), "AES");
+            SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
             return secret;
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("AES should always be present in a Java SE runtime", e);

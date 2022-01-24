@@ -13,13 +13,15 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test AES Cryptographic Strategy")
 public class TestAESCryptoStrategy {
-    private String testPassword = "12345678";
-    private static String testFilePath = TestAESCryptoStrategy.class.getClassLoader().getResource("crypto/fileToEncrypt.txt").getPath();
+    private final String testPassword = "12345678";
+    private static final String testFilePath = Objects.requireNonNull(TestAESCryptoStrategy.class.getClassLoader().
+            getResource("crypto/fileToEncrypt.txt")).getPath();
     private static Path inputFile;
 
     @TempDir
