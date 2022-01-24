@@ -35,7 +35,7 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
-    @DisplayName("Test that encrypting and decrypting results in the correct output.")
+    @DisplayName("Test that encrypting and decrypting result returns the correct output.")
     public void testEncryptionDecryptionGivesOriginalOutput() throws IOException {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");
@@ -48,6 +48,7 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
+    @DisplayName("Test that one can't read contents of encrypted file")
     public void testCantReadContentOfEncryptedFile() throws IOException {
         String inputContent = Files.readString(inputFile);
         Path encryptedFile = tempDir.resolve("encryptedFile");
@@ -63,6 +64,7 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
+    @DisplayName("Test that encryption can't be decrypted using wrong password")
     public void testWrongPasswordGivesBadDecryption() {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");

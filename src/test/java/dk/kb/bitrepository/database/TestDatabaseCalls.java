@@ -3,6 +3,7 @@ package dk.kb.bitrepository.database;
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -17,7 +18,7 @@ import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.database.DatabaseUtils.dropTables;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@DisplayName("Test Database Calls")
 public class TestDatabaseCalls {
     private static final ConfigurationHandler configs = new ConfigurationHandler();
 
@@ -42,6 +43,7 @@ public class TestDatabaseCalls {
     }
 
     @Test
+    @DisplayName("Test Insert, Select, and Delete for 'encrypted_parameters' table")
     public void TestInsertSelectAndDeleteForEncParametersTable() {
         String table = ENC_PARAMS_TABLE;
 
@@ -76,6 +78,7 @@ public class TestDatabaseCalls {
     }
 
     @Test
+    @DisplayName("Test Insert, Select, and Delete for 'files' table")
     public void TestInsertSelectAndDeleteForFilesTable() {
         insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
@@ -96,6 +99,7 @@ public class TestDatabaseCalls {
     }
 
     @Test
+    @DisplayName("Test Update of Encrypted Timestamp in 'files' table")
     public void TestUpdateEncryptedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
@@ -115,6 +119,7 @@ public class TestDatabaseCalls {
     }
 
     @Test
+    @DisplayName("Test Update of Checksum Timestamp in 'files' table")
     public void TestUpdateChecksumTimestampInFilesTable() {
         String table = FILES_TABLE;
 
@@ -134,6 +139,7 @@ public class TestDatabaseCalls {
     }
 
     @Test
+    @DisplayName("Test Update of Received Timestamp in 'files' table")
     public void TestUpdateReceivedTimestampInFilesTable() {
         String table = FILES_TABLE;
 

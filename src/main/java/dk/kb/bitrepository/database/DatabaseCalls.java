@@ -104,7 +104,7 @@ public class DatabaseCalls {
                 log.warn("No results found.");
                 return resultList;
             } else {
-                log.info("All results have been processed.");
+                log.info("{} result(s) have been processed.", resultList.size());
             }
         } catch (SQLException e) {
             log.error("Error occurred when trying to connect to the database.", e);

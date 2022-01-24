@@ -60,17 +60,17 @@ public class TestMessageReceivedHandler {
 
     @AfterEach
     public void cleanup() {
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, false);
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE, false);
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, true);
+        delete(COLLECTION_ID, FILE_ID, FILES_TABLE, true);
         cleanupFiles();
     }
 
     @Test
+    @DisplayName("Test #PutFile()")
     public void testPutFile() throws IOException {
         message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
         boolean handled = (boolean) handler.handleReceivedMessage(message);
         assertTrue(handled);
-
 
         // Decrypt the file
         CryptoStrategy AES = setupCryptoStrategy();
@@ -94,10 +94,10 @@ public class TestMessageReceivedHandler {
             assertEquals(Files.readAllLines(decryptedFilePath), Files.readAllLines(filePath));
             assertEquals(testString, Files.readString(decryptedFilePath));
         }
-        cleanupFiles();
     }
 
     @Test
+    @DisplayName("Test #GetFile()")
     public void testGetFile() throws IOException {
         // Put file using MockupMessage with the payload
         message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
@@ -126,23 +126,25 @@ public class TestMessageReceivedHandler {
         assertEquals(testString, Files.readString(Path.of(filePath.toString() + ":received")));
     }
 
-    @DisplayName("Test of #GetFile() to return an empty byte[] when it can't find the file")
     @Test
+    @DisplayName("Test of #GetFile() to return an empty byte[] when it can't find the file")
     public void testGetFileEmptyResponse() {
         message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload, new MockupResponse(payload));
         byte[] result = (byte[]) handler.handleReceivedMessage(message);
         assertEquals(0, result.length);
     }
 
-    @DisplayName("Test of #GetFile() to return an empty byte[] when it gets no response from the encrypted pillar")
     @Test
+    @DisplayName("Test of #GetFile() to return an empty byte[] when it gets no response from the encrypted pillar")
     public void testGetFileNoResponseFromPillar() {
+        //Mockup Message with no Response, so it defaults to null
         message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload);
         byte[] result = (byte[]) handler.handleReceivedMessage(message);
         assertEquals(0, result.length);
     }
 
     @Test
+    @DisplayName("Test #DeleteFile()")
     public void testDeleteFile() throws FileExistsException {
         message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
         // Put file using MockupMessage with the payload
@@ -167,10 +169,11 @@ public class TestMessageReceivedHandler {
         assertTrue(encryptionParameterData.isEmpty());
     }
 
-    @DisplayName("Test of #DeteleFile() to return null when it can't find the file")
     @Test
+    @DisplayName("Test of #DeteleFile() to return null when it can't find the file")
     public void testDeleteFileEmptyResponse() {
-        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, FILE_ID);
+        // Concatenating "test" to the end of the primary key strings to not hit a correct index
+        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID + "test", FILE_ID + "test");
         assertNull(handler.handleReceivedMessage(message));
     }
 
