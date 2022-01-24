@@ -1,17 +1,16 @@
 package dk.kb.bitrepository;
 
-import dk.kb.bitrepository.database.TestDatabaseSuite;
-import dk.kb.bitrepository.mediator.TestMediatorSuite;
+import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
 import org.junit.platform.suite.api.SuiteDisplayName;
-import org.junit.runners.Suite.SuiteClasses;
 
-@SuiteClasses({
-        TestDatabaseSuite.class,
-        TestMediatorSuite.class,
-})
 @Suite
+@SelectPackages({
+        "dk.kb.bitrepository.crypto",
+        "dk.kb.bitrepository.database",
+        "dk.kb.bitrepository.mediator"
+})
 @SuiteDisplayName("Test Suite")
 public class TestSuite {
-
 }
+

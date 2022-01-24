@@ -93,7 +93,6 @@ public class DatabaseUtils {
                     statement.executeUpdate(s);
                 }
             }
-            statement.close();
             log.info("Query executed successfully.");
         } catch (SQLException e) {
             log.error("Error in executing SQL query: ", e);

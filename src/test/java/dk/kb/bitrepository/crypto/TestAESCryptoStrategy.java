@@ -23,10 +23,10 @@ public class TestAESCryptoStrategy {
     private static Path inputFile;
 
     @TempDir
-    static Path tempDir;
+    public static Path tempDir;
 
     @BeforeAll
-    static void setup() throws IOException {
+    public static void setup() throws IOException {
         Path testFileResource = Path.of(testFilePath);
         inputFile = tempDir.resolve(testFileResource);
         Files.copy(testFileResource, inputFile);
