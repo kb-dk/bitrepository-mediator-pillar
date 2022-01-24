@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.database;
 
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,12 @@ public class TestDatabaseCalls {
         } else {
             System.out.println("Config has not been set up. Run DatabaseSetup before running any tests.");
         }
+    }
+
+    @AfterEach
+    public void afterEach() {
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, false);
+        delete(COLLECTION_ID, FILE_ID, FILES_TABLE, false);
     }
 
     @Test
@@ -70,11 +77,9 @@ public class TestDatabaseCalls {
 
     @Test
     public void TestInsertSelectAndDeleteForFilesTable() {
-        String table = FILES_TABLE;
-
         insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, table);
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
 
         assertFalse(result.isEmpty());
 
@@ -88,8 +93,6 @@ public class TestDatabaseCalls {
         assertEquals(FILES_CHECKSUM, firstResult.getChecksum());
         assertEquals(FILES_ENC_CHECKSUM, firstResult.getEncryptedChecksum());
         assertEquals(FILES_CHECKSUM_TIMESTAMP_MOCKUP, firstResult.getChecksumTimestamp());
-
-        delete(COLLECTION_ID, FILE_ID, table);
     }
 
     @Test
@@ -109,8 +112,6 @@ public class TestDatabaseCalls {
 
         assertEquals(firstResult.getEncryptedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getEncryptedTimestamp());
-
-        delete(COLLECTION_ID, FILE_ID, table);
     }
 
     @Test
@@ -130,8 +131,6 @@ public class TestDatabaseCalls {
 
         assertEquals(firstResult.getChecksumTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getChecksumTimestamp());
-
-        delete(COLLECTION_ID, FILE_ID, table);
     }
 
     @Test
@@ -151,7 +150,5 @@ public class TestDatabaseCalls {
 
         assertEquals(firstResult.getReceivedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getReceivedTimestamp());
-
-        delete(COLLECTION_ID, FILE_ID, table);
     }
 }

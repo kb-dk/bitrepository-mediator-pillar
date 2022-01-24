@@ -41,7 +41,13 @@ public class GetFile extends MessageResult<byte[]> {
         // TODO: Identify => Relay message to Encrypted Pillar
         //  and get response from Encrypted Pillar
         MockupResponse response = relayMessageToEncryptedPillar(collectionID, fileID);
-        byte[] fileBytes = response.getFile();
+        byte[] fileBytes = (response != null) ? response.getPayload() : new byte[0];
+        byte[] out = new byte[0];
+
+        if (fileBytes.length == 0) {
+            log.error("Received no response from the encrypted pillar.");
+            return out;
+        }
 
         // Create the received file locally
         Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
@@ -51,38 +57,41 @@ public class GetFile extends MessageResult<byte[]> {
             log.error("The file already exists.", e);
         }
 
-        // Get old - and generate new encrypted checksum
         List<DatabaseData> filesResult = select(collectionID, fileID, FILES_TABLE);
-        FilesData firstFilesResult = (FilesData) filesResult.get(0);
-        String newEncryptedChecksum = ChecksumUtils.generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
-        String oldEncryptedChecksum = firstFilesResult.getEncryptedChecksum();
+        if (!filesResult.isEmpty()) {
+            // Get old encrypted checksum, and generate new encrypted checksum
+            FilesData firstFilesResult = (FilesData) filesResult.get(0);
+            String newEncryptedChecksum = ChecksumUtils.generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
+            String oldEncryptedChecksum = firstFilesResult.getEncryptedChecksum();
 
-        // Compared checksum of file from encrypted pillar with the encrypted checksum in local table.
-        Path decryptedFilePath = Paths.get(getDecryptedFilePath(collectionID, fileID));
-        byte[] out = new byte[0];
-        if (newEncryptedChecksum.equals(oldEncryptedChecksum)) {
-            // Get the used encryption parameters from the 'enc_parameters' table.
-            List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-            EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
+            // Compared checksum of file from encrypted pillar with the encrypted checksum in local table.
+            Path decryptedFilePath = Paths.get(getDecryptedFilePath(collectionID, fileID));
 
-            // Decrypt the file using the parameters.
-            try {
-                CryptoStrategy AES = initAES(config.getEncryptionPassword(), firstEncParamResult.getSalt(), firstEncParamResult.getIv());
-                AES.decrypt(encryptedFilePath, decryptedFilePath);
-            } catch (IOException e) {
-                log.error("An error occurred when fetching the AES password from the configs.", e);
+            if (newEncryptedChecksum.equals(oldEncryptedChecksum)) {
+                // Get the used encryption parameters from the 'enc_parameters' table.
+                List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+                EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
+
+                // Decrypt the file using the parameters.
+                try {
+                    CryptoStrategy AES = initAES(config.getEncryptionPassword(), firstEncParamResult.getSalt(), firstEncParamResult.getIv());
+                    AES.decrypt(encryptedFilePath, decryptedFilePath);
+                } catch (IOException e) {
+                    log.error("An error occurred when fetching the AES password from the configs.", e);
+                }
+                // FIXME: RETURN DECRYPTED FILE TO CLIENT IF NOTHING GOES WRONG
+                //  ELSE THROW EXCEPTION / ALARM
+                try {
+                    out = Files.readAllBytes(decryptedFilePath);
+                } catch (IOException e) {
+                    log.error("Error occurred when trying to read file.", e);
+                }
+            } else {
+                // TODO: Handle this in a proper way
+                log.error("Checksums did not match.");
             }
-            // TODO: RETURN DECRYPTED FILE TO BitClient IF NOTHING GOES WRONG
-            //  ELSE THROW EXCEPTION / ALARM
-            try {
-                out = Files.readAllBytes(decryptedFilePath);
-            } catch (IOException e) {
-                log.error("Error occurred when trying to read file.", e);
-            }
-        } else {
-            // TODO: Handle this in a proper way
-            log.error("Checksums did not match!");
         }
+        log.error("Received no results for the collection- and file-ids: [{}, {}}", collectionID, fileID);
         return out;
     }
 

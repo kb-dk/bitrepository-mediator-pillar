@@ -34,7 +34,7 @@ public class DatabaseCalls {
      */
     public static void insertInto(String collection_id, String file_id, String salt, byte[] iv, int iterations) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
-        executeQuery(query, collection_id, file_id, salt, iv, iterations);
+        executeQuery(query, true, collection_id, file_id, salt, iv, iterations);
     }
 
     /**
@@ -52,7 +52,7 @@ public class DatabaseCalls {
                                   OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum,
                                   OffsetDateTime checksum_timestamp) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
-        executeQuery(query, collection_id, file_id, received_timestamp, encrypted_timestamp,
+        executeQuery(query, true, collection_id, file_id, received_timestamp, encrypted_timestamp,
                 checksum, enc_checksum, checksum_timestamp);
     }
 
@@ -71,10 +71,8 @@ public class DatabaseCalls {
         query = query.replace("@", fileID);
 
         try (Connection connection = connect(); Statement statement = connection.createStatement()) {
-            log.info("Connection established to the database.");
             log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
-            log.info("Query executed successfully!");
             while (result.next()) {
                 if (table.equals(ENC_PARAMS_TABLE)) {
                     EncryptedParametersData data = new EncryptedParametersData(
@@ -101,15 +99,15 @@ public class DatabaseCalls {
                 }
             }
             result.close();
-            log.info("All results have been processed.");
 
             if (resultList.isEmpty()) {
                 log.warn("No results found.");
                 return resultList;
+            } else {
+                log.info("All results have been processed.");
             }
         } catch (SQLException e) {
-            log.error("Error in executing SQL query:\n", e);
-            System.out.println("Error in executing SQL query:\n" + e);
+            log.error("Error occurred when trying to connect to the database.", e);
         }
 
         return resultList;
@@ -121,12 +119,25 @@ public class DatabaseCalls {
      * @param collectionID The CollectionID of the index to be deleted.
      * @param fileID       The FileID of the index to be deleted.
      * @param table        The table to delete from.
+     * @param verbose      Used to turn informative logging off or on.
      */
-    public static void delete(String collectionID, String fileID, String table) {
+    public static void delete(String collectionID, String fileID, String table, boolean verbose) {
         String query = String.format(Locale.getDefault(), "DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
 
-        executeQuery(query, collectionID, fileID);
+        executeQuery(query, verbose, collectionID, fileID);
+    }
 
+    /**
+     * Performs the DELETE query in the chosen table where collection_id and file_id fits the chosen parameters.
+     * Informative logging is turned on by default. Use the overloaded method to turn logging off,
+     * primarily used for clean in tests.
+     *
+     * @param collectionID The CollectionID of the index to be deleted.
+     * @param fileID       The FileID of the index to be deleted.
+     * @param table        The table to delete from.
+     */
+    public static void delete(String collectionID, String fileID, String table) {
+        delete(collectionID, fileID, table, true);
     }
 
     /**
@@ -141,7 +152,7 @@ public class DatabaseCalls {
                                        OffsetDateTime new_timestamp) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
                 timestampColumn);
-        executeQuery(query, new_timestamp, collectionID, fileID);
+        executeQuery(query, true, new_timestamp, collectionID, fileID);
     }
 
     /**
@@ -150,9 +161,9 @@ public class DatabaseCalls {
      * @param query The query to execute.
      * @param args  The arguments to put in the given query.
      */
-    private static void executeQuery(String query, @NotNull Object... args) {
+    private static void executeQuery(String query, boolean verbose, @NotNull Object... args) {
         try (Connection connection = connect()) {
-            prepareStatement(query, connection, args);
+            prepareStatement(query, connection, verbose, args);
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);
             System.out.println("Error in executing SQL query:\n" + e);
@@ -167,12 +178,12 @@ public class DatabaseCalls {
      * @param args       The arguments to be set in the statement.
      * @throws SQLException Throws an exception if the connection to the Database fails.
      */
-    private static void prepareStatement(String query, Connection connection, @NotNull Object... args) throws SQLException {
-        log.info("Connection established to the database; readying statement.");
+    private static void prepareStatement(String query, Connection connection, boolean verbose, @NotNull Object... args) throws SQLException {
         PreparedStatement statement = createPreparedStatement(connection, query, args);
-        log.info("Executing >>" + statement);
+        if (verbose) {
+            log.info("Executing >>" + statement);
+        }
         statement.executeUpdate();
-        log.info("Query has been executed successfully!");
         statement.close();
     }
 }

@@ -31,8 +31,7 @@ public class MessageReceivedHandler {
             case GET_FILE:
                 return new GetFile(config, message).execute();
             case DELETE_FILE:
-                //
-                break;
+                return new DeleteFile(config, message).execute();
             case REPLACE_FILE:
                 //
                 break;
@@ -151,6 +150,7 @@ public class MessageReceivedHandler {
     public static String getDecryptedFilePath(String collectionID, String fileID) {
         return "src/main/java/dk/kb/bitrepository/mediator/files/file_decrypted:" + collectionID + ":" + fileID;
     }
+
 
     /**
      * Helper method that is used to delete local files.

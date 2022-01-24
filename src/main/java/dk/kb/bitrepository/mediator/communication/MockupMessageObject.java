@@ -4,8 +4,14 @@ public class MockupMessageObject {
     private final MockupMessageType type;
     private final String collectionID;
     private final String fileID;
-    private final byte[] payload;
+    private byte[] payload = new byte[0];
     private MockupResponse mockupResponse = null;
+
+    public MockupMessageObject(MockupMessageType type, String collectionID, String fileID) {
+        this.type = type;
+        this.collectionID = collectionID;
+        this.fileID = fileID;
+    }
 
     public MockupMessageObject(MockupMessageType type, String collectionID, String fileID, byte[] payload) {
         this.type = type;

@@ -7,7 +7,9 @@ import dk.kb.bitrepository.mediator.communication.MockupMessageObject;
 import dk.kb.bitrepository.mediator.communication.MockupResponse;
 import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
+import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -26,11 +28,9 @@ import static dk.kb.bitrepository.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.*;
-import static dk.kb.bitrepository.mediator.communication.MockupMessageType.GET_FILE;
-import static dk.kb.bitrepository.mediator.communication.MockupMessageType.PUT_FILE;
+import static dk.kb.bitrepository.mediator.communication.MockupMessageType.*;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test MessageReceivedHandler")
 public class TestMessageReceivedHandler {
@@ -60,8 +60,8 @@ public class TestMessageReceivedHandler {
 
     @AfterEach
     public void cleanup() {
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, false);
+        delete(COLLECTION_ID, FILE_ID, FILES_TABLE, false);
         cleanupFiles();
     }
 
@@ -71,16 +71,12 @@ public class TestMessageReceivedHandler {
         boolean handled = (boolean) handler.handleReceivedMessage(message);
         assertTrue(handled);
 
-        // Get the used encryption parameters from the 'enc_parameters' table
-        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
-        String salt = firstEncParamResult.getSalt();
-        byte[] iv = firstEncParamResult.getIv();
-        CryptoStrategy AES = new AESCryptoStrategy(encryptionPassword, salt, iv);
 
         // Decrypt the file
+        CryptoStrategy AES = setupCryptoStrategy();
         AES.decrypt(encryptedFilePath, decryptedFilePath);
 
+        List<DatabaseData> result;
         // Assert that Checksums match
         {
             result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
@@ -128,5 +124,63 @@ public class TestMessageReceivedHandler {
 
         assertTrue(bytesReceived.length > 0);
         assertEquals(testString, Files.readString(Path.of(filePath.toString() + ":received")));
+    }
+
+    @DisplayName("Test of #GetFile() to return an empty byte[] when it can't find the file")
+    @Test
+    public void testGetFileEmptyResponse() {
+        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload, new MockupResponse(payload));
+        byte[] result = (byte[]) handler.handleReceivedMessage(message);
+        assertEquals(0, result.length);
+    }
+
+    @DisplayName("Test of #GetFile() to return an empty byte[] when it gets no response from the encrypted pillar")
+    @Test
+    public void testGetFileNoResponseFromPillar() {
+        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload);
+        byte[] result = (byte[]) handler.handleReceivedMessage(message);
+        assertEquals(0, result.length);
+    }
+
+    @Test
+    public void testDeleteFile() throws FileExistsException {
+        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
+        // Put file using MockupMessage with the payload
+        boolean putFileHandled = (boolean) handler.handleReceivedMessage(message);
+        assertTrue(putFileHandled);
+        cleanupFiles();
+
+        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, FILE_ID);
+        // Compute the checksum of the payload bytes
+        writeBytesToFile(payload, filePath);
+        String payloadChecksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
+
+        // Delete file and assert that the checksum of the deleted file is equal to the checksum of the payload
+        String checksumDeleted = (String) handler.handleReceivedMessage(message);
+        assertNotNull(checksumDeleted);
+        assertEquals(payloadChecksum, checksumDeleted);
+
+        // Assert that the local database indexes are deleted
+        List<DatabaseData> filesData = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        List<DatabaseData> encryptionParameterData = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        assertTrue(filesData.isEmpty());
+        assertTrue(encryptionParameterData.isEmpty());
+    }
+
+    @DisplayName("Test of #DeteleFile() to return null when it can't find the file")
+    @Test
+    public void testDeleteFileEmptyResponse() {
+        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, FILE_ID);
+        assertNull(handler.handleReceivedMessage(message));
+    }
+
+    @NotNull
+    private CryptoStrategy setupCryptoStrategy() {
+        // Get the used encryption parameters from the 'enc_parameters' table
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
+        String salt = firstEncParamResult.getSalt();
+        byte[] iv = firstEncParamResult.getIv();
+        return new AESCryptoStrategy(encryptionPassword, salt, iv);
     }
 }

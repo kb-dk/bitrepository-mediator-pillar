@@ -34,34 +34,35 @@ public class PutFile extends MessageResult<Boolean> {
     @Override
     public Boolean execute() {
         OffsetDateTime fileReceivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        CryptoStrategy AES;
-        String password = null;
+        CryptoStrategy AES = null;
         try {
-            password = config.getEncryptionPassword();
+            AES = initAES(config.getEncryptionPassword());
         } catch (IOException e) {
             log.error("An error occurred when trying to get encryption password from configs.", e);
         }
-        AES = initAES(password);
 
-        Path filePath = Paths.get(getFilePath(collectionID, fileID));
-        Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
-        boolean encryptionDone = createAndEncryptFileFromBytes(AES, bytes, filePath, encryptedFilePath);
-        if (encryptionDone) {
-            OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-            {
-                // TODO:  Relay message to the encrypted pillar w. the encrypted file
+        if (AES != null) {
+            Path filePath = Paths.get(getFilePath(collectionID, fileID));
+            Path encryptedFilePath = Paths.get(getEncryptedFilePath(collectionID, fileID));
+            boolean encryptionDone = createAndEncryptFileFromBytes(AES, bytes, filePath, encryptedFilePath);
+            if (encryptionDone) {
+                OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+                {
+                    // TODO:  Relay message to the encrypted pillar w. the encrypted file
+                }
+                //FIXME: Is this the correct way of computing checksum?
+                String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
+                String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
+
+                OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
+
+                insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), AES.getIterations());
+                insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
+
+                return Boolean.TRUE;
+            } else {
+                log.error("There was an error encrypting the file.");
             }
-            //FIXME: Is this the correct way of computing checksum?
-            String checksum = generateChecksum(new File(String.valueOf(filePath)), ChecksumType.MD5);
-            String encryptedChecksum = generateChecksum(new File(String.valueOf(encryptedFilePath)), ChecksumType.MD5);
-
-            OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-            insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), AES.getIterations());
-            insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
-            // cleanupFiles();
-
-            return Boolean.TRUE;
         }
         return Boolean.FALSE;
     }

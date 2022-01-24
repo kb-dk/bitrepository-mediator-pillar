@@ -1,16 +1,13 @@
 package dk.kb.bitrepository.mediator.communication;
 
 public class MockupResponse {
-    private static byte[] file = null;
+    private static byte[] payload = null;
 
-    public MockupResponse() {
+    public MockupResponse(byte[] payload) {
+        MockupResponse.payload = payload;
     }
 
-    public MockupResponse(byte[] file) {
-        MockupResponse.file = file;
-    }
-
-    public byte[] getFile() {
-        return file;
+    public byte[] getPayload() {
+        return payload;
     }
 }
