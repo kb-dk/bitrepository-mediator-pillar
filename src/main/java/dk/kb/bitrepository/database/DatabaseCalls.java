@@ -156,6 +156,53 @@ public class DatabaseCalls {
     }
 
     /**
+     * Performs UPDATE on all values matching the chosen primary key.
+     * Used to update a column in the table when replacing a file on the encrypted pillar.
+     *
+     * @param collectionID       The collection ID, part of the primary key.
+     * @param fileID             The file ID, part of the primary key.
+     * @param receivedTimestamp  The new timestamp for when the file was received.
+     * @param encryptedTimestamp The new timestamp for when the file was encrypted.
+     * @param checksum           The checksum of the new file.
+     * @param encryptedChecksum  The encrypted checksum of the new encrypted file.
+     * @param checksumTimestamp  The timestamp for when the checksum was computed.
+     */
+    public static void updateFilesTable(String collectionID, String fileID, OffsetDateTime receivedTimestamp,
+                                        OffsetDateTime encryptedTimestamp, String checksum, String encryptedChecksum,
+                                        OffsetDateTime checksumTimestamp) {
+        String query = String.format(Locale.getDefault(), "UPDATE %s SET " +
+                        "received_timestamp = ?, " +
+                        "encrypted_timestamp = ?, " +
+                        "checksum = ?, " +
+                        "encrypted_checksum = ?, " +
+                        "checksum_timestamp = ? WHERE collection_id = ? AND file_id = ?",
+                FILES_TABLE);
+        executeQuery(query, true, receivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum,
+                checksumTimestamp, collectionID, fileID);
+
+    }
+
+    /**
+     * Performs UPDATE on all values matching the chosen primary key.
+     * Used to update a column in the table when replacing a file on the encrypted pillar.
+     *
+     * @param collectionID The collection ID, part of the primary key.
+     * @param fileID       The file ID, part of the primary key.
+     * @param salt         The salt used to encrypt the new file.
+     * @param iv           The IV used to encrypt the new file.
+     * @param iterations   The number of iterations used in the encryption of the new file.
+     */
+    public static void updateEncryptionParametersTable(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
+        String query = String.format(Locale.getDefault(), "UPDATE %s SET " +
+                        "salt = ?, " +
+                        "iv = ?, " +
+                        "iterations = ? WHERE collection_id = ? AND file_id = ?",
+                ENC_PARAMS_TABLE);
+        executeQuery(query, true, salt, iv, iterations, collectionID, fileID);
+
+    }
+
+    /**
      * Helper method to execute the given query with the given arguments.
      *
      * @param query The query to execute.

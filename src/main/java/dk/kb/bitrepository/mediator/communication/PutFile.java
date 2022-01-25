@@ -3,6 +3,7 @@ package dk.kb.bitrepository.mediator.communication;
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,7 @@ public class PutFile extends MessageResult<Boolean> {
     private final String fileID;
     private final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
-    public PutFile(ConfigurationHandler config, MockupMessageObject message) {
+    public PutFile(ConfigurationHandler config, @NotNull MockupMessageObject message) {
         this.config = config;
         this.bytes = message.getPayload();
         this.collectionID = message.getCollectionID();

@@ -64,6 +64,18 @@ public class AESCryptoStrategy implements CryptoStrategy {
     }
 
     @Override
+    public byte[] encrypt(byte[] bytes) {
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
+        } catch (InvalidKeyException e) {
+            throw new IllegalStateException("Invalid key provided for encryption", e);
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new IllegalStateException("Bad parameters provided for encryption", e);
+        }
+        return doTranscipher(bytes);
+    }
+
+    @Override
     public void decrypt(Path encryptedInputFile, Path decryptedOutputFile) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
@@ -74,6 +86,19 @@ public class AESCryptoStrategy implements CryptoStrategy {
         }
         doTranscipher(encryptedInputFile, decryptedOutputFile);
     }
+
+    @Override
+    public byte[] decrypt(byte[] bytes) {
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
+        } catch (InvalidKeyException e) {
+            throw new IllegalStateException("Invalid key provided for decryption", e);
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new IllegalStateException("Bad parameters provided for decryption", e);
+        }
+        return doTranscipher(bytes);
+    }
+
 
     private void doTranscipher(Path inputFile, Path encryptedOutputFile) {
         try (InputStream inputStream = Files.newInputStream(inputFile); OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
@@ -101,6 +126,20 @@ public class AESCryptoStrategy implements CryptoStrategy {
         } catch (IOException e) {
             log.error("Failed reading/writing input file '{}' or output file '{}'..", inputFile, encryptedOutputFile, e);
         }
+    }
+
+    private byte[] doTranscipher(byte[] bytes) {
+        byte[] outputBytes;
+
+        try {
+            outputBytes = cipher.doFinal(bytes);
+        } catch (IllegalBlockSizeException e) {
+            throw new IllegalStateException("Bad data length provided to AES", e);
+        } catch (BadPaddingException e) {
+            throw new IllegalStateException("Bad padding.. did you use correct key for cipher?", e);
+        }
+
+        return outputBytes;
     }
 
     private Cipher initCipher() {

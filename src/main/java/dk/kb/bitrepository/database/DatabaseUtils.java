@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.database;
 
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +124,7 @@ public class DatabaseUtils {
      * @throws SQLException          If unable to prepare a statement
      * @throws IllegalStateException if any of the args is of an unknown type
      */
-    static PreparedStatement createPreparedStatement(Connection dbConnection, String query, Object... args) throws SQLException {
+    static PreparedStatement createPreparedStatement(@NotNull Connection dbConnection, String query, Object @NotNull ... args) throws SQLException {
         //log.trace("Preparing the statement: '" + query + "' with arguments '" + Arrays.asList(args) + "'");
         PreparedStatement s = dbConnection.prepareStatement(query);
         int i = 1;

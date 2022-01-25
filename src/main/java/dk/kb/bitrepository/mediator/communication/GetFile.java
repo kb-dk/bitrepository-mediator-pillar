@@ -7,6 +7,7 @@ import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.utils.ChecksumUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class GetFile extends MessageResult<byte[]> {
     private final ConfigurationHandler config;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public GetFile(ConfigurationHandler config, MockupMessageObject message) {
+    public GetFile(ConfigurationHandler config, @NotNull MockupMessageObject message) {
         this.config = config;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();

@@ -1,7 +1,7 @@
 package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.database.DatabaseData;
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,17 +14,13 @@ import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.database.DatabaseData.FilesData;
 
 public class DeleteFile extends MessageResult<String> {
-    private final MockupResponse response;
     private final String collectionID;
     private final String fileID;
-    private final ConfigurationHandler config;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public DeleteFile(ConfigurationHandler config, MockupMessageObject message) {
-        this.config = config;
+    public DeleteFile(@NotNull MockupMessageObject message) {
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
-        this.response = message.getMockupResponse();
     }
 
     @Override
@@ -35,7 +31,7 @@ public class DeleteFile extends MessageResult<String> {
             FilesData firstResult = (FilesData) filesData.get(0);
             String encryptedChecksum = firstResult.getEncryptedChecksum();
 
-            // TODO: Relay 'delete' call to Encrypted Pillar - and get response (Enc_Checksum?)
+            // TODO: Relay 'delete' call to Encrypted Pillar - and get response (Enc_Checksum or boolean?)
             boolean deletedFromEncryptedPillar = relayMessageToEncryptedPillar(collectionID, fileID, encryptedChecksum);
 
             if (deletedFromEncryptedPillar) {
@@ -49,6 +45,7 @@ public class DeleteFile extends MessageResult<String> {
                 return null;
             }
         }
+        log.error("No results were found for collection- and file-id : [{}, {}]", collectionID, fileID);
         return null;
     }
 

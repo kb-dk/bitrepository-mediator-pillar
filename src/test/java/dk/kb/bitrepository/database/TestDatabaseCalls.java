@@ -157,4 +157,54 @@ public class TestDatabaseCalls {
         assertEquals(firstResult.getReceivedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, firstResult.getReceivedTimestamp());
     }
+
+    @Test
+    @DisplayName("Test that updating 'files' table works")
+    public void testUpdatingFilesTable() {
+        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP, FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
+        updateFilesTable(COLLECTION_ID, FILE_ID, OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC), FILES_CHECKSUM + "_new", FILES_ENC_CHECKSUM + "_new", OffsetDateTime.now(ZoneOffset.UTC));
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData res0 = (FilesData) result.get(0);
+
+        assertNotEquals(FILES_RECEIVED_TIMESTAMP_MOCKUP, res0.getReceivedTimestamp());
+        assertNotEquals(FILES_ENCRYPTED_TIMESTAMP_MOCKUP, res0.getEncryptedTimestamp());
+        assertNotEquals(FILES_CHECKSUM, res0.getChecksum());
+        assertNotEquals(FILES_ENC_CHECKSUM, res0.getEncryptedChecksum());
+        assertNotEquals(FILES_CHECKSUM_TIMESTAMP_MOCKUP, res0.getChecksumTimestamp());
+        assertEquals(FILES_CHECKSUM + "_new", res0.getChecksum());
+        assertEquals(FILES_ENC_CHECKSUM + "_new", res0.getEncryptedChecksum());
+    }
+
+    @Test
+    @DisplayName("Test that updating 'enc_parameters' table works")
+    public void testUpdatingEncryptionParametersTable() {
+        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+        updateEncryptionParametersTable(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData res0 = (EncryptedParametersData) result.get(0);
+
+        assertNotEquals(ENC_PARAMS_SALT, res0.getSalt());
+        assertNotEquals(ENC_PARAMS_ITERATIONS, res0.getIterations());
+        assertEquals(Arrays.toString(ENC_PARAMS_IV), Arrays.toString(res0.getIv()));
+        assertEquals(ENC_PARAMS_SALT + "_new", res0.getSalt());
+        assertEquals(1234, res0.getIterations());
+    }
+
+    @Test
+    @DisplayName("Test updating 'enc_parameters' table for non-existing index")
+    public void testUpdatingEncryptionParametersTableForNonExistingIndex() {
+        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+        updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test", ENC_PARAMS_SALT
+                + "_new", ENC_PARAMS_IV, 1234);
+        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData res0 = (EncryptedParametersData) result.get(0);
+
+        assertEquals(COLLECTION_ID, res0.getCollectionID());
+        assertEquals(FILE_ID, res0.getFileID());
+        assertEquals(ENC_PARAMS_SALT, res0.getSalt());
+        assertEquals(Arrays.toString(ENC_PARAMS_IV), Arrays.toString(res0.getIv()));
+        assertEquals(ENC_PARAMS_ITERATIONS, res0.getIterations());
+        assertNotEquals(ENC_PARAMS_SALT + "_new", res0.getSalt());
+        assertNotEquals(1234, res0.getIterations());
+    }
 }

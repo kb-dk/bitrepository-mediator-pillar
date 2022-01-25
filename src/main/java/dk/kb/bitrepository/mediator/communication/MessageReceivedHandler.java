@@ -31,10 +31,9 @@ public class MessageReceivedHandler {
             case GET_FILE:
                 return new GetFile(config, message).execute();
             case DELETE_FILE:
-                return new DeleteFile(config, message).execute();
+                return new DeleteFile(message).execute();
             case REPLACE_FILE:
-                //
-                break;
+                return new ReplaceFile(config, message).execute();
             case GET_CHECKSUMS:
                 //
                 break;

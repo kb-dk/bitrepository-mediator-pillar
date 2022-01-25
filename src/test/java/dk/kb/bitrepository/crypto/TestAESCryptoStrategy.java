@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,10 +69,21 @@ public class TestAESCryptoStrategy {
     public void testWrongPasswordGivesBadDecryption() {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");
-        AESCryptoStrategy encryption = new AESCryptoStrategy(testPassword);
-        AESCryptoStrategy decryption = new AESCryptoStrategy("87654321");
+        CryptoStrategy encryption = new AESCryptoStrategy(testPassword);
+        CryptoStrategy decryption = new AESCryptoStrategy("87654321");
 
         encryption.encrypt(inputFile, encryptedFile);
         assertThrows(IllegalStateException.class, () -> decryption.decrypt(encryptedFile, decryptedFile));
+    }
+
+    @Test
+    @DisplayName("Test encryption and decryption of byte[]")
+    public void testEncryptionAndDecryptionOfByteArray() {
+        byte[] payload = "1923u1i4".getBytes(StandardCharsets.UTF_8);
+        CryptoStrategy AES = new AESCryptoStrategy(testPassword);
+        byte[] encryptedData = AES.encrypt(payload);
+        assertNotEquals(payload, encryptedData);
+        byte[] decryptedData = AES.decrypt(encryptedData);
+        assertEquals(Arrays.toString(payload), Arrays.toString(decryptedData));
     }
 }
