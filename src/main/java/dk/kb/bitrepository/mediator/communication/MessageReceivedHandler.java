@@ -44,29 +44,6 @@ public class MessageReceivedHandler {
     }
 
     /**
-     * Writes the given bytes to a file.
-     *
-     * @param bytes    The bytes to write.
-     * @param filePath The path to the file.
-     */
-    public static void writeBytesToFile(byte[] bytes, Path filePath) throws FileExistsException {
-        boolean fileExist = Files.exists(filePath);
-        if (fileExist) {
-            log.warn("File already exists at {}.", filePath);
-            throw new FileExistsException();
-        } else {
-            try {
-                OutputStream output = Files.newOutputStream(filePath);
-                output.write(bytes);
-                output.close();
-                log.info("Bytes has successfully been written to file {}", filePath);
-            } catch (IOException e) {
-                log.error("Something went wrong writing to the file.", e);
-            }
-        }
-    }
-
-    /**
      * Standard initialization of an AESCryptoStrategy.
      *
      * @param password The password to use in the encryption.
@@ -99,6 +76,7 @@ public class MessageReceivedHandler {
      * @param filePath          The path to where the file will be created.
      * @param encryptedFilePath The path to where the encrypted file will be created.
      */
+    @Deprecated
     public static boolean createAndEncryptFileFromBytes(CryptoStrategy crypto, byte[] bytes, Path filePath, Path encryptedFilePath) {
         try {
             writeBytesToFile(bytes, filePath);
@@ -115,6 +93,30 @@ public class MessageReceivedHandler {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Writes the given bytes to a file.
+     *
+     * @param bytes    The bytes to write.
+     * @param filePath The path to the file.
+     */
+    @Deprecated
+    public static void writeBytesToFile(byte[] bytes, Path filePath) throws FileExistsException {
+        boolean fileExist = Files.exists(filePath);
+        if (fileExist) {
+            log.warn("File already exists at {}.", filePath);
+            throw new FileExistsException();
+        } else {
+            try {
+                OutputStream output = Files.newOutputStream(filePath);
+                output.write(bytes);
+                output.close();
+                log.info("Bytes has successfully been written to file {}", filePath);
+            } catch (IOException e) {
+                log.error("Something went wrong writing to the file.", e);
+            }
+        }
     }
 
     /**

@@ -10,15 +10,13 @@ import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseCalls.delete;
@@ -32,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test MessageReceivedHandler")
 public class TestMessageReceivedHandler {
-    private MockupMessageObject message;
+    private static MockupMessageObject message;
     private static String encryptionPassword;
     private static String testString;
     private static MessageReceivedHandler handler;
@@ -53,6 +51,13 @@ public class TestMessageReceivedHandler {
         checksumSpecTYPE.setChecksumType(ChecksumType.MD5);
     }
 
+    @BeforeEach
+    public void putFile() {
+        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
+        boolean handled = (boolean) handler.handleReceivedMessage(message);
+        assertTrue(handled);
+    }
+
     @AfterEach
     public void cleanup() {
         delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, true);
@@ -62,11 +67,7 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test #PutFile()")
     public void testPutFile() {
-        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
-        boolean handled = (boolean) handler.handleReceivedMessage(message);
-        assertTrue(handled);
-
-        // Decrypt the file
+        // Encrypt the payload
         CryptoStrategy AES = setupCryptoStrategy();
         byte[] encryptedPayload = AES.encrypt(payload);
 
@@ -75,10 +76,9 @@ public class TestMessageReceivedHandler {
         String newEncryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedPayload), checksumSpecTYPE);
 
         // Assert that checksums match
-        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        FilesData firstFilesResult = (FilesData) result.get(0);
-        assertEquals(firstFilesResult.getChecksum(), newChecksum);
-        assertEquals(firstFilesResult.getEncryptedChecksum(), newEncryptedChecksum);
+        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        assertEquals(result.getChecksum(), newChecksum);
+        assertEquals(result.getEncryptedChecksum(), newEncryptedChecksum);
 
         // Assert that the decrypted bytes are equal to the original payload bytes
         assertEquals(testString, new String(AES.decrypt(encryptedPayload), StandardCharsets.UTF_8));
@@ -87,11 +87,6 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test #GetFile()")
     public void testGetFile() {
-        // Put file using MockupMessage with the payload
-        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
-        boolean handled = (boolean) handler.handleReceivedMessage(message);
-        assertTrue(handled);
-
         // Created encrypted payload from PutFile payload
         CryptoStrategy AES = setupCryptoStrategy();
         byte[] encryptedPayload = AES.encrypt(payload);
@@ -109,7 +104,7 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test of #GetFile() to return an empty byte[] when it can't find the file")
     public void testGetFileEmptyResponse() {
-        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload, new MockupResponse(payload));
+        message = new MockupMessageObject(GET_FILE, "not_a_real_id", FILE_ID, payload, new MockupResponse(payload));
         byte[] result = (byte[]) handler.handleReceivedMessage(message);
         assertEquals(0, result.length);
     }
@@ -118,7 +113,7 @@ public class TestMessageReceivedHandler {
     @DisplayName("Test of #GetFile() to return an empty byte[] when it gets no response from the encrypted pillar")
     public void testGetFileNoResponseFromPillar() {
         //Mockup Message with no Response, so it defaults to null
-        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload);
+        message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, payload, null);
         byte[] result = (byte[]) handler.handleReceivedMessage(message);
         assertEquals(0, result.length);
     }
@@ -126,11 +121,6 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test #DeleteFile()")
     public void testDeleteFile() {
-        message = new MockupMessageObject(PUT_FILE, COLLECTION_ID, FILE_ID, payload);
-        // Put file using MockupMessage with the payload
-        boolean putFileHandled = (boolean) handler.handleReceivedMessage(message);
-        assertTrue(putFileHandled);
-
         message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, FILE_ID);
         // Compute the checksum of the payload bytes
         String payloadChecksum = generateChecksum(new ByteArrayInputStream(payload), checksumSpecTYPE);
@@ -150,25 +140,51 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test of #DeteleFile() to return null when it can't find the file")
     public void testDeleteFileEmptyResponse() {
-        // Concatenating "test" to the end of the primary key strings to not hit a correct index
-        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, FILE_ID + "test");
+        message = new MockupMessageObject(DELETE_FILE, COLLECTION_ID, "not_a_real_id");
         assertNull(handler.handleReceivedMessage(message));
     }
 
     @Test
-    @DisplayName("Test of #UpdateFile()")
-    public void testUpdateFile() {
+    @DisplayName("Test of #ReplaceFile()")
+    public void testReplaceFile() {
+        FilesData res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        String oldChecksum = res.getChecksum();
+        String oldEncryptedChecksum = res.getEncryptedChecksum();
+        OffsetDateTime oldReceivedTimestamp = res.getReceivedTimestamp();
 
+        byte[] newPayload = "test_new_payload".getBytes(Charset.defaultCharset());
+        byte[] encryptedPayload = setupCryptoStrategy().encrypt(payload);
+        message = new MockupMessageObject(REPLACE_FILE, COLLECTION_ID, FILE_ID, newPayload, new MockupResponse(encryptedPayload));
+        boolean handled = (boolean) handler.handleReceivedMessage(message);
+        assertTrue(handled);
+
+        String checksum = generateChecksum(new ByteArrayInputStream(newPayload), checksumSpecTYPE);
+        byte[] encryptedNewPayload = setupCryptoStrategy().encrypt(newPayload);
+        String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedNewPayload), checksumSpecTYPE);
+
+        // Update 'select' result
+        res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        // Assert that the table was updated
+        assertNotEquals(oldChecksum, res.getChecksum());
+        assertNotEquals(oldEncryptedChecksum, res.getEncryptedChecksum());
+        assertNotEquals(oldReceivedTimestamp, res.getReceivedTimestamp());
+        // Assert that the table was updated with the correct data
+        assertEquals(checksum, res.getChecksum());
+        assertEquals(encryptedChecksum, res.getEncryptedChecksum());
     }
 
+    /**
+     * Used to for easy set up of the AES crypto strategy, with parameters from the 'enc_parameters' table.
+     *
+     * @return AESCryptStrategy with parameters used to encrypt a given file.
+     */
     @NotNull
     private CryptoStrategy setupCryptoStrategy() {
-        // Get the used encryption parameters from the 'enc_parameters' table
         List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
         String salt = firstEncParamResult.getSalt();
         byte[] iv = firstEncParamResult.getIv();
-        
+
         return new AESCryptoStrategy(encryptionPassword, salt, iv);
     }
 }
