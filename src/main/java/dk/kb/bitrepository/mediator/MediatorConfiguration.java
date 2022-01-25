@@ -9,25 +9,32 @@ import org.bitrepository.settings.repositorysettings.RepositorySettings;
 import java.util.List;
 
 public class MediatorConfiguration {
-    private final YAML intermediatorConf;
+    private final YAML mediatorYAML;
     private final Settings pillarSettings;
 
-    public MediatorConfiguration(YAML intermediatorConf, Settings pillarSettings) {
-        this.intermediatorConf = intermediatorConf;
+    public MediatorConfiguration(YAML mediatorYAML, Settings pillarSettings) {
+        this.mediatorYAML = mediatorYAML;
         this.pillarSettings = pillarSettings;
     }
 
     public String getComponentID() {
-        return intermediatorConf.getString(ConfigConstants.COMPONENT_ID);
+        return pillarSettings.getComponentID();
+    }
+
+    public String getPrivateMessageDestination() {
+        return mediatorYAML.getString(ConfigConstants.PRIVATE_MESSAGE_DESTINATION);
+    }
+
+    public String getRepositoryMessageDestination() {
+        return pillarSettings.getCollectionDestination();
     }
 
     public String getCryptoAlgorithm() {
-        return intermediatorConf.getString(ConfigConstants.CRYPTO_ALGORITHM);
+        return mediatorYAML.getString(ConfigConstants.CRYPTO_ALGORITHM);
     }
 
     /**
      * @return the first Collections ID as a list of Collections.
-     * TODO singular vs. plural
      */
     public List<Collection> getCollections() {
         return pillarSettings.getCollections();

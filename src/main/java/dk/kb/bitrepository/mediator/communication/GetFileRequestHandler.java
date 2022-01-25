@@ -28,6 +28,7 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
 
     @Override
     protected void performAction() {
+        System.out.println("Performing action!");
         // Check DAO
         // If file does not exist send failed response
         // Else start client towards underlying pillar
@@ -36,6 +37,9 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
 
     @Override
     protected void sendProgressResponse() {
-
+        // In refpillar checks that collection has an archive for the collection and
+        // gets back a DefaultFileInfo from there with the File object - this is used to set the file size on the response
+        // Not sure if we should keep entries of file sizes in database? Ask Kim.
+        System.out.println("Sending progress response!");
     }
 }

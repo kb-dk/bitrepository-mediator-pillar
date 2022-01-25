@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator;
 
+import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
 import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
@@ -37,8 +38,10 @@ public class MediatorComponentFactory {
         MediatorConfiguration configuration = loadConfiguration(pillarID, pathToConfiguration);
         SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration.getPillarSettings());
         MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(configuration, messageBus);
+        PillarContext pillarContext = new PillarContext(configuration, messageBus, responseDispatcher);
 
-        return new MediatorPillar(messageBus, configuration);
+        return new MediatorPillar(configuration, pillarContext, messageBus);
     }
 
     private MediatorConfiguration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
@@ -54,7 +57,7 @@ public class MediatorComponentFactory {
      * @param settings The settings.
      * @return The security manager.
      */
-    private static SecurityManager loadSecurityManager(String pathToPrivateKeyFile, Settings settings) {
+    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, Settings settings) {
         PermissionStore permissionStore = new PermissionStore();
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();

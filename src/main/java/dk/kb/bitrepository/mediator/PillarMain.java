@@ -18,9 +18,12 @@ public class PillarMain implements Callable<Integer>{
     @CommandLine.Parameters(index = "1", type = String.class, defaultValue = "src/test/resources/conf/client-01.pem") // Default for now
     private String keyfilePath;
 
+    @CommandLine.Parameters(index = "2", type = String.class, defaultValue = "TestPillar1")
+    private String pillarID;
+
     @Override
     public Integer call() throws IOException {
-        MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath, "mediator");
+        MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath, pillarID);
         pillar.start();
         return 0;
     }

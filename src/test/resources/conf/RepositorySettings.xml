@@ -25,14 +25,21 @@
   <Name>Example Repository</Name>
   <!-- The list of collection in this repository -->
   <Collections>
-    <Collection><ID>TwoPillarCollection</ID>
+    <Collection>
+      <ID>TestCollection1</ID>
         <!--List of pillars that belongs in the collection. Clients will only expect answers from
         pillars listed here.
       -->
-      <PillarIDs><PillarID>Pillar1</PillarID><PillarID>Pillar2</PillarID></PillarIDs>
+      <PillarIDs>
+        <PillarID>TestPillar1</PillarID>
+        <PillarID>TestPillar2</PillarID>
+      </PillarIDs>
     </Collection>
-    <Collection><ID>SinglePillarCollection</ID>
-      <PillarIDs><PillarID>Pillar1</PillarID></PillarIDs>
+    <Collection>
+      <ID>TestCollection2</ID>
+      <PillarIDs>
+        <PillarID>TestPillar1</PillarID>
+      </PillarIDs>
     </Collection>
   </Collections>
   <ProtocolSettings>
@@ -68,7 +75,7 @@
     -->
     <RequireChecksumForNewFileRequests>true</RequireChecksumForNewFileRequests>
     <!--
-      CollectionDestination, defines the destination topic for broardcast messages within the collection 
+      CollectionDestination, defines the destination topic for broadcast messages within the collection
       I.e. for identify* requests. 
     -->
     <CollectionDestination>topic://dummy-collection-id</CollectionDestination>

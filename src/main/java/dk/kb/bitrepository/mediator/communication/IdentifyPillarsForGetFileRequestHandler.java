@@ -41,6 +41,7 @@ public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHand
         irInfo.setResponseCode(ResponseCode.IDENTIFICATION_POSITIVE);
         irInfo.setResponseText(RESPONSE_FOR_POSITIVE_IDENTIFICATION);
         response.setResponseInfo(irInfo);
+        context.getResponseDispatcher().completeAndSendResponseToRequest(request, response);
     }
 
     @Override

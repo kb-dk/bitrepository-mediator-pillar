@@ -76,7 +76,7 @@
     <!-- 
       ID of the pillar
     -->
-    <PillarID>test-pillar</PillarID>
+    <PillarID>TestPillar1</PillarID>
     
     <!--
       The type of pillar. Must be either 'FILE' or 'CHECKSUM' for a FilePillar or ChecksumPillar respectively.
@@ -98,7 +98,7 @@
           If no collection ids are defined, then it will be used as default directory for the collections, which
           does not have a specific set of directories defined.              
         -->
-      <CollectionID>TwoPillarCollection</CollectionID>
+      <CollectionID>TestCollection1</CollectionID>
       
       <!-- 
         Paths to the base directory for file storage and checksum files.
