@@ -10,8 +10,8 @@ import org.bitrepository.protocol.MessageContext;
 
 public abstract class IdentifyRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
     protected static final String RESPONSE_FOR_POSITIVE_IDENTIFICATION = "Operation acknowledged and accepted.";
-    private PillarContext context;
-    private Settings settings;
+    protected PillarContext context;
+    private final Settings settings;
     protected RequestValidator requestValidator;
 
     public IdentifyRequestHandler(PillarContext context) {

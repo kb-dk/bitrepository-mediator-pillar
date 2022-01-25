@@ -9,8 +9,8 @@ import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.MessageContext;
 
 public abstract class ActionRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
-    private PillarContext context;
-    private Settings settings;
+    private final Settings settings;
+    protected PillarContext context;
     protected RequestValidator requestValidator;
 
     public ActionRequestHandler(PillarContext context) {

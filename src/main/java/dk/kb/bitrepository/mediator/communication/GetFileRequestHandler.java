@@ -40,6 +40,7 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
         // In refpillar checks that collection has an archive for the collection and
         // gets back a DefaultFileInfo from there with the File object - this is used to set the file size on the response
         // Not sure if we should keep entries of file sizes in database? Ask Kim.
+        // For now ignore file size - it is not required for the Response object.
         System.out.println("Sending progress response!");
     }
 }

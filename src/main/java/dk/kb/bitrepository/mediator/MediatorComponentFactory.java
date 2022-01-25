@@ -10,6 +10,7 @@ import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.security.BasicMessageAuthenticator;
 import org.bitrepository.protocol.security.BasicMessageSigner;
 import org.bitrepository.protocol.security.BasicOperationAuthorizor;
+import org.bitrepository.protocol.security.BasicSecurityManager;
 import org.bitrepository.protocol.security.MessageAuthenticator;
 import org.bitrepository.protocol.security.MessageSigner;
 import org.bitrepository.protocol.security.OperationAuthorizor;
@@ -36,7 +37,7 @@ public class MediatorComponentFactory {
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile, String pillarID) throws IOException {
         MediatorConfiguration configuration = loadConfiguration(pillarID, pathToConfiguration);
-        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration.getPillarSettings());
+        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration);
         MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
         ResponseDispatcher responseDispatcher = new ResponseDispatcher(configuration, messageBus);
         PillarContext pillarContext = new PillarContext(configuration, messageBus, responseDispatcher);
@@ -52,19 +53,18 @@ public class MediatorComponentFactory {
     }
 
     /**
-     * Instantiates the security manager based on the settings and the path to the key file.
+     * Instantiates the security manager based on the configuration and the path to the key file.
      * @param pathToPrivateKeyFile The path to the key file.
-     * @param settings The settings.
+     * @param configuration The configuration.
      * @return The security manager.
      */
-    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, Settings settings) {
+    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, MediatorConfiguration configuration) {
         PermissionStore permissionStore = new PermissionStore();
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);
-        return new NoOpSecurityManager();
-        /*return new BasicSecurityManager(settings.getRepositorySettings(), pathToPrivateKeyFile,
+        return new BasicSecurityManager(configuration.getRepositorySettings(), pathToPrivateKeyFile,
                 authenticator, signer, authorizer, permissionStore,
-                settings.getComponentID());*/
+                configuration.getComponentID());
     }
 }

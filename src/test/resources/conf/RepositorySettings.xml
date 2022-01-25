@@ -58,12 +58,12 @@
       in the system should authenticate the message by signature check against known certificates. 
       Setting this to true, implies that all messages sent should be signed by sender. 
     -->
-    <RequireMessageAuthentication>true</RequireMessageAuthentication>
+    <RequireMessageAuthentication>false</RequireMessageAuthentication>
     <!-- 
       RequireOperationAuthorization, defines whether operations should be authorized against 
       permissions defined in RepositorySettings (in the bottom of this file).
     -->
-    <RequireOperationAuthorization>true</RequireOperationAuthorization>
+    <RequireOperationAuthorization>false</RequireOperationAuthorization>
     <!--
       RequireChecksumForDestructiveRequests, defines whether it is required to provide a checksum
       when running a destructive request (i.e. deleting or replacing a file).

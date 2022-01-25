@@ -11,11 +11,8 @@ import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
 public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
-    PillarContext context;
-
     public IdentifyPillarsForGetFileRequestHandler(PillarContext context) {
         super(context);
-        this.context = context;
     }
 
     @Override
