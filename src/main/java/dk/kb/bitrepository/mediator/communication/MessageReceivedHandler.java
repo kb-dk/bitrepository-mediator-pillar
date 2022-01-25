@@ -124,6 +124,7 @@ public class MessageReceivedHandler {
      * @param fileID       File ID of the file.
      * @return The string representation of the path, created from the unique collection ID and file ID.
      */
+    @Deprecated
     public static String getFilePath(String collectionID, String fileID) {
         return "src/main/java/dk/kb/bitrepository/mediator/files/file:" + collectionID + ":" + fileID;
     }
@@ -135,6 +136,7 @@ public class MessageReceivedHandler {
      * @param fileID       File ID of the file.
      * @return The string representation of the path, created from the unique collection ID and file ID.
      */
+    @Deprecated
     public static String getEncryptedFilePath(String collectionID, String fileID) {
         return "src/main/java/dk/kb/bitrepository/mediator/files/file_encrypted:" + collectionID + ":" + fileID;
     }
@@ -146,14 +148,15 @@ public class MessageReceivedHandler {
      * @param fileID       File ID of the file.
      * @return The string representation of the path, created from the unique collection ID and file ID.
      */
+    @Deprecated
     public static String getDecryptedFilePath(String collectionID, String fileID) {
         return "src/main/java/dk/kb/bitrepository/mediator/files/file_decrypted:" + collectionID + ":" + fileID;
     }
 
-
     /**
      * Helper method that is used to delete local files.
      */
+    @Deprecated
     public static void cleanupFiles() {
         File dir = new File("src/main/java/dk/kb/bitrepository/mediator/files/");
         try {
