@@ -35,8 +35,7 @@ public class MessageReceivedHandler {
             case REPLACE_FILE:
                 return new ReplaceFile(config, message).execute();
             case GET_CHECKSUMS:
-                //
-                break;
+                return new GetChecksums(message).execute();
             default:
                 log.error("Unsupported message type.");
         }

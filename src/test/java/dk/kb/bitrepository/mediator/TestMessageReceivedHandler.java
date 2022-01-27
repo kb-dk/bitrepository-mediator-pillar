@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.database.DatabaseData;
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.communication.EncryptedPillarData;
 import dk.kb.bitrepository.mediator.communication.MessageReceivedHandler;
 import dk.kb.bitrepository.mediator.communication.MockupMessageObject;
 import dk.kb.bitrepository.mediator.communication.MockupResponse;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static dk.kb.bitrepository.database.DatabaseCalls.delete;
@@ -60,8 +62,8 @@ public class TestMessageReceivedHandler {
 
     @AfterEach
     public void cleanup() {
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE, true);
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE, true);
+        delete(ENC_PARAMS_TABLE, true);
+        delete(FILES_TABLE, true);
     }
 
     @Test
@@ -173,6 +175,65 @@ public class TestMessageReceivedHandler {
         assertEquals(encryptedChecksum, res.getEncryptedChecksum());
     }
 
+    @Test
+    @DisplayName("Test #GetChecksums()")
+    public void testGetChecksums() {
+        // Cleanup the AfterEach block
+        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        // Performing extra PUT_FILE operations
+        List<byte[]> extraPayloads = putExtraFiles(3);
+
+        // Create the MockupResponse from the encrypted pillar
+        List<EncryptedPillarData> encryptedPillarData = generateEncryptedPillarDataForMockupResponse(extraPayloads);
+
+        // Use the newly created Mockup Response data to perform GET_CHECKSUMS
+        message = new MockupMessageObject(GET_CHECKSUMS, new MockupResponse(encryptedPillarData));
+        List<?> matchingChecksumsList = (ArrayList<?>) handler.handleReceivedMessage(message);
+
+        for (int i = 0; i < matchingChecksumsList.size(); i++) {
+            EncryptedPillarData e = ((EncryptedPillarData) matchingChecksumsList.get(i));
+            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE).get(0);
+            assertEquals(COLLECTION_ID + i, e.getCollectionID());
+            assertEquals(FILE_ID + i, e.getFileID());
+            assertEquals(res.getChecksum(), e.getChecksum());
+        }
+    }
+
+    @Test
+    @DisplayName("Test #GetChecksums() with one mismatching checksum")
+    public void testGetChecksumsOneWrongChecksum() {
+        // Cleanup the AfterEach block
+        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        // Performing extra PUT_FILE operations
+        List<byte[]> extraPayloads = putExtraFiles(4);
+
+        // Change a payload to be incorrect to simulate bits flitting or other form of corruption
+        extraPayloads.remove(3);
+        extraPayloads.add("test-string-wrong".getBytes(Charset.defaultCharset()));
+
+        // Create the MockupResponse from the encrypted pillar
+        List<EncryptedPillarData> encryptedPillarData = generateEncryptedPillarDataForMockupResponse(extraPayloads);
+
+        // Use the newly created Mockup Response data to perform GET_CHECKSUMS
+        message = new MockupMessageObject(GET_CHECKSUMS, new MockupResponse(encryptedPillarData));
+        List<?> matchingChecksumsList = (ArrayList<?>) handler.handleReceivedMessage(message);
+
+        // Assert that the resulting checksums are 1 less than the payloads, since exactly 1 should be corrupt
+        assertEquals(extraPayloads.size() - 1, matchingChecksumsList.size());
+
+        // Assert that collection id, file id, and checksums of decrypted bytes match
+        for (int i = 0; i < matchingChecksumsList.size(); i++) {
+            EncryptedPillarData e = (EncryptedPillarData) matchingChecksumsList.get(i);
+            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE).get(0);
+
+            assertEquals(COLLECTION_ID + i, e.getCollectionID());
+            assertEquals(FILE_ID + i, e.getFileID());
+            assertEquals(res.getChecksum(), e.getChecksum());
+        }
+    }
+
     /**
      * Used to for easy set up of the AES crypto strategy, with parameters from the 'enc_parameters' table.
      *
@@ -186,5 +247,51 @@ public class TestMessageReceivedHandler {
         byte[] iv = firstEncParamResult.getIv();
 
         return new AESCryptoStrategy(encryptionPassword, salt, iv);
+    }
+
+    /**
+     * Used to perform extra PutFile operations.
+     *
+     * @param howMany How many extra PutFile operations to perform.
+     * @return Returns a list of the payloads that were used.
+     */
+    @NotNull
+    private List<byte[]> putExtraFiles(int howMany) {
+        List<byte[]> out = new ArrayList<>();
+        for (int i = 0; i < howMany; i++) {
+            byte[] extraPayload = ("test string " + i).getBytes(Charset.defaultCharset());
+            message = new MockupMessageObject(PUT_FILE, COLLECTION_ID + i, FILE_ID + i, extraPayload);
+            handler.handleReceivedMessage(message);
+            out.add(extraPayload);
+        }
+        return out;
+    }
+
+    /**
+     * Generates encryptedPillarData, used in the MockupResponse, for every payload that is given.
+     *
+     * @param payloads The payloads to be added to the encryptedPillarData, should be encrypted payloads.
+     * @return The mockup encryptedPillarData.
+     */
+    @NotNull
+    private List<EncryptedPillarData> generateEncryptedPillarDataForMockupResponse(List<byte[]> payloads) {
+        List<EncryptedPillarData> encryptedPillarData = new ArrayList<>();
+
+        // Insert data for every extra PutFile that has been run through the #putExtraFiles() method.
+        for (int i = 0; i < payloads.size(); i++) {
+            String collectionID = COLLECTION_ID + i;
+            String fileID = FILE_ID + i;
+
+            FilesData res = (FilesData) select(collectionID, fileID, FILES_TABLE).get(0);
+            EncryptedParametersData cry = (EncryptedParametersData) select(collectionID, fileID, ENC_PARAMS_TABLE).get(0);
+
+            encryptedPillarData.add(new EncryptedPillarData(
+                    collectionID, fileID,
+                    new AESCryptoStrategy(encryptionPassword, cry.getSalt(), cry.getIv()).encrypt(payloads.get(i)),
+                    res.getEncryptedChecksum(),
+                    res.getChecksumTimestamp()));
+        }
+
+        return encryptedPillarData;
     }
 }

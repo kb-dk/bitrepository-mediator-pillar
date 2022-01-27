@@ -2,8 +2,8 @@ package dk.kb.bitrepository.mediator.communication;
 
 public class MockupMessageObject {
     private final MockupMessageType type;
-    private final String collectionID;
-    private final String fileID;
+    private String collectionID = null;
+    private String fileID = null;
     private byte[] payload = new byte[0];
     private MockupResponse mockupResponse = null;
 
@@ -18,6 +18,11 @@ public class MockupMessageObject {
         this.payload = payload;
         this.collectionID = collectionID;
         this.fileID = fileID;
+    }
+
+    public MockupMessageObject(MockupMessageType type, MockupResponse mockupResponse) {
+        this.type = type;
+        this.mockupResponse = mockupResponse;
     }
 
     public MockupMessageObject(MockupMessageType type, String collectionID, String fileID, byte[] payload, MockupResponse mockupResponse) {
