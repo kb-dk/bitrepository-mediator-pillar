@@ -100,7 +100,7 @@ public class TestMessageReceivedHandler {
         byte[] bytesReceived = (byte[]) handler.handleReceivedMessage(message);
 
         assertTrue(bytesReceived.length > 0);
-        assertEquals(testString, new String(bytesReceived));
+        assertEquals(testString, new String(bytesReceived, Charset.defaultCharset()));
     }
 
     @Test
