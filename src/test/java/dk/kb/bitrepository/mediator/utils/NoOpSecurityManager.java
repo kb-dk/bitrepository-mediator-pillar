@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.utils;
 
 import org.bitrepository.protocol.security.SecurityManager;
 import org.bitrepository.protocol.security.exception.CertificateUseException;

@@ -1,17 +1,17 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.database.DatabaseData;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.database.DatabaseCalls.select;
-import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
-import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class DeleteFile extends MessageResult<String> {
     private final String collectionID;

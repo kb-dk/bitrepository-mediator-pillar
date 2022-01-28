@@ -1,6 +1,6 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

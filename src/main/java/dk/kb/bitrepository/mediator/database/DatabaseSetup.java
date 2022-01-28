@@ -1,6 +1,6 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +38,7 @@ public class DatabaseSetup {
             log.info("Configurations file has been created successfully.");
         }
 
-        if (Files.exists(Path.of("src/main/java/dk/kb/bitrepository/database/configs/configurations.properties"))) {
+        if (Files.exists(Path.of("src/main/java/dk/kb/bitrepository/mediator/database/configs/configurations.properties"))) {
             DatabaseUtils.createTables();
             System.out.println("Tables have been created.");
             log.info("Tables 'files' and 'enc_parameters' created successfully.");

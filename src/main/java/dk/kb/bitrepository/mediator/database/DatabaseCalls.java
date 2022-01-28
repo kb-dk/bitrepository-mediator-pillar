@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator.database;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -10,12 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static dk.kb.bitrepository.database.DatabaseConstants.ENC_PARAMS_TABLE;
-import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
-import static dk.kb.bitrepository.database.DatabaseUtils.connect;
-import static dk.kb.bitrepository.database.DatabaseUtils.createPreparedStatement;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 
 public class DatabaseCalls {
     private static final Logger log = LoggerFactory.getLogger(DatabaseCalls.class);
@@ -67,16 +63,16 @@ public class DatabaseCalls {
         query = query.replace("?", collectionID);
         query = query.replace("@", fileID);
 
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+        try (Connection connection = DatabaseUtils.connect(); Statement statement = connection.createStatement()) {
             log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
                 if (table.equals(ENC_PARAMS_TABLE)) {
-                    EncryptedParametersData data = new EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3), result.getBytes(4), result.getInt(5));
+                    DatabaseData.EncryptedParametersData data = new DatabaseData.EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3), result.getBytes(4), result.getInt(5));
 
                     resultList.add(data);
                 } else if (table.equals(FILES_TABLE)) {
-                    FilesData data = new FilesData(result.getString(1), result.getString(2), result.getObject(3, OffsetDateTime.class), result.getObject(4, OffsetDateTime.class), result.getString(5), result.getString(6), result.getObject(7, OffsetDateTime.class));
+                    DatabaseData.FilesData data = new DatabaseData.FilesData(result.getString(1), result.getString(2), result.getObject(3, OffsetDateTime.class), result.getObject(4, OffsetDateTime.class), result.getString(5), result.getString(6), result.getObject(7, OffsetDateTime.class));
 
                     resultList.add(data);
                 }
@@ -187,7 +183,7 @@ public class DatabaseCalls {
      * @param args  The arguments to put in the given query.
      */
     private static void executeQuery(String query, boolean verbose, @NotNull Object... args) {
-        try (Connection connection = connect()) {
+        try (Connection connection = DatabaseUtils.connect()) {
             prepareStatement(query, connection, verbose, args);
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);
@@ -204,7 +200,7 @@ public class DatabaseCalls {
      * @throws SQLException Throws an exception if the connection to the Database fails.
      */
     private static void prepareStatement(String query, Connection connection, boolean verbose, @NotNull Object... args) throws SQLException {
-        PreparedStatement statement = createPreparedStatement(connection, query, args);
+        PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args);
         if (verbose) {
             log.info("Executing >>" + statement);
         }

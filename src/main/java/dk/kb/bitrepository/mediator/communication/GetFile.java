@@ -1,9 +1,9 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.database.DatabaseData;
-import dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
-import dk.kb.bitrepository.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
+import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.utils.ChecksumUtils;
@@ -15,9 +15,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.select;
-import static dk.kb.bitrepository.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
 
 public class GetFile extends MessageResult<byte[]> {

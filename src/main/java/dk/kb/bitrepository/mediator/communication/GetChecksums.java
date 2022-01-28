@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.select;
-import static dk.kb.bitrepository.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class GetChecksums extends MessageResult<List<EncryptedPillarData>> {

@@ -1,7 +1,7 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
-import dk.kb.bitrepository.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.insertInto;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 

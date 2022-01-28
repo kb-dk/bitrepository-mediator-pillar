@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.database.configs;
+package dk.kb.bitrepository.mediator.database.configs;
 
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.iv.RandomIvGenerator;
@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public class ConfigurationHandler {
-    private final String configPath = "src/main/java/dk/kb/bitrepository/database/configs/configurations.properties";
+    private final String configPath = "src/main/java/dk/kb/bitrepository/mediator/database/configs/configurations.properties";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
     private Properties properties = null;

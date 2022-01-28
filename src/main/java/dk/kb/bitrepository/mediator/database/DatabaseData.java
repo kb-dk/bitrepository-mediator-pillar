@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator.database;
 
 import java.time.OffsetDateTime;
 

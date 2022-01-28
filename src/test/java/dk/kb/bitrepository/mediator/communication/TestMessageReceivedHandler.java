@@ -1,13 +1,13 @@
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.database.DatabaseData;
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.communication.EncryptedPillarData;
 import dk.kb.bitrepository.mediator.communication.MessageReceivedHandler;
 import dk.kb.bitrepository.mediator.communication.MockupMessageObject;
 import dk.kb.bitrepository.mediator.communication.MockupResponse;
-import dk.kb.bitrepository.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
@@ -21,11 +21,11 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.database.DatabaseCalls.select;
-import static dk.kb.bitrepository.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MockupMessageType.*;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 import static org.junit.jupiter.api.Assertions.*;

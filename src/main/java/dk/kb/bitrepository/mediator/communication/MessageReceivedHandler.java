@@ -1,8 +1,8 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
-import dk.kb.bitrepository.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;

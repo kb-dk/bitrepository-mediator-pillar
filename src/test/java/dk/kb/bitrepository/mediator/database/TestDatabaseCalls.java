@@ -1,6 +1,8 @@
-package dk.kb.bitrepository.database;
+package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
+import dk.kb.bitrepository.mediator.database.DatabaseUtils;
+import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -11,11 +13,11 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
-import static dk.kb.bitrepository.database.DatabaseCalls.*;
-import static dk.kb.bitrepository.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.database.DatabaseData.EncryptedParametersData;
-import static dk.kb.bitrepository.database.DatabaseData.FilesData;
-import static dk.kb.bitrepository.database.DatabaseUtils.dropTables;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.database.DatabaseUtils.dropTables;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test Database Calls")

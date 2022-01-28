@@ -1,7 +1,6 @@
 package dk.kb.bitrepository.mediator.utils;
 
 import dk.kb.bitrepository.mediator.MediatorConfiguration;
-import dk.kb.bitrepository.mediator.TestUtils;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.protocol.ProtocolVersionLoader;

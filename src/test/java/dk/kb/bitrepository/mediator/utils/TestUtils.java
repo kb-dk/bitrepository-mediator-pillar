@@ -1,5 +1,6 @@
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.utils;
 
+import dk.kb.bitrepository.mediator.MediatorConfiguration;
 import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;

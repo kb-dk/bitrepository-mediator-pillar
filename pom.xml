@@ -183,7 +183,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>dk.kb.bitrepository.database.DatabaseUtils</mainClass>
+                    <mainClass>dk.kb.bitrepository.mediator.database.DatabaseUtils</mainClass>
                 </configuration>
             </plugin>
 

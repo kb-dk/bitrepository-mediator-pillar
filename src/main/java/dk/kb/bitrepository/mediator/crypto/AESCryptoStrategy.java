@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.crypto;
+package dk.kb.bitrepository.mediator.crypto;
 
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
