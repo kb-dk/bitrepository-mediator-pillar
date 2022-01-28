@@ -1,14 +1,10 @@
-package dk.kb.bitrepository.mediator.crypto;
+package dk.kb.bitrepository.crypto;
 
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
+import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -18,11 +14,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
@@ -30,18 +22,33 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private final Logger log = LoggerFactory.getLogger(AESCryptoStrategy.class);
     private final String SECRET_KEY_ALGO = "PBKDF2WithHmacSHA256"; // TODO figure out which of these to move to settings
     private final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
-    private final int HASHING_ITERATIONS = 100_000;
     private final int KEY_LENGTH = 256;
-    private String salt;
-    private SecretKey secretKey; // TODO consider base64-encoding to string
-    private IvParameterSpec iv;
-    private Cipher cipher;
+    private int HASHING_ITERATIONS = 100_000;
+    private final String salt;
+    private final SecretKey secretKey; // TODO consider base64-encoding to string
+    private final IvParameterSpec iv;
+    private final Cipher cipher;
 
-    public AESCryptoStrategy(String password) { // TODO gonna need to provide key, salt and IV through here or in methods
+    public AESCryptoStrategy(String password) {
         this.salt = generateSalt();
         this.secretKey = getKeyFromPassword(password, salt);
         this.iv = generateIv();
         this.cipher = initCipher();
+    }
+
+    public AESCryptoStrategy(String password, String salt, byte[] iv) {
+        this.salt = salt;
+        this.secretKey = getKeyFromPassword(password, salt);
+        this.iv = generateIv(iv);
+        this.cipher = initCipher();
+    }
+
+    public AESCryptoStrategy(String password, String salt, byte[] iv, int iterations) {
+        this.salt = salt;
+        this.secretKey = getKeyFromPassword(password, salt);
+        this.iv = generateIv(iv);
+        this.cipher = initCipher();
+        this.HASHING_ITERATIONS = iterations;
     }
 
     @Override
@@ -57,6 +64,18 @@ public class AESCryptoStrategy implements CryptoStrategy {
     }
 
     @Override
+    public byte[] encrypt(byte[] bytes) {
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
+        } catch (InvalidKeyException e) {
+            throw new IllegalStateException("Invalid key provided for encryption", e);
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new IllegalStateException("Bad parameters provided for encryption", e);
+        }
+        return doTranscipher(bytes);
+    }
+
+    @Override
     public void decrypt(Path encryptedInputFile, Path decryptedOutputFile) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
@@ -68,9 +87,21 @@ public class AESCryptoStrategy implements CryptoStrategy {
         doTranscipher(encryptedInputFile, decryptedOutputFile);
     }
 
+    @Override
+    public byte[] decrypt(byte[] bytes) {
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
+        } catch (InvalidKeyException e) {
+            throw new IllegalStateException("Invalid key provided for decryption", e);
+        } catch (InvalidAlgorithmParameterException e) {
+            throw new IllegalStateException("Bad parameters provided for decryption", e);
+        }
+        return doTranscipher(bytes);
+    }
+
+
     private void doTranscipher(Path inputFile, Path encryptedOutputFile) {
-        try (InputStream inputStream = Files.newInputStream(inputFile);
-             OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
+        try (InputStream inputStream = Files.newInputStream(inputFile); OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -97,6 +128,20 @@ public class AESCryptoStrategy implements CryptoStrategy {
         }
     }
 
+    private byte[] doTranscipher(byte[] bytes) {
+        byte[] outputBytes;
+
+        try {
+            outputBytes = cipher.doFinal(bytes);
+        } catch (IllegalBlockSizeException e) {
+            throw new IllegalStateException("Bad data length provided to AES", e);
+        } catch (BadPaddingException e) {
+            throw new IllegalStateException("Bad padding.. did you use correct key for cipher?", e);
+        }
+
+        return outputBytes;
+    }
+
     private Cipher initCipher() {
         try {
             return Cipher.getInstance(CIPHER_ALGO);
@@ -109,8 +154,7 @@ public class AESCryptoStrategy implements CryptoStrategy {
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGO);
             KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(StandardCharsets.UTF_8), HASHING_ITERATIONS, KEY_LENGTH);
-            SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
-                    .getEncoded(), "AES");
+            SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
             return secret;
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("AES should always be present in a Java SE runtime", e);
@@ -131,11 +175,22 @@ public class AESCryptoStrategy implements CryptoStrategy {
         return new IvParameterSpec(iv);
     }
 
+    private IvParameterSpec generateIv(byte[] iv) {
+        return new IvParameterSpec(iv);
+    }
+
+    @Override
     public String getSalt() {
         return salt;
     }
 
+    @Override
     public IvParameterSpec getIV() {
         return iv;
+    }
+
+    @Override
+    public int getIterations() {
+        return HASHING_ITERATIONS;
     }
 }

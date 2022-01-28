@@ -1,7 +1,8 @@
-package dk.kb.bitrepository.mediator.crypto;
+package dk.kb.bitrepository.crypto;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -10,27 +11,30 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayName("Test AES Cryptographic Strategy")
 public class TestAESCryptoStrategy {
-    private String testPassword = "12345678";
-    private String testFilePath = getClass().getClassLoader().getResource("crypto/fileToEncrypt.txt").getPath();
-    private Path inputFile;
+    private final String testPassword = "12345678";
+    private static final String testFilePath = Objects.requireNonNull(TestAESCryptoStrategy.class.getClassLoader().
+            getResource("crypto/fileToEncrypt.txt")).getPath();
+    private static Path inputFile;
 
     @TempDir
-    Path tempDir;
+    public static Path tempDir;
 
-    @BeforeEach
-    public void setupTest() throws IOException {
+    @BeforeAll
+    public static void setup() throws IOException {
         Path testFileResource = Path.of(testFilePath);
-        inputFile = tempDir.resolve(testFileResource.getFileName());
+        inputFile = tempDir.resolve(testFileResource);
         Files.copy(testFileResource, inputFile);
     }
 
     @Test
+    @DisplayName("Test that encrypting and decrypting result returns the correct output.")
     public void testEncryptionDecryptionGivesOriginalOutput() throws IOException {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");
@@ -43,6 +47,7 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
+    @DisplayName("Test that one can't read contents of encrypted file")
     public void testCantReadContentOfEncryptedFile() throws IOException {
         String inputContent = Files.readString(inputFile);
         Path encryptedFile = tempDir.resolve("encryptedFile");
@@ -58,13 +63,25 @@ public class TestAESCryptoStrategy {
     }
 
     @Test
+    @DisplayName("Test that encryption can't be decrypted using wrong password")
     public void testWrongPasswordGivesBadDecryption() {
         Path encryptedFile = tempDir.resolve("encryptedFile");
         Path decryptedFile = tempDir.resolve("decryptedFile");
-        AESCryptoStrategy encryption = new AESCryptoStrategy(testPassword);
-        AESCryptoStrategy decryption = new AESCryptoStrategy("87654321");
+        CryptoStrategy encryption = new AESCryptoStrategy(testPassword);
+        CryptoStrategy decryption = new AESCryptoStrategy("87654321");
 
         encryption.encrypt(inputFile, encryptedFile);
         assertThrows(IllegalStateException.class, () -> decryption.decrypt(encryptedFile, decryptedFile));
+    }
+
+    @Test
+    @DisplayName("Test encryption and decryption of byte[]")
+    public void testEncryptionAndDecryptionOfByteArray() {
+        byte[] payload = "1923u1i4".getBytes(StandardCharsets.UTF_8);
+        CryptoStrategy AES = new AESCryptoStrategy(testPassword);
+        byte[] encryptedData = AES.encrypt(payload);
+        assertNotEquals(payload, encryptedData);
+        byte[] decryptedData = AES.decrypt(encryptedData);
+        assertEquals(Arrays.toString(payload), Arrays.toString(decryptedData));
     }
 }
