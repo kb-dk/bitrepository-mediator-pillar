@@ -1,8 +1,8 @@
 package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.database.configs.ConfigurationHandler;
-import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
+import dk.kb.bitrepository.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.crypto.CryptoStrategy;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +17,7 @@ import java.nio.file.Path;
 
 public class MessageReceivedHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
-    private ConfigurationHandler config = null;
+    private ConfigurationHandler config;
 
     public MessageReceivedHandler(ConfigurationHandler configurationHandler) {
         this.config = configurationHandler;

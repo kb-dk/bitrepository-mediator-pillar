@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class DatabaseSetup {
-    private static ConfigurationHandler configs;
     private static final Logger log = LoggerFactory.getLogger(DatabaseSetup.class);
 
     /**
@@ -33,7 +32,7 @@ public class DatabaseSetup {
             System.exit(0);
         }
         if (args.length >= 6) {
-            configs = new ConfigurationHandler(args[0], args[1], args[2]);
+            ConfigurationHandler configs = new ConfigurationHandler(args[0], args[1], args[2]);
             configs.encryptLoginInformation(args[3], args[4], args[5]);
             System.out.println("Configurations file has been created successfully.");
             log.info("Configurations file has been created successfully.");

@@ -1,7 +1,5 @@
 package dk.kb.bitrepository.crypto;
 
-import dk.kb.bitrepository.utils.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.utils.crypto.CryptoStrategy;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;

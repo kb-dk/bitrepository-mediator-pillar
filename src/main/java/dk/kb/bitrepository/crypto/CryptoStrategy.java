@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.utils.crypto;
+package dk.kb.bitrepository.crypto;
 
 import javax.crypto.spec.IvParameterSpec;
 import java.nio.file.Path;

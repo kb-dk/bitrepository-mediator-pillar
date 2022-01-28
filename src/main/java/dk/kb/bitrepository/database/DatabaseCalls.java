@@ -20,7 +20,7 @@ import static dk.kb.bitrepository.database.DatabaseUtils.createPreparedStatement
 public class DatabaseCalls {
     private static final Logger log = LoggerFactory.getLogger(DatabaseCalls.class);
 
-    public DatabaseCalls() {
+    private DatabaseCalls() {
     }
 
     /**
