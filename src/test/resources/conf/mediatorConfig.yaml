@@ -1,4 +1,4 @@
 pillar:
-  componentID: "test-pillar"
+  privateMessageDestination: "topic://mediator-test"
 crypto:
   algorithm: "AES"

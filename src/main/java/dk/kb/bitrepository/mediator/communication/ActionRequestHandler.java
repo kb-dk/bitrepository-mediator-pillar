@@ -8,13 +8,12 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.MessageContext;
 
-public abstract class IdentifyRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
-    protected static final String RESPONSE_FOR_POSITIVE_IDENTIFICATION = "Operation acknowledged and accepted.";
-    protected PillarContext context;
+public abstract class ActionRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
     private final Settings settings;
+    protected PillarContext context;
     protected RequestValidator requestValidator;
 
-    public IdentifyRequestHandler(PillarContext context) {
+    public ActionRequestHandler(PillarContext context) {
         this.context = context;
         settings = context.getPillarSettings();
         requestValidator = new RequestValidator(settings);
@@ -26,29 +25,23 @@ public abstract class IdentifyRequestHandler<T extends MessageRequest> implement
     @Override
     public void processRequest(T request, MessageContext messageContext) throws RequestHandlerException {
         validateRequest(request, messageContext);
-        sendPositiveResponse(request, messageContext);
+        sendProgressResponse();
+        performAction();
     }
 
     @Override
     public abstract MessageResponse generateFailedResponse(T request);
 
     /**
-     * Validate both that the given request it is possible to perform and that it is allowed.
-     * @param request The request to validate.
+     * Validate both that the given request is possible to perform and that it is allowed.
+     *
+     * @param request        The request to validate.
      * @param requestContext The context for the request.
      * @throws RequestHandlerException If something in the request is inconsistent with the possibilities of the pillar.
      */
     protected abstract void validateRequest(T request, MessageContext requestContext) throws RequestHandlerException;
 
-    /**
-     * Sends a identification response.
-     * @param request The request to respond to.
-     * @param requestContext The context for the request.
-     * @throws RequestHandlerException If the positive response could not be created.
-     */
-    protected abstract void sendPositiveResponse(T request, MessageContext requestContext) throws RequestHandlerException;
+    protected abstract void performAction();
 
-    public Settings getSettings() {
-        return settings;
-    }
+    protected abstract void sendProgressResponse();
 }
