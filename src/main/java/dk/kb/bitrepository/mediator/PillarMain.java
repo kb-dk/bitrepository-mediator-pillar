@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
@@ -22,9 +21,17 @@ public class PillarMain implements Callable<Integer>{
     private String pillarID;
 
     @Override
-    public Integer call() throws IOException {
-        MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath, pillarID);
-        pillar.start();
+    public Integer call() {
+        try {
+            MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath, pillarID);
+            log.info("Pillar started");
+            synchronized(pillar) {
+                pillar.wait(); // wait indefinitely to keep thread alive
+            }
+        } catch (Exception e) {
+            log.error("Error starting pillar", e);
+            return 1;
+        }
         return 0;
     }
     

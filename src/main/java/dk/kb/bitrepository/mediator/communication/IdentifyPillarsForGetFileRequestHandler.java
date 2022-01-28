@@ -42,7 +42,7 @@ public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHand
     }
 
     @Override
-    public MessageResponse generateFailedResponse(IdentifyPillarsForGetFileRequest request) {
+    public MessageResponse generateFailedResponse(IdentifyPillarsForGetFileRequest request) { // TODO
         return null;
     }
 }

@@ -31,10 +31,10 @@ public class RequestValidator {
     }
 
     /**
-     * Uses the FileIDValidator to validate the format of a given file id.
-     * Also validates, that the file-id does not start with illegal 'path' characters (e.g. '..' or starts with a '/').
-     * @param fileID The id to validate.
-     * @throws RequestHandlerException If the id of the file was invalid.
+     * Uses the FileIDValidator to validate the format of a given file ID.
+     * Also validates, that the file ID does not start with illegal 'path' characters (e.g. '..' or starts with a '/').
+     * @param fileID The ID to validate.
+     * @throws RequestHandlerException If the ID of the file was invalid.
      */
     public void validateFileIDFormat(String fileID) throws RequestHandlerException {
         ResponseInfo ri = fileIDValidator.validateFileID(fileID);

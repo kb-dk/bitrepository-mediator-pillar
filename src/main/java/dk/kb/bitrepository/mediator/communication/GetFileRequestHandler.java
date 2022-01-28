@@ -17,7 +17,7 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
     }
 
     @Override
-    public MessageResponse generateFailedResponse(GetFileRequest request) {
+    public MessageResponse generateFailedResponse(GetFileRequest request) { // TODO
         return null;
     }
 
@@ -27,7 +27,7 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
     }
 
     @Override
-    protected void performAction() {
+    protected void performAction() { // TODO
         System.out.println("Performing action!");
         // Check DAO
         // If file does not exist send failed response
@@ -36,7 +36,7 @@ public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> 
     }
 
     @Override
-    protected void sendProgressResponse() {
+    protected void sendProgressResponse() { // TODO
         // In refpillar checks that collection has an archive for the collection and
         // gets back a DefaultFileInfo from there with the File object - this is used to set the file size on the response
         // Not sure if we should keep entries of file sizes in database? Ask Kim.
