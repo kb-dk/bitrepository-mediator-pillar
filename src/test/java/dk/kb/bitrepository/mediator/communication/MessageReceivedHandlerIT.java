@@ -31,7 +31,7 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test MessageReceivedHandler")
-public class TestMessageReceivedHandler {
+public class MessageReceivedHandlerIT { // TODO consider removing/mocking database calls so this is not an integration test
     private static MockupMessageObject message;
     private static String encryptionPassword;
     private static String testString;
@@ -70,8 +70,8 @@ public class TestMessageReceivedHandler {
     @DisplayName("Test #PutFile()")
     public void testPutFile() {
         // Encrypt the payload
-        CryptoStrategy AES = setupCryptoStrategy();
-        byte[] encryptedPayload = AES.encrypt(payload);
+        CryptoStrategy aes = setupCryptoStrategy();
+        byte[] encryptedPayload = aes.encrypt(payload);
 
         // Compute new checksums
         String newChecksum = generateChecksum(new ByteArrayInputStream(payload), checksumSpecTYPE);
@@ -83,15 +83,15 @@ public class TestMessageReceivedHandler {
         assertEquals(result.getEncryptedChecksum(), newEncryptedChecksum);
 
         // Assert that the decrypted bytes are equal to the original payload bytes
-        assertEquals(testString, new String(AES.decrypt(encryptedPayload), StandardCharsets.UTF_8));
+        assertEquals(testString, new String(aes.decrypt(encryptedPayload), StandardCharsets.UTF_8));
     }
 
     @Test
     @DisplayName("Test #GetFile()")
     public void testGetFile() {
         // Created encrypted payload from PutFile payload
-        CryptoStrategy AES = setupCryptoStrategy();
-        byte[] encryptedPayload = AES.encrypt(payload);
+        CryptoStrategy aes = setupCryptoStrategy();
+        byte[] encryptedPayload = aes.encrypt(payload);
 
         // Create a mockup message object with a mockup response containing the encrypted payload.
         message = new MockupMessageObject(GET_FILE, COLLECTION_ID, FILE_ID, null, new MockupResponse(encryptedPayload));
