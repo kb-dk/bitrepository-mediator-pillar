@@ -62,8 +62,8 @@ public class TestMessageReceivedHandler {
 
     @AfterEach
     public void cleanup() {
-        delete(ENC_PARAMS_TABLE, true);
-        delete(FILES_TABLE, true);
+        delete(ENC_PARAMS_TABLE);
+        delete(FILES_TABLE);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class TestMessageReceivedHandler {
         String newEncryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedPayload), checksumSpecTYPE);
 
         // Assert that checksums match
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         assertEquals(result.getChecksum(), newChecksum);
         assertEquals(result.getEncryptedChecksum(), newEncryptedChecksum);
 
@@ -133,10 +133,10 @@ public class TestMessageReceivedHandler {
         assertEquals(payloadChecksum, checksumDeleted);
 
         // Assert that the local database indexes are deleted
-        List<DatabaseData> filesData = select(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        List<DatabaseData> encryptionParameterData = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        assertTrue(filesData.isEmpty());
-        assertTrue(encryptionParameterData.isEmpty());
+        FilesData filesData = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        EncryptedParametersData encryptionParameterData = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        assertNull(filesData);
+        assertNull(encryptionParameterData);
     }
 
     @Test
@@ -149,7 +149,7 @@ public class TestMessageReceivedHandler {
     @Test
     @DisplayName("Test of #ReplaceFile()")
     public void testReplaceFile() {
-        FilesData res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        FilesData res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         String oldChecksum = res.getChecksum();
         String oldEncryptedChecksum = res.getEncryptedChecksum();
         OffsetDateTime oldReceivedTimestamp = res.getReceivedTimestamp();
@@ -165,7 +165,7 @@ public class TestMessageReceivedHandler {
         String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedNewPayload), checksumSpecTYPE);
 
         // Update 'select' result
-        res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE).get(0);
+        res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         // Assert that the table was updated
         assertNotEquals(oldChecksum, res.getChecksum());
         assertNotEquals(oldEncryptedChecksum, res.getEncryptedChecksum());
@@ -193,7 +193,7 @@ public class TestMessageReceivedHandler {
 
         for (int i = 0; i < matchingChecksumsList.size(); i++) {
             EncryptedPillarData e = ((EncryptedPillarData) matchingChecksumsList.get(i));
-            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE).get(0);
+            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
             assertEquals(COLLECTION_ID + i, e.getCollectionID());
             assertEquals(FILE_ID + i, e.getFileID());
             assertEquals(res.getChecksum(), e.getChecksum());
@@ -226,7 +226,7 @@ public class TestMessageReceivedHandler {
         // Assert that collection id, file id, and checksums of decrypted bytes match
         for (int i = 0; i < matchingChecksumsList.size(); i++) {
             EncryptedPillarData e = (EncryptedPillarData) matchingChecksumsList.get(i);
-            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE).get(0);
+            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
 
             assertEquals(COLLECTION_ID + i, e.getCollectionID());
             assertEquals(FILE_ID + i, e.getFileID());
@@ -241,10 +241,9 @@ public class TestMessageReceivedHandler {
      */
     @NotNull
     private CryptoStrategy setupCryptoStrategy() {
-        List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
-        String salt = firstEncParamResult.getSalt();
-        byte[] iv = firstEncParamResult.getIv();
+        EncryptedParametersData result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        String salt = result.getSalt();
+        byte[] iv = result.getIv();
 
         return new AESCryptoStrategy(encryptionPassword, salt, iv);
     }
@@ -282,8 +281,8 @@ public class TestMessageReceivedHandler {
             String collectionID = COLLECTION_ID + i;
             String fileID = FILE_ID + i;
 
-            FilesData res = (FilesData) select(collectionID, fileID, FILES_TABLE).get(0);
-            EncryptedParametersData cry = (EncryptedParametersData) select(collectionID, fileID, ENC_PARAMS_TABLE).get(0);
+            FilesData res = (FilesData) select(collectionID, fileID, FILES_TABLE);
+            EncryptedParametersData cry = (EncryptedParametersData) select(collectionID, fileID, ENC_PARAMS_TABLE);
 
             encryptedPillarData.add(new EncryptedPillarData(
                     collectionID, fileID,

@@ -50,22 +50,20 @@ public class GetFile extends MessageResult<byte[]> {
             return out;
         }
 
-        List<DatabaseData> filesResult = select(collectionID, fileID, FILES_TABLE);
-        if (!filesResult.isEmpty()) {
+        FilesData filesResult = (FilesData) select(collectionID, fileID, FILES_TABLE);
+        if (filesResult != null) {
             // Get old encrypted checksum, and generate new encrypted checksum
-            FilesData firstFilesResult = (FilesData) filesResult.get(0);
             String newEncryptedChecksum = ChecksumUtils.generateChecksum(new ByteArrayInputStream(encryptedPayload), checksumSpecTYPE);
-            String oldEncryptedChecksum = firstFilesResult.getEncryptedChecksum();
+            String oldEncryptedChecksum = filesResult.getEncryptedChecksum();
 
             // Compared checksum of file from encrypted pillar with the encrypted checksum in local table.
             if (newEncryptedChecksum.equals(oldEncryptedChecksum)) {
                 // Get the used encryption parameters from the 'enc_parameters' table.
-                List<DatabaseData> result = select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-                EncryptedParametersData firstEncParamResult = (EncryptedParametersData) result.get(0);
+                EncryptedParametersData encParams = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
                 // Decrypt the file using the parameters.
                 try {
-                    CryptoStrategy AES = initAES(config.getEncryptionPassword(), firstEncParamResult.getSalt(), firstEncParamResult.getIv());
+                    CryptoStrategy AES = initAES(config.getEncryptionPassword(), encParams.getSalt(), encParams.getIv());
                     out = AES.decrypt(encryptedPayload);
                 } catch (IOException e) {
                     log.error("An error occurred when fetching the AES password from the configs.", e);

@@ -5,8 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
 import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
@@ -25,17 +23,16 @@ public class DeleteFile extends MessageResult<String> {
 
     @Override
     public String execute() {
-        List<DatabaseData> filesData = select(collectionID, fileID, FILES_TABLE);
+        FilesData filesData = (FilesData) select(collectionID, fileID, FILES_TABLE);
 
-        if (!filesData.isEmpty()) {
-            FilesData firstResult = (FilesData) filesData.get(0);
-            String encryptedChecksum = firstResult.getEncryptedChecksum();
+        if (filesData != null) {
+            String encryptedChecksum = filesData.getEncryptedChecksum();
 
             // TODO: Relay 'delete' call to Encrypted Pillar - and get response (Enc_Checksum or boolean?)
             boolean deletedFromEncryptedPillar = relayMessageToEncryptedPillar(collectionID, fileID, encryptedChecksum);
 
             if (deletedFromEncryptedPillar) {
-                String checksum = firstResult.getChecksum();
+                String checksum = filesData.getChecksum();
                 delete(collectionID, fileID, FILES_TABLE);
                 delete(collectionID, fileID, ENC_PARAMS_TABLE);
 

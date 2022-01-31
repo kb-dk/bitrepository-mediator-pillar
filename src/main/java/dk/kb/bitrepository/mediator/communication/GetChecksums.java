@@ -40,7 +40,7 @@ public class GetChecksums extends MessageResult<List<EncryptedPillarData>> {
     }
 
     private EncryptedPillarData createChecksumDataIfChecksumsMatch(String collectionID, String fileID, String encryptedChecksumPillar) {
-        FilesData result = (FilesData) select(collectionID, fileID, FILES_TABLE).get(0);
+        FilesData result = (FilesData) select(collectionID, fileID, FILES_TABLE);
 
         if (result.getEncryptedChecksum().equals(encryptedChecksumPillar)) {
             //FIXME: Correct information returned?
