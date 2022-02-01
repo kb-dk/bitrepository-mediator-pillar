@@ -8,12 +8,12 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.MessageContext;
 
-public abstract class ActionRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
+public abstract class PerformRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
     private final Settings settings;
     protected PillarContext context;
     protected RequestValidator requestValidator;
 
-    public ActionRequestHandler(PillarContext context) {
+    public PerformRequestHandler(PillarContext context) {
         this.context = context;
         settings = context.getPillarSettings();
         requestValidator = new RequestValidator(settings);

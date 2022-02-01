@@ -6,7 +6,7 @@ import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public class GetFileRequestHandler extends ActionRequestHandler<GetFileRequest> {
+public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest> {
     public GetFileRequestHandler(PillarContext context) {
         super(context);
     }
