@@ -11,28 +11,53 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateEncryptionParametersTable;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateFilesTable;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateTimestamp;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_ITERATIONS;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_IV;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_SALT;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENC_CHECKSUM;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.database.DatabaseUtils.dropTables;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Test Database Calls")
-public class TestDatabaseCalls {
+public class DatabaseCallsIT {
     private static final ConfigurationHandler configs = new ConfigurationHandler();
 
     @BeforeAll
     static void setUp() throws Exception {
-        // Drop tables
-        dropTables();
-        System.out.println("Database tables has been dropped.");
+        DatabaseSetup.main(new String[] {"testdb", "jdbc:postgresql://localhost", "5432", "testuser", "testpw", "testcryppw"});
         // Create tables anew
         if (configs.configExists()) {
+            // Drop tables
+            System.out.println("Database tables has been dropped.");
+            dropTables();
             DatabaseUtils.createTables();
             System.out.println("Tables have been created.");
         } else {
             System.out.println("Config has not been set up. Run DatabaseSetup before running any tests.");
+            System.exit(0);
         }
     }
 

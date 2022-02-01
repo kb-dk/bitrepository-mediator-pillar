@@ -19,7 +19,7 @@ public class DatabaseSetup {
      * while the other information stays as cleartext.
      * Example of parameters:
      * </p>
-     * testdb jdbc:postgresql://localhost 5432 masj masj testestpw
+     * testdb jdbc:postgresql://localhost 5432 testuser testpw testcryptopw
      * </p
      * If the main method is run with 0 arguments, and a configurations file exists,
      * then it will simply create the tables 'files' and 'enc_parameters'.
