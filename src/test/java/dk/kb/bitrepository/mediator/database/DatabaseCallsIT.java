@@ -9,29 +9,9 @@ import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
-import java.util.List;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateEncryptionParametersTable;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateFilesTable;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.updateTimestamp;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_ITERATIONS;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_IV;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_SALT;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENC_CHECKSUM;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.database.DatabaseUtils.dropTables;
@@ -43,7 +23,7 @@ public class DatabaseCallsIT {
 
     @BeforeAll
     static void setUp() throws Exception {
-        DatabaseSetup.main(new String[] {"testdb", "jdbc:postgresql://localhost", "5432", "testuser", "testpw", "testcryppw"});
+        DatabaseSetup.main(new String[]{"testdb", "jdbc:postgresql://localhost", "5432", "testuser", "testpw", "testcryppw"});
         // Create tables anew
         if (configs.configExists()) {
             // Drop tables

@@ -40,7 +40,7 @@ public class DatabaseUtils {
      * Creates the tables as defined in the 'create_tables.sql' file, using the
      * {@link #parseSQL(String filePath) parseSQL} method.
      */
-    static void createTables() {
+    public static void createTables() {
         String filePath = "src/main/resources/create_tables.sql";
         String[] queries = parseSQL(filePath);
         executeSQLFromStringArray(queries);
