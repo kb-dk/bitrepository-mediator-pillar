@@ -1,4 +1,15 @@
 pillar:
+  pillarID: "TestPillar1"
   privateMessageDestination: "topic://mediator-test"
+
 crypto:
   algorithm: "AES"
+  AESPassword: "testcryptopw"
+
+database:
+  driver: "org.postgresql.Driver"
+  name: "testdb"
+  username: "testuser"
+  password: "testpw"
+  # (port 5432) port is unnecessary when using default
+  url: "jdbc:postgresql://localhost"

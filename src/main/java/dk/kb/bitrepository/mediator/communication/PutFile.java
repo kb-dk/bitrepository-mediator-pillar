@@ -37,15 +37,15 @@ public class PutFile extends MessageResult<Boolean> {
     @Override
     public Boolean execute() {
         OffsetDateTime fileReceivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        CryptoStrategy AES = null;
+        CryptoStrategy aes = null;
         try {
-            AES = initAES(config.getEncryptionPassword());
+            aes = initAES(config.getEncryptionPassword());
         } catch (IOException e) {
             log.error("An error occurred when trying to get encryption password from configs.", e);
         }
 
-        if (AES != null) {
-            byte[] encryptedBytes = AES.encrypt(bytes);
+        if (aes != null) {
+            byte[] encryptedBytes = aes.encrypt(bytes);
             if (encryptedBytes.length > 0) {
                 OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
                 {
@@ -57,7 +57,7 @@ public class PutFile extends MessageResult<Boolean> {
 
                 OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-                insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), AES.getIterations());
+                insertInto(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
                 insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
 
                 return Boolean.TRUE;

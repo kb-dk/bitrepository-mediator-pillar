@@ -63,8 +63,8 @@ public class GetFile extends MessageResult<byte[]> {
 
                 // Decrypt the file using the parameters.
                 try {
-                    CryptoStrategy AES = initAES(config.getEncryptionPassword(), encParams.getSalt(), encParams.getIv());
-                    out = AES.decrypt(encryptedPayload);
+                    CryptoStrategy aes = initAES(config.getEncryptionPassword(), encParams.getSalt(), encParams.getIv());
+                    out = aes.decrypt(encryptedPayload);
                 } catch (IOException e) {
                     log.error("An error occurred when fetching the AES password from the configs.", e);
                 }

@@ -17,8 +17,8 @@ public class MediatorConfiguration {
         this.pillarSettings = pillarSettings;
     }
 
-    public String getComponentID() {
-        return pillarSettings.getComponentID();
+    public String getMediatorPillarID() {
+        return mediatorYAML.getString(ConfigConstants.PILLAR_ID);
     }
 
     public String getPrivateMessageDestination() {

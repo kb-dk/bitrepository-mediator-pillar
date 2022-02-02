@@ -22,7 +22,7 @@ public class ResponseDispatcher {
 
     private void completeResponse(MessageRequest request, MessageResponse response) {
         // TODO will probably move this block to template method in a parent class as in ref-code
-        response.setFrom(config.getComponentID());
+        response.setFrom(config.getMediatorPillarID());
         response.setMinVersion(ProtocolVersionLoader.loadProtocolVersion().getMinVersion());
         response.setVersion(ProtocolVersionLoader.loadProtocolVersion().getVersion());
 

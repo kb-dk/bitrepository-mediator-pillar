@@ -35,10 +35,6 @@ public class MediatorPillar {
         messageRequestDelegator.startListening();
     }
 
-    public void start() {
-        System.out.println(config.getComponentID());
-    }
-
     public void shutdown() {
         try {
             messageRequestDelegator.stop();
@@ -54,7 +50,7 @@ public class MediatorPillar {
      * @return List of collection IDs relevant for the pillar (collections contained in this pillar)
      */
     private List<String> getPillarCollectionIDs() {
-        String pillarID = config.getComponentID();
+        String pillarID = config.getMediatorPillarID();
         List<Collection> collections = config.getCollections();
         List<String> relevantCollectionIDs = new ArrayList<>();
         for (Collection collection : collections) {

@@ -35,8 +35,8 @@ public class MediatorComponentFactory {
         return instance;
     }
 
-    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile, String pillarID) throws IOException {
-        MediatorConfiguration configuration = loadConfiguration(pillarID, pathToConfiguration);
+    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
+        MediatorConfiguration configuration = loadConfiguration(pathToConfiguration);
         SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration);
         MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
         ResponseDispatcher responseDispatcher = new ResponseDispatcher(configuration, messageBus);
@@ -45,8 +45,9 @@ public class MediatorComponentFactory {
         return new MediatorPillar(configuration, pillarContext, messageBus);
     }
 
-    private MediatorConfiguration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
-        YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml"); // TODO probably move
+    private MediatorConfiguration loadConfiguration(String pathToConfiguration) throws IOException {
+        YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml");
+        String pillarID = mediatorConfig.getString(ConfigConstants.PILLAR_ID);
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);
         Settings settings = settingsProvider.getSettings();
         return new MediatorConfiguration(mediatorConfig, settings);
@@ -65,6 +66,6 @@ public class MediatorComponentFactory {
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);
         return new BasicSecurityManager(configuration.getRepositorySettings(), pathToPrivateKeyFile,
                 authenticator, signer, authorizer, permissionStore,
-                configuration.getComponentID());
+                configuration.getMediatorPillarID());
     }
 }
