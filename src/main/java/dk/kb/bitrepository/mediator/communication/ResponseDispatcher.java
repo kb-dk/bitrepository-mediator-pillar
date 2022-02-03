@@ -1,17 +1,19 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.MediatorConfiguration;
+import dk.kb.bitrepository.mediator.utils.configurations.PillarSettings;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.ProtocolVersionLoader;
 import org.bitrepository.protocol.messagebus.MessageSender;
 
 public class ResponseDispatcher {
-    private final MediatorConfiguration config;
+    private final PillarSettings config;
     private final MessageSender sender;
+    private final String privateMessageDestination;
 
-    public ResponseDispatcher(MediatorConfiguration config, MessageSender sender) {
+    public ResponseDispatcher(PillarSettings config, String privateMessageDestination, MessageSender sender) {
         this.config = config;
+        this.privateMessageDestination = privateMessageDestination;
         this.sender = sender;
     }
 
@@ -28,7 +30,7 @@ public class ResponseDispatcher {
 
         response.setCorrelationID(request.getCorrelationID());
         response.setCollectionID(request.getCollectionID());
-        response.setReplyTo(config.getPrivateMessageDestination());
+        response.setReplyTo(privateMessageDestination);
         response.setDestination(request.getReplyTo());
         response.setTo(request.getFrom());
     }

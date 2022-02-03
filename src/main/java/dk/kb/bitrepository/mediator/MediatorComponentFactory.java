@@ -1,30 +1,27 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
-import dk.kb.util.yaml.YAML;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.PillarSettings;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
 import org.bitrepository.protocol.activemq.ActiveMQMessageBus;
 import org.bitrepository.protocol.messagebus.MessageBus;
-import org.bitrepository.protocol.security.BasicMessageAuthenticator;
-import org.bitrepository.protocol.security.BasicMessageSigner;
-import org.bitrepository.protocol.security.BasicOperationAuthorizor;
-import org.bitrepository.protocol.security.BasicSecurityManager;
-import org.bitrepository.protocol.security.MessageAuthenticator;
-import org.bitrepository.protocol.security.MessageSigner;
-import org.bitrepository.protocol.security.OperationAuthorizor;
-import org.bitrepository.protocol.security.PermissionStore;
 import org.bitrepository.protocol.security.SecurityManager;
+import org.bitrepository.protocol.security.*;
 
 import java.io.IOException;
 
 public class MediatorComponentFactory {
     private static MediatorComponentFactory instance;
 
-    private MediatorComponentFactory() {}
+    private MediatorComponentFactory() {
+    }
 
     public static MediatorComponentFactory getInstance() {
+        // FIXME: double-checked locking
         if (instance == null) {
             synchronized (MediatorComponentFactory.class) {
                 if (instance == null) {
@@ -36,29 +33,35 @@ public class MediatorComponentFactory {
     }
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile, String pillarID) throws IOException {
-        MediatorConfiguration configuration = loadConfiguration(pillarID, pathToConfiguration);
-        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration);
-        MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
-        ResponseDispatcher responseDispatcher = new ResponseDispatcher(configuration, messageBus);
-        PillarContext pillarContext = new PillarContext(configuration, messageBus, responseDispatcher);
+        new ConfigurationHandler(pathToConfiguration + "/mediatorConfig.yaml");
+        Configurations configs = ConfigurationHandler.getConfigurations();
+        PillarSettings pillarSettings = loadPillarSettings(pillarID, pathToConfiguration);
 
-        return new MediatorPillar(configuration, pillarContext, messageBus);
+        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, pillarSettings);
+        MessageBus messageBus = new ActiveMQMessageBus(pillarSettings.getPillarSettings(), securityManager);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(
+                pillarSettings,
+                configs.getPillarConfig().getPrivateMessageDestination(),
+                messageBus);
+        PillarContext pillarContext = new PillarContext(pillarSettings, messageBus, responseDispatcher);
+
+        return new MediatorPillar(pillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
     }
 
-    private MediatorConfiguration loadConfiguration(String pillarID, String pathToConfiguration) throws IOException {
-        YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml"); // TODO probably move
+    private PillarSettings loadPillarSettings(String pillarID, String pathToConfiguration) {
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);
         Settings settings = settingsProvider.getSettings();
-        return new MediatorConfiguration(mediatorConfig, settings);
+        return new PillarSettings(settings);
     }
 
     /**
      * Instantiates the security manager based on the configuration and the path to the key file.
+     *
      * @param pathToPrivateKeyFile The path to the key file.
-     * @param configuration The configuration.
+     * @param configuration        The configuration.
      * @return The security manager.
      */
-    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, MediatorConfiguration configuration) {
+    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, PillarSettings configuration) {
         PermissionStore permissionStore = new PermissionStore();
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();

@@ -1,6 +1,5 @@
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.utils.configurations;
 
-import dk.kb.util.yaml.YAML;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.settings.referencesettings.ReferenceSettings;
 import org.bitrepository.settings.repositorysettings.Collection;
@@ -8,12 +7,10 @@ import org.bitrepository.settings.repositorysettings.RepositorySettings;
 
 import java.util.List;
 
-public class MediatorConfiguration {
-    private final YAML mediatorYAML;
+public class PillarSettings {
     private final Settings pillarSettings;
 
-    public MediatorConfiguration(YAML mediatorYAML, Settings pillarSettings) {
-        this.mediatorYAML = mediatorYAML;
+    public PillarSettings(Settings pillarSettings) {
         this.pillarSettings = pillarSettings;
     }
 
@@ -21,16 +18,8 @@ public class MediatorConfiguration {
         return pillarSettings.getComponentID();
     }
 
-    public String getPrivateMessageDestination() {
-        return mediatorYAML.getString(ConfigConstants.PRIVATE_MESSAGE_DESTINATION);
-    }
-
     public String getRepositoryMessageDestination() {
         return pillarSettings.getCollectionDestination();
-    }
-
-    public String getCryptoAlgorithm() {
-        return mediatorYAML.getString(ConfigConstants.CRYPTO_ALGORITHM);
     }
 
     /**
@@ -42,6 +31,7 @@ public class MediatorConfiguration {
 
     /**
      * Wraps the {@link org.bitrepository.settings.repositorysettings.ProtocolSettings#getAlarmDestination()} method.
+     *
      * @return the alarm destination
      */
     public String getAlarmDestination() {

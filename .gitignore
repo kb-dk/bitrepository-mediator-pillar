@@ -4,4 +4,5 @@ target/
 .settings/
 .idea/
 **/configurations.properties
+**/configs.yml
 **/files/

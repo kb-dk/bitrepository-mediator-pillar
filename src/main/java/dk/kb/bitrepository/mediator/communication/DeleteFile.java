@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.DatabaseData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ public class DeleteFile extends MessageResult<String> {
                 return null;
             }
         }
-        log.error("No results were found for collection- and file-id : [{}, {}]", collectionID, fileID);
+        log.warn("No results were found for collection- and file-id : [{}, {}]", collectionID, fileID);
         return null;
     }
 

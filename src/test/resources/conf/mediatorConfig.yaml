@@ -1,4 +1,13 @@
-pillar:
+pillarConfig:
   privateMessageDestination: "topic://mediator-test"
-crypto:
+
+cryptoConfig:
   algorithm: "AES"
+  password: "testcryptopw"
+
+databaseConfig:
+  name: "testdb"
+  url: "jdbc:postgresql://localhost"
+  port: "5432"
+  username: "testuser"
+  password: "testpw"

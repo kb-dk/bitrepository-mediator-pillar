@@ -1,9 +1,8 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.DatabaseData;
 import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.utils.ChecksumUtils;
@@ -12,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.List;
 
 import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
@@ -24,11 +21,11 @@ public class GetFile extends MessageResult<byte[]> {
     private final MockupResponse response;
     private final String collectionID;
     private final String fileID;
-    private final ConfigurationHandler config;
+    private final Configurations config;
     private final ChecksumSpecTYPE checksumSpecTYPE;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public GetFile(ConfigurationHandler config, @NotNull MockupMessageObject message) {
+    public GetFile(Configurations config, @NotNull MockupMessageObject message) {
         this.config = config;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
@@ -62,12 +59,8 @@ public class GetFile extends MessageResult<byte[]> {
                 EncryptedParametersData encParams = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
                 // Decrypt the file using the parameters.
-                try {
-                    CryptoStrategy AES = initAES(config.getEncryptionPassword(), encParams.getSalt(), encParams.getIv());
-                    out = AES.decrypt(encryptedPayload);
-                } catch (IOException e) {
-                    log.error("An error occurred when fetching the AES password from the configs.", e);
-                }
+                CryptoStrategy AES = initAES(config.getCryptoConfig().getPassword(), encParams.getSalt(), encParams.getIv());
+                out = AES.decrypt(encryptedPayload);
             } else {
                 // TODO: RETURN DECRYPTED BYTES TO CLIENT IF NOTHING GOES WRONG
                 //  ELSE THROW EXCEPTION / ALARM

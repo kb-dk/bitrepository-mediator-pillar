@@ -1,6 +1,6 @@
 package dk.kb.bitrepository.mediator.utils;
 
-import dk.kb.bitrepository.mediator.MediatorConfiguration;
+import dk.kb.bitrepository.mediator.utils.configurations.PillarSettings;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.protocol.ProtocolVersionLoader;
@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class RequestValidatorTest {
     private GetFileRequest request;
-    private static MediatorConfiguration conf;
+    private static PillarSettings conf;
     private static RequestValidator validator;
     private static String pillarID = "test-pillar";
 

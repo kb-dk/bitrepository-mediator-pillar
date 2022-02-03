@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -19,22 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test Database Calls")
 public class DatabaseCallsIT {
-    private static final ConfigurationHandler configs = new ConfigurationHandler();
 
     @BeforeAll
     static void setUp() throws Exception {
-        DatabaseSetup.main(new String[]{"testdb", "jdbc:postgresql://localhost", "5432", "testuser", "testpw", "testcryppw"});
-        // Create tables anew
-        if (configs.configExists()) {
-            // Drop tables
-            System.out.println("Database tables has been dropped.");
-            dropTables();
-            DatabaseUtils.createTables();
-            System.out.println("Tables have been created.");
-        } else {
-            System.out.println("Config has not been set up. Run DatabaseSetup before running any tests.");
-            System.exit(0);
-        }
+        // Drop tables & create tables anew
+        System.out.println("Database tables has been dropped.");
+        dropTables();
+        DatabaseUtils.createTables();
+        System.out.println("Tables have been created.");
     }
 
     @AfterEach

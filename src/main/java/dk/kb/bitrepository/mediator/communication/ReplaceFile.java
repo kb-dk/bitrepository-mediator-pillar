@@ -1,7 +1,7 @@
 package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -20,7 +19,7 @@ import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class ReplaceFile extends MessageResult<Boolean> {
-    private final ConfigurationHandler config;
+    private final Configurations config;
     private final String collectionID;
     private final String fileID;
     private final ChecksumSpecTYPE checksumSpecTYPE;
@@ -28,7 +27,7 @@ public class ReplaceFile extends MessageResult<Boolean> {
     private final MockupResponse response;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public ReplaceFile(ConfigurationHandler config, @NotNull MockupMessageObject message) {
+    public ReplaceFile(Configurations config, @NotNull MockupMessageObject message) {
         this.config = config;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
@@ -60,14 +59,9 @@ public class ReplaceFile extends MessageResult<Boolean> {
         byte[] newEncryptedBytes;
         CryptoStrategy AES;
         OffsetDateTime newEncryptedTimestamp;
-        try {
-            AES = initAES(config.getEncryptionPassword());
-            newEncryptedBytes = AES.encrypt(payload);
-            newEncryptedTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
-        } catch (IOException e) {
-            log.error("An error occurred during encryption", e);
-            return Boolean.FALSE;
-        }
+        AES = initAES(config.getCryptoConfig().getPassword());
+        newEncryptedBytes = AES.encrypt(payload);
+        newEncryptedTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
         // Get new values that are to be saved to the mediator pillars internal database
         String newChecksum = generateChecksum(new ByteArrayInputStream(payload), checksumSpecTYPE);
