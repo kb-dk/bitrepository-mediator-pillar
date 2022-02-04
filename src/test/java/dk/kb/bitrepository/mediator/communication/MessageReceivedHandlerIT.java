@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -37,7 +38,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
 
     @BeforeAll
-    static void setup() {
+    static void setup() throws FileNotFoundException {
         new ConfigurationHandler(CONFIG_PATH_TEST);
         Configurations config = ConfigurationHandler.getConfigurations();
         handler = new MessageReceivedHandler(config);
