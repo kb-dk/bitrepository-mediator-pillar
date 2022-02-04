@@ -2,7 +2,7 @@ package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -38,9 +38,9 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
 
     @BeforeAll
-    static void setup() throws FileNotFoundException {
-        new ConfigurationHandler(CONFIG_PATH_TEST);
-        Configurations config = ConfigurationHandler.getConfigurations();
+    static void setup() throws IOException {
+        ConfigurationsProvider configProvider = new ConfigurationsProvider(CONFIG_PATH_TEST);
+        Configurations config = configProvider.getConfigurations();
         handler = new MessageReceivedHandler(config);
         encryptionPassword = config.getCryptoConfig().getPassword();
 

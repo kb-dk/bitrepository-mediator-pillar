@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,10 +7,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.OffsetDateTime;
-
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler.getConfigurations;
 
 public class DatabaseUtils {
     private static String databaseURL = null;
@@ -20,16 +21,6 @@ public class DatabaseUtils {
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
     private DatabaseUtils() {
-    }
-
-    /**
-     * Initializes the configurations in the code, by extracting them from the configurations file.
-     */
-    private static void initDatabaseConfigurations() {
-        DatabaseConfigurations configs = getConfigurations().getDatabaseConfig();
-        username = configs.getUsername();
-        password = configs.getPassword();
-        databaseURL = String.format("%s:%s/%s", configs.getUrl(), configs.getPort(), configs.getName());
     }
 
     /**
@@ -49,7 +40,6 @@ public class DatabaseUtils {
      * @throws SQLException Throws an error if the connection could not be established.
      */
     static Connection connect() throws SQLException {
-        initDatabaseConfigurations();
         return DriverManager.getConnection(databaseURL, username, password);
     }
 

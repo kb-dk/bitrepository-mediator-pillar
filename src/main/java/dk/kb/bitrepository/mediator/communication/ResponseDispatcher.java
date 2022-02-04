@@ -1,18 +1,18 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.utils.configurations.PillarSettings;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
+import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.ProtocolVersionLoader;
 import org.bitrepository.protocol.messagebus.MessageSender;
 
 public class ResponseDispatcher {
-    private final PillarSettings config;
+    private final Settings refPillarSettings;
     private final MessageSender sender;
     private final String privateMessageDestination;
 
-    public ResponseDispatcher(PillarSettings config, String privateMessageDestination, MessageSender sender) {
-        this.config = config;
+    public ResponseDispatcher(Settings refPillarSettings, String privateMessageDestination, MessageSender sender) {
+        this.refPillarSettings = refPillarSettings;
         this.privateMessageDestination = privateMessageDestination;
         this.sender = sender;
     }
@@ -24,7 +24,7 @@ public class ResponseDispatcher {
 
     private void completeResponse(MessageRequest request, MessageResponse response) {
         // TODO will probably move this block to template method in a parent class as in ref-code
-        response.setFrom(config.getComponentID());
+        response.setFrom(refPillarSettings.getComponentID());
         response.setMinVersion(ProtocolVersionLoader.loadProtocolVersion().getMinVersion());
         response.setVersion(ProtocolVersionLoader.loadProtocolVersion().getVersion());
 

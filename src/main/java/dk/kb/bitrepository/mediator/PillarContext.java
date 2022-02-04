@@ -1,29 +1,22 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
-import dk.kb.bitrepository.mediator.utils.configurations.PillarSettings;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.messagebus.MessageBus;
 
 public class PillarContext {
-    private final PillarSettings configuration;
     private final MessageBus messageBus;
-    private final Settings pillarSettings;
+    private final Settings settings;
     private final ResponseDispatcher responseDispatcher;
 
-    public PillarContext(PillarSettings configuration, MessageBus messageBus, ResponseDispatcher responseDispatcher) {
-        this.configuration = configuration;
-        this.pillarSettings = configuration.getPillarSettings();
+    public PillarContext(Settings settings, MessageBus messageBus, ResponseDispatcher responseDispatcher) {
+        this.settings = settings;
         this.messageBus = messageBus;
         this.responseDispatcher = responseDispatcher;
     }
 
-    public PillarSettings getConfiguration() {
-        return configuration;
-    }
-
-    public Settings getPillarSettings() {
-        return pillarSettings;
+    public Settings getRefPillarSettings() {
+        return settings;
     }
 
     public ResponseDispatcher getResponseDispatcher() {
