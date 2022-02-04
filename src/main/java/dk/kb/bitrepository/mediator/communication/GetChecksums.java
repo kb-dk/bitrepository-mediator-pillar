@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;

@@ -1,11 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.DatabaseData;
 import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
-import dk.kb.bitrepository.mediator.communication.EncryptedPillarData;
-import dk.kb.bitrepository.mediator.communication.MessageReceivedHandler;
-import dk.kb.bitrepository.mediator.communication.MockupMessageObject;
-import dk.kb.bitrepository.mediator.communication.MockupResponse;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -21,8 +16,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.delete;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;

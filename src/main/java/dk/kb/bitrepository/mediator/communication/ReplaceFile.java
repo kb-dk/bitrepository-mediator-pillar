@@ -14,7 +14,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;

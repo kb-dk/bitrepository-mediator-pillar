@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.insertInto;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
