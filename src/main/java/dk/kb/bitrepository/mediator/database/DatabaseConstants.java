@@ -75,6 +75,9 @@ public final class DatabaseConstants {
      */
     public final static OffsetDateTime FILES_CHECKSUM_TIMESTAMP_MOCKUP = OffsetDateTime.MIN;
 
+    public static final String DEFAULT_DATABASE_CREATION_SCRIPT = "sql/create_tables.sql";
+
+
     /**
      * Private constructor to prevent instantiation of this constants class.
      */

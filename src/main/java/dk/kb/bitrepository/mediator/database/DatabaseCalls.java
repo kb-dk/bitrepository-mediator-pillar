@@ -168,7 +168,6 @@ public class DatabaseCalls {
             prepareStatement(query, connection, args);
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);
-            System.out.println("Error in executing SQL query:\n" + e);
         }
     }
 

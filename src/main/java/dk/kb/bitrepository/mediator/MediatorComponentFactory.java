@@ -45,7 +45,7 @@ public class MediatorComponentFactory {
         return new MediatorPillar(configuration, pillarContext, messageBus);
     }
 
-    private MediatorConfiguration loadConfiguration(String pathToConfiguration) throws IOException {
+    public static MediatorConfiguration loadConfiguration(String pathToConfiguration) throws IOException {
         YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml");
         String pillarID = mediatorConfig.getString(ConfigConstants.PILLAR_ID);
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);

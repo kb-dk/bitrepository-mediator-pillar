@@ -25,6 +25,18 @@ public class MediatorConfiguration {
         return mediatorYAML.getString(ConfigConstants.PRIVATE_MESSAGE_DESTINATION);
     }
 
+    public String getDatabaseURL() {
+        return mediatorYAML.getString(ConfigConstants.DATABASE_URL);
+    }
+
+    public String getDatabaseUsername() {
+        return mediatorYAML.getString(ConfigConstants.DATABASE_USERNAME);
+    }
+
+    public String getDatabasePassword() {
+        return mediatorYAML.getString(ConfigConstants.DATABASE_PASSWORD);
+    }
+
     public String getRepositoryMessageDestination() {
         return pillarSettings.getCollectionDestination();
     }

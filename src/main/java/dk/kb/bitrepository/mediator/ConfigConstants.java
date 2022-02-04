@@ -7,4 +7,9 @@ public class ConfigConstants {
 
     public static final String CRYPTO_ALGORITHM = "crypto.algorithm";
 
+    public static final String DATABASE_URL = "database.url";
+
+    public static final String DATABASE_USERNAME = "database.username";
+
+    public static final String DATABASE_PASSWORD = "database.password";
 }

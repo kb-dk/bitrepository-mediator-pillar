@@ -1,5 +1,7 @@
 package dk.kb.bitrepository.mediator.database;
 
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.MediatorConfiguration;
 import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,27 +16,18 @@ import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
-import static dk.kb.bitrepository.mediator.database.DatabaseUtils.dropTables;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test Database Calls")
 public class DatabaseCallsIT {
-    private static final ConfigurationHandler configs = new ConfigurationHandler();
 
     @BeforeAll
     static void setUp() throws Exception {
-        DatabaseSetup.main(new String[]{"testdb", "jdbc:postgresql://localhost", "5432", "testuser", "testpw", "testcryppw"});
-        // Create tables anew
-        if (configs.configExists()) {
-            // Drop tables
-            System.out.println("Database tables has been dropped.");
-            dropTables();
-            DatabaseUtils.createTables();
-            System.out.println("Tables have been created.");
-        } else {
-            System.out.println("Config has not been set up. Run DatabaseSetup before running any tests.");
-            System.exit(0);
-        }
+        MediatorConfiguration testConfig = MediatorComponentFactory.loadConfiguration("conf");// TODO variable move somewhere
+        DatabaseTestUtils.dropTables(testConfig);
+        System.out.println("Database tables has been dropped.");
+        DatabaseTestUtils.createTables(testConfig);
+        System.out.println("Tables have been created.");
     }
 
     @AfterEach

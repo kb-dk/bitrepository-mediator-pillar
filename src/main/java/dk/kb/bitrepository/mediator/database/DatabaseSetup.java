@@ -1,47 +1,21 @@
 package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.sql.SQLException;
 
 public class DatabaseSetup {
-    private static final Logger log = LoggerFactory.getLogger(DatabaseSetup.class);
-
-    /**
-     * Run this main method with the following 5 arguments:
-     * Database-name, URL, Port, Username, Password, and AESPassword.
-     * </p>
-     * This will initialize the configurations file with encrypted username and passwords,
-     * while the other information stays as cleartext.
-     * Example of parameters:
-     * </p>
-     * testdb jdbc:postgresql://localhost 5432 testuser testpw testcryptopw
-     * </p
-     * If the main method is run with 0 arguments, and a configurations file exists,
-     * then it will simply create the tables 'files' and 'enc_parameters'.
-     *
-     * @param args Takes either 0 or these 6 arguments : Name, Url, Port, Username, Password, and AESPassword.
-     */
-    public static void main(String @NotNull [] args) {
-        if (args.length != 0 && args.length < 5) {
-            System.out.println("Takes the following 6 arguments:\n\tName URL Port Username Password AESPassword");
+    public static void main(String[] args) throws IOException, SQLException {
+        if (args.length < 1 || args.length > 2) {
+            System.out.println("Error: Expected 1-2 arguments:\n\tpathToConfigurationDir pathToCreationScript (optional)");
             System.exit(0);
         }
-        if (args.length >= 6) {
-            ConfigurationHandler configs = new ConfigurationHandler(args[0], args[1], args[2]);
-            configs.encryptLoginInformation(args[3], args[4], args[5]);
-            System.out.println("Configurations file has been created successfully.");
-            log.info("Configurations file has been created successfully.");
+        if (args.length == 1) {
+            DatabaseUtils.runSqlFromFile(MediatorComponentFactory.loadConfiguration(args[0]), DatabaseConstants.DEFAULT_DATABASE_CREATION_SCRIPT);
         }
-
-        if (Files.exists(Path.of("src/main/java/dk/kb/bitrepository/mediator/database/configs/configurations.properties"))) {
-            DatabaseUtils.createTables();
-            System.out.println("Tables have been created.");
-            log.info("Tables 'files' and 'enc_parameters' created successfully.");
+        if (args.length == 2) {
+            DatabaseUtils.runSqlFromFile(MediatorComponentFactory.loadConfiguration(args[0]), args[1]);
         }
     }
 }

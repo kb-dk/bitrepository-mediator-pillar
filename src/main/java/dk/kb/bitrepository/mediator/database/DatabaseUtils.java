@@ -1,22 +1,25 @@
 package dk.kb.bitrepository.mediator.database;
 
+import dk.kb.bitrepository.mediator.MediatorConfiguration;
 import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.time.OffsetDateTime;
 
 public class DatabaseUtils {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
     private static String databaseURL;
     private static String password;
     private static String username;
     private static ConfigurationHandler configs = null;
-    private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
     private DatabaseUtils() {
     }
@@ -37,13 +40,37 @@ public class DatabaseUtils {
     }
 
     /**
-     * Creates the tables as defined in the 'create_tables.sql' file, using the
-     * {@link #parseSQL(String filePath) parseSQL} method.
+     * Runs an SQL file against the database specified by the pillar configuration.
      */
-    public static void createTables() {
-        String filePath = "src/main/resources/create_tables.sql";
-        String[] queries = parseSQL(filePath);
-        executeSQLFromStringArray(queries);
+    public static void runSqlFromFile(MediatorConfiguration pillarConfig, String pathToSqlFile) throws IOException, SQLException {
+        String[] queries = parseSqlFile(pathToSqlFile);
+        try (Connection connection = getNonPooledConnection(pillarConfig)) {
+            executeSQLFromStringArray(connection, queries);
+        }
+    }
+
+    /**
+     * Parses SQL queries from a given .sql file to a String array.
+     *
+     * @param pathToCreationScript The .sql files path.
+     * @return A string array containing the queries parsed from the file.
+     */
+    @NotNull
+    private static String[] parseSqlFile(String pathToCreationScript) throws IOException {
+        String[] queries;
+        try (InputStream is = DatabaseUtils.class.getClassLoader().getResourceAsStream(pathToCreationScript)) {
+            if (is == null) {
+                throw new FileNotFoundException("Didn't find any file in classpath corresponding to '" +
+                        pathToCreationScript + "'");
+            }
+            // Splitting the string on ";" to separate requests.
+            queries = IOUtils.toString(is, StandardCharsets.UTF_8).split(";");
+        }
+        return queries;
+    }
+
+    public static Connection getNonPooledConnection(MediatorConfiguration pillarConfig) throws SQLException {
+        return DriverManager.getConnection(pillarConfig.getDatabaseURL(), pillarConfig.getDatabaseUsername(), pillarConfig.getDatabasePassword());
     }
 
     /**
@@ -61,30 +88,12 @@ public class DatabaseUtils {
     }
 
     /**
-     * Parses SQL queries from a given .sql file to a String array.
-     *
-     * @param filePath The .sql files path.
-     * @return A string array containing the queries parsed from the file.
-     */
-    private static String[] parseSQL(String filePath) {
-        String[] queries = new String[0];
-
-        try {
-            // Splitting the string on ";" to separate requests.
-            queries = Files.readString(Path.of(filePath)).split(";");
-        } catch (IOException e) {
-            log.error("No file exists at {}", filePath, e);
-        }
-        return queries;
-    }
-
-    /**
      * Executes all queries provided in a String array.
      *
      * @param query String array that contains the queries to be executed.
      */
-    private static void executeSQLFromStringArray(String[] query) {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+    private static void executeSQLFromStringArray(Connection connection, String[] query) {
+        try (Statement statement = connection.createStatement()) {
             log.info("Connection established to the database; trying to execute query.");
             for (String s : query) {
                 //Remove spaces to not execute empty statements
@@ -98,18 +107,6 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             log.error("Error in executing SQL query: ", e);
         }
-    }
-
-    /**
-     * Delete tables 'enc_parameters' and 'files'. Used for testing purposes.
-     *
-     * @throws SQLException Throws a SQLException when failing to connect to the database server.
-     */
-    static void dropTables() throws SQLException {
-        Connection connection = connect();
-        Statement statement = connection.createStatement();
-        statement.executeUpdate("DROP TABLE IF EXISTS enc_parameters");
-        statement.executeUpdate("DROP TABLE IF EXISTS files");
     }
 
     /**

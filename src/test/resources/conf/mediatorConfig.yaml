@@ -7,9 +7,7 @@ crypto:
   AESPassword: "testcryptopw"
 
 database:
-  driver: "org.postgresql.Driver"
-  name: "testdb"
   username: "testuser"
-  password: "testpw"
+  password: "testpassword"
   # (port 5432) port is unnecessary when using default
-  url: "jdbc:postgresql://localhost"
+  url: "jdbc:postgresql://localhost/testdb"
