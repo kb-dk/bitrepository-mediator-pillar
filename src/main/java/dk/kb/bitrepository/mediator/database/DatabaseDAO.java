@@ -15,10 +15,10 @@ import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class DatabaseDAO {
     private static final Logger log = LoggerFactory.getLogger(DatabaseDAO.class);
-    private final DatabaseConnectionManager manager;
+    private final DatabaseConnectionManager connectionManager;
 
-    public DatabaseDAO(DatabaseConnectionManager manager) { // name subject to change
-        this.manager = manager;
+    public DatabaseDAO(DatabaseConnectionManager connectionManager) { // name subject to change
+        this.connectionManager = connectionManager;
     }
 
     /**
@@ -59,13 +59,13 @@ public class DatabaseDAO {
      * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE.
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
-    public static DatabaseData select(String collectionID, String fileID, String table) {
+    public DatabaseData select(String collectionID, String fileID, String table) {
         String query = String.format(Locale.getDefault(), "SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
         query = query.replace("?", collectionID);
         query = query.replace("@", fileID);
 
         DatabaseData out = null;
-        try (Connection connection = DatabaseUtils.connect(); Statement statement = connection.createStatement()) {
+        try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
             log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
@@ -166,7 +166,7 @@ public class DatabaseDAO {
      * @param args  The arguments to put in the given query.
      */
     private void executeQuery(String query, @NotNull Object... args) {
-        try (Connection connection = manager.getConnection();
+        try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args)) {
 
             log.debug("Executing >>" + statement);

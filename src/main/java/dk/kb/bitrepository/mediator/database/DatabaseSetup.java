@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.database;
 
 import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -11,11 +12,12 @@ public class DatabaseSetup {
             System.out.println("Error: Expected 1-2 arguments:\n\tpathToConfigurationDir pathToCreationScript (optional)");
             System.exit(0);
         }
+        Configurations configs = MediatorComponentFactory.loadMediatorConfigurations(args[0]);
         if (args.length == 1) {
-            DatabaseUtils.runSqlFromFile(MediatorComponentFactory.loadConfiguration(args[0]), DatabaseConstants.DEFAULT_DATABASE_CREATION_SCRIPT);
+            DatabaseUtils.runSqlFromFile(configs.getDatabaseConfig(), DatabaseConstants.DEFAULT_DATABASE_CREATION_SCRIPT);
         }
         if (args.length == 2) {
-            DatabaseUtils.runSqlFromFile(MediatorComponentFactory.loadConfiguration(args[0]), args[1]);
+            DatabaseUtils.runSqlFromFile(configs.getDatabaseConfig(), args[1]);
         }
     }
 }

@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
+import dk.kb.bitrepository.mediator.utils.configurations.PillarConfigurations;
 import org.bitrepository.bitrepositorymessages.Message;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.protocol.MessageContext;
@@ -20,10 +21,12 @@ public class MessageRequestDelegator implements MessageListener {
     private final Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
     private final MessageBus messageBus;
     private final PillarContext context;
+    private final PillarConfigurations configs;
 
-    public MessageRequestDelegator(MessageBus messageBus, PillarContext context) {
+    public MessageRequestDelegator(MessageBus messageBus, PillarContext context, PillarConfigurations configs) {
         this.messageBus = messageBus;
         this.context = context;
+        this.configs = configs;
 
         handlerMap = new HashMap<>();
         for (RequestHandler<? extends MessageRequest> handler : createMessageHandlers()) {
@@ -62,12 +65,12 @@ public class MessageRequestDelegator implements MessageListener {
     }
 
     public void startListening() {
-        messageBus.addListener(context.getConfiguration().getPrivateMessageDestination(), this);
-        messageBus.addListener(context.getConfiguration().getRepositoryMessageDestination(), this);
+        messageBus.addListener(configs.getPrivateMessageDestination(), this);
+        messageBus.addListener(context.getRefPillarSettings().getCollectionDestination(), this);
     }
 
     public void stop() {
-        messageBus.removeListener(context.getConfiguration().getPrivateMessageDestination(), this);
-        messageBus.removeListener(context.getConfiguration().getRepositoryMessageDestination(), this);
+        messageBus.removeListener(configs.getPrivateMessageDestination(), this);
+        messageBus.removeListener(context.getRefPillarSettings().getCollectionDestination(), this);
     }
 }

@@ -2,7 +2,7 @@ package dk.kb.bitrepository.mediator.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import dk.kb.bitrepository.mediator.MediatorConfiguration;
+import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,16 +14,16 @@ public class DatabaseConnectionManager {
     private final static Logger log = LoggerFactory.getLogger(DatabaseConnectionManager.class);
     private DataSource pool;
 
-    public DatabaseConnectionManager(MediatorConfiguration pillarConfig) {
-        initializeConnectionPool(pillarConfig);
+    public DatabaseConnectionManager(DatabaseConfigurations dbConfig) {
+        initializeConnectionPool(dbConfig);
     }
 
-    private void initializeConnectionPool(MediatorConfiguration pillarConfig) {
+    private void initializeConnectionPool(DatabaseConfigurations pillarConfig) {
         log.debug("Initializing jdbc connection pool");
         HikariConfig poolConfig = new HikariConfig();
-        poolConfig.setJdbcUrl(pillarConfig.getDatabaseURL() + ";create=true");
-        poolConfig.setUsername(pillarConfig.getDatabaseUsername());
-        poolConfig.setPassword(pillarConfig.getDatabasePassword());
+        poolConfig.setJdbcUrl(pillarConfig.getUrl() + ";create=true");
+        poolConfig.setUsername(pillarConfig.getUsername());
+        poolConfig.setPassword(pillarConfig.getPassword());
         // TODO configure connection pool more and silence logs(?)
         pool = new HikariDataSource(poolConfig);
     }

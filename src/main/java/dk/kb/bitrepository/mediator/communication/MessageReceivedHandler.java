@@ -1,8 +1,8 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -17,10 +17,10 @@ import java.nio.file.Path;
 
 public class MessageReceivedHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
-    private ConfigurationHandler config;
+    private Configurations config;
 
-    public MessageReceivedHandler(ConfigurationHandler configurationHandler) {
-        this.config = configurationHandler;
+    public MessageReceivedHandler(Configurations configs) {
+        this.config = configs;
     }
 
     //TODO: Must be asynchronous to not block up the mediator pillar

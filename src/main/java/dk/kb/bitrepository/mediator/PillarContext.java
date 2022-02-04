@@ -5,24 +5,18 @@ import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.messagebus.MessageBus;
 
 public class PillarContext {
-    private final MediatorConfiguration configuration;
     private final MessageBus messageBus;
-    private final Settings pillarSettings;
+    private final Settings settings;
     private final ResponseDispatcher responseDispatcher;
 
-    public PillarContext(MediatorConfiguration configuration, MessageBus messageBus, ResponseDispatcher responseDispatcher) {
-        this.configuration = configuration;
-        this.pillarSettings = configuration.getPillarSettings();
+    public PillarContext(Settings settings, MessageBus messageBus, ResponseDispatcher responseDispatcher) {
+        this.settings = settings;
         this.messageBus = messageBus;
         this.responseDispatcher = responseDispatcher;
     }
 
-    public MediatorConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    public Settings getPillarSettings() {
-        return pillarSettings;
+    public Settings getRefPillarSettings() {
+        return settings;
     }
 
     public ResponseDispatcher getResponseDispatcher() {

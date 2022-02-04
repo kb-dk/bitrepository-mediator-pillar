@@ -1,8 +1,8 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.utils.ChecksumUtils;
@@ -11,22 +11,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class GetFile extends MessageResult<byte[]> {
     private final MockupResponse response;
     private final String collectionID;
     private final String fileID;
-    private final ConfigurationHandler config;
+    private final Configurations config;
     private final ChecksumSpecTYPE checksumSpecTYPE;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public GetFile(ConfigurationHandler config, @NotNull MockupMessageObject message) {
+    public GetFile(Configurations config, @NotNull MockupMessageObject message) {
         this.config = config;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
@@ -60,12 +62,8 @@ public class GetFile extends MessageResult<byte[]> {
                 EncryptedParametersData encParams = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
                 // Decrypt the file using the parameters.
-                try {
-                    CryptoStrategy aes = initAES(config.getEncryptionPassword(), encParams.getSalt(), encParams.getIv());
-                    out = aes.decrypt(encryptedPayload);
-                } catch (IOException e) {
-                    log.error("An error occurred when fetching the AES password from the configs.", e);
-                }
+                CryptoStrategy aes = initAES(config.getCryptoConfig().getPassword(), encParams.getSalt(), encParams.getIv());
+                out = aes.decrypt(encryptedPayload);
             } else {
                 // TODO: RETURN DECRYPTED BYTES TO CLIENT IF NOTHING GOES WRONG
                 //  ELSE THROW EXCEPTION / ALARM

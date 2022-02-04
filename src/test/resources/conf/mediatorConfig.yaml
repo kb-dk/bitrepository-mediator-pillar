@@ -1,13 +1,12 @@
-pillar:
-  pillarID: "TestPillar1"
+pillarConfig:
+  mediatorPillarID: "testpillar"
   privateMessageDestination: "topic://mediator-test"
 
-crypto:
+cryptoConfig:
   algorithm: "AES"
-  AESPassword: "testcryptopw"
+  password: "testcryptopw"
 
-database:
-  username: "testuser"
-  password: "testpassword"
-  # (port 5432) port is unnecessary when using default
+databaseConfig:
   url: "jdbc:postgresql://localhost/testdb"
+  username: "testuser"
+  password: "testpw"

@@ -1,8 +1,9 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.database.configs.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +17,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
+import static dk.kb.bitrepository.mediator.TestConstants.CONFIG_PATH_TEST;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
@@ -37,9 +37,10 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
     @BeforeAll
     static void setup() throws IOException {
-        ConfigurationHandler config = new ConfigurationHandler();
+        ConfigurationsProvider configProvider = new ConfigurationsProvider(CONFIG_PATH_TEST);
+        Configurations config = configProvider.getConfigurations();
         handler = new MessageReceivedHandler(config);
-        encryptionPassword = config.getEncryptionPassword();
+        encryptionPassword = config.getCryptoConfig().getPassword();
 
         testString = "test string";
         payload = testString.getBytes(Charset.defaultCharset());

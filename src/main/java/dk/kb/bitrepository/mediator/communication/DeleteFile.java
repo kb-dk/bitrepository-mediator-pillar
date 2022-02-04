@@ -4,10 +4,10 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.delete;
+import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class DeleteFile extends MessageResult<String> {
@@ -41,7 +41,7 @@ public class DeleteFile extends MessageResult<String> {
                 return null;
             }
         }
-        log.error("No results were found for collection- and file-id : [{}, {}]", collectionID, fileID);
+        log.warn("No results were found for collection- and file-id : [{}, {}]", collectionID, fileID);
         return null;
     }
 

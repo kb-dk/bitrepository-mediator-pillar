@@ -1,7 +1,8 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
-import dk.kb.util.yaml.YAML;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
@@ -36,36 +37,44 @@ public class MediatorComponentFactory {
     }
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
-        MediatorConfiguration configuration = loadConfiguration(pathToConfiguration);
-        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, configuration);
-        MessageBus messageBus = new ActiveMQMessageBus(configuration.getPillarSettings(), securityManager);
-        ResponseDispatcher responseDispatcher = new ResponseDispatcher(configuration, messageBus);
-        PillarContext pillarContext = new PillarContext(configuration, messageBus, responseDispatcher);
+        Configurations configs = loadMediatorConfigurations(pathToConfiguration);
+        Settings refPillarSettings = configs.getRefPillarSettings();
 
-        return new MediatorPillar(configuration, pillarContext, messageBus);
+        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
+        MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(
+                refPillarSettings,
+                configs.getPillarConfig().getPrivateMessageDestination(),
+                messageBus);
+        PillarContext pillarContext = new PillarContext(refPillarSettings, messageBus, responseDispatcher);
+
+        return new MediatorPillar(refPillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
     }
 
-    public static MediatorConfiguration loadConfiguration(String pathToConfiguration) throws IOException {
-        YAML mediatorConfig = new YAML(pathToConfiguration + "/mediatorConfig.yaml");
-        String pillarID = mediatorConfig.getString(ConfigConstants.PILLAR_ID);
-        SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);
-        Settings settings = settingsProvider.getSettings();
-        return new MediatorConfiguration(mediatorConfig, settings);
+    public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
+        ConfigurationsProvider configProvider = new ConfigurationsProvider(pathToConfiguration + "/mediatorConfig.yaml");
+        Configurations configs = configProvider.getConfigurations();
+        String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
+        SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), mediatorPillarID);
+        Settings refPillarSettings = settingsProvider.getSettings();
+        configs.setRefPillarSettings(refPillarSettings);
+        return configs;
     }
 
     /**
      * Instantiates the security manager based on the configuration and the path to the key file.
+     *
      * @param pathToPrivateKeyFile The path to the key file.
-     * @param configuration The configuration.
+     * @param refPillarSettings    The configuration.
      * @return The security manager.
      */
-    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, MediatorConfiguration configuration) {
+    private SecurityManager loadSecurityManager(String pathToPrivateKeyFile, Settings refPillarSettings) {
         PermissionStore permissionStore = new PermissionStore();
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);
-        return new BasicSecurityManager(configuration.getRepositorySettings(), pathToPrivateKeyFile,
+        return new BasicSecurityManager(refPillarSettings.getRepositorySettings(), pathToPrivateKeyFile,
                 authenticator, signer, authorizer, permissionStore,
-                configuration.getMediatorPillarID());
+                refPillarSettings.getComponentID());
     }
 }

@@ -1,8 +1,8 @@
 package dk.kb.bitrepository.mediator.utils;
 
-import dk.kb.bitrepository.mediator.MediatorConfiguration;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
+import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.ProtocolVersionLoader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,14 +13,14 @@ import java.io.IOException;
 
 public class RequestValidatorTest {
     private GetFileRequest request;
-    private static MediatorConfiguration conf;
+    private static Settings conf;
     private static RequestValidator validator;
     private static String pillarID = "test-pillar";
 
     @BeforeAll
     public static void setup() throws IOException {
-        conf = TestUtils.loadConfiguration(pillarID, "src/test/resources/conf");
-        validator = new RequestValidator(conf.getPillarSettings());
+        conf = TestUtils.loadRefPillarSettings(pillarID, "src/test/resources/conf");
+        validator = new RequestValidator(conf);
     }
 
     @BeforeEach

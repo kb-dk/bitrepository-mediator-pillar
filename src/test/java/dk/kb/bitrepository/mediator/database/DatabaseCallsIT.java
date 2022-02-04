@@ -1,7 +1,8 @@
 package dk.kb.bitrepository.mediator.database;
 
 import dk.kb.bitrepository.mediator.MediatorComponentFactory;
-import dk.kb.bitrepository.mediator.MediatorConfiguration;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -23,12 +24,13 @@ public class DatabaseCallsIT {
 
     @BeforeAll
     static void setUp() throws Exception {
-        MediatorConfiguration testConfig = MediatorComponentFactory.loadConfiguration("conf");// TODO variable move somewhere
-        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(testConfig);
+        Configurations testConfig = MediatorComponentFactory.loadMediatorConfigurations("conf");// TODO variable move somewhere
+        DatabaseConfigurations databaseConfig = testConfig.getDatabaseConfig();
+        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(databaseConfig);
         dao = new DatabaseDAO(connectionManager);
-        DatabaseTestUtils.dropTables(testConfig);
+        DatabaseTestUtils.dropTables(databaseConfig);
         System.out.println("Database tables has been dropped.");
-        DatabaseTestUtils.createTables(testConfig);
+        DatabaseTestUtils.createTables(databaseConfig);
         System.out.println("Tables have been created.");
     }
 
