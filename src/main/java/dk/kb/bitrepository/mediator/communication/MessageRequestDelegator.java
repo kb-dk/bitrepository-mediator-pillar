@@ -66,11 +66,11 @@ public class MessageRequestDelegator implements MessageListener {
 
     public void startListening() {
         messageBus.addListener(configs.getPrivateMessageDestination(), this);
-        messageBus.addListener(context.getRefPillarSettings().getCollectionDestination(), this);
+        messageBus.addListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
     }
 
     public void stop() {
         messageBus.removeListener(configs.getPrivateMessageDestination(), this);
-        messageBus.removeListener(context.getRefPillarSettings().getCollectionDestination(), this);
+        messageBus.removeListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
     }
 }

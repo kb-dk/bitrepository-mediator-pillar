@@ -1,25 +1,36 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
-import org.bitrepository.common.settings.Settings;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.protocol.messagebus.MessageBus;
 
 public class PillarContext {
     private final MessageBus messageBus;
-    private final Settings settings;
+    private final Configurations configurations;
     private final ResponseDispatcher responseDispatcher;
+    private final DatabaseDAO dao;
 
-    public PillarContext(Settings settings, MessageBus messageBus, ResponseDispatcher responseDispatcher) {
-        this.settings = settings;
+    public PillarContext(Configurations configurations, MessageBus messageBus, ResponseDispatcher responseDispatcher, DatabaseDAO dao) {
+        this.configurations = configurations;
         this.messageBus = messageBus;
         this.responseDispatcher = responseDispatcher;
+        this.dao = dao;
     }
 
-    public Settings getRefPillarSettings() {
-        return settings;
+    public Configurations getConfigurations() {
+        return configurations;
+    }
+
+    public MessageBus getMessageBus() {
+        return messageBus;
     }
 
     public ResponseDispatcher getResponseDispatcher() {
         return responseDispatcher;
+    }
+
+    public DatabaseDAO getDAO() {
+        return dao;
     }
 }

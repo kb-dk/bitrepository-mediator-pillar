@@ -1,8 +1,11 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
+import dk.kb.bitrepository.mediator.database.DatabaseConnectionManager;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
@@ -46,7 +49,8 @@ public class MediatorComponentFactory {
                 refPillarSettings,
                 configs.getPillarConfig().getPrivateMessageDestination(),
                 messageBus);
-        PillarContext pillarContext = new PillarContext(refPillarSettings, messageBus, responseDispatcher);
+        DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
+        PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
 
         return new MediatorPillar(refPillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
     }
@@ -76,5 +80,10 @@ public class MediatorComponentFactory {
         return new BasicSecurityManager(refPillarSettings.getRepositorySettings(), pathToPrivateKeyFile,
                 authenticator, signer, authorizer, permissionStore,
                 refPillarSettings.getComponentID());
+    }
+
+    public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
+        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
+        return new DatabaseDAO(connectionManager);
     }
 }

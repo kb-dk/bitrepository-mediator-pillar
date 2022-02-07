@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -23,8 +24,9 @@ public class PutFile extends MessageResult<Boolean> {
     private final ChecksumSpecTYPE checksumSpecTYPE;
     private final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
-    public PutFile(Configurations config, @NotNull MockupMessageObject message) {
-        this.config = config;
+    public PutFile(PillarContext context, @NotNull MockupMessageObject message) {
+        this.context = context;
+        this.config = context.getConfigurations();
         this.bytes = message.getPayload();
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
@@ -49,8 +51,8 @@ public class PutFile extends MessageResult<Boolean> {
 
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-            insertInto(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
-            insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
+            context.getDAO().insertInto(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
+            context.getDAO().insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
 
             return Boolean.TRUE;
         } else {

@@ -3,20 +3,20 @@ package dk.kb.bitrepository.mediator.communication;
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import dk.kb.bitrepository.mediator.utils.RequestValidator;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
-import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.MessageContext;
 
 public abstract class PerformRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
-    private final Settings settings;
+    private final Configurations configurations;
     protected PillarContext context;
     protected RequestValidator requestValidator;
 
     public PerformRequestHandler(PillarContext context) {
         this.context = context;
-        settings = context.getRefPillarSettings();
-        requestValidator = new RequestValidator(settings);
+        configurations = context.getConfigurations();
+        requestValidator = new RequestValidator(configurations.getRefPillarSettings());
     }
 
     @Override

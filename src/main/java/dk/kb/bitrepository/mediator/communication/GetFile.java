@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
@@ -17,7 +18,6 @@ import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class GetFile extends MessageResult<byte[]> {
@@ -28,8 +28,9 @@ public class GetFile extends MessageResult<byte[]> {
     private final ChecksumSpecTYPE checksumSpecTYPE;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public GetFile(Configurations config, @NotNull MockupMessageObject message) {
-        this.config = config;
+    public GetFile(PillarContext context, @NotNull MockupMessageObject message) {
+        this.context = context;
+        this.config = context.getConfigurations();
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
         this.response = message.getMockupResponse();
@@ -50,7 +51,7 @@ public class GetFile extends MessageResult<byte[]> {
             return out;
         }
 
-        FilesData filesResult = (FilesData) select(collectionID, fileID, FILES_TABLE);
+        FilesData filesResult = (FilesData) context.getDAO().select(collectionID, fileID, FILES_TABLE);
         if (filesResult != null) {
             // Get old encrypted checksum, and generate new encrypted checksum
             String newEncryptedChecksum = ChecksumUtils.generateChecksum(new ByteArrayInputStream(encryptedPayload), checksumSpecTYPE);
@@ -59,7 +60,7 @@ public class GetFile extends MessageResult<byte[]> {
             // Compared checksum of file from encrypted pillar with the encrypted checksum in local table.
             if (newEncryptedChecksum.equals(oldEncryptedChecksum)) {
                 // Get the used encryption parameters from the 'enc_parameters' table.
-                EncryptedParametersData encParams = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+                EncryptedParametersData encParams = (EncryptedParametersData) context.getDAO().select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
                 // Decrypt the file using the parameters.
                 CryptoStrategy aes = initAES(config.getCryptoConfig().getPassword(), encParams.getSalt(), encParams.getIv());

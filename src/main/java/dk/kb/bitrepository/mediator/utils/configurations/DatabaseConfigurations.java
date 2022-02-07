@@ -1,5 +1,7 @@
 package dk.kb.bitrepository.mediator.utils.configurations;
 
+import java.util.Locale;
+
 import static java.lang.String.format;
 
 public final class DatabaseConfigurations {
@@ -51,10 +53,10 @@ public final class DatabaseConfigurations {
 
     @Override
     public String toString() {
-        return format("port: %s\n", port) +
-                format("name: %s\n", name) +
-                format("username: %s\n", username) +
-                format("password: %s\n", password) +
-                format("url: %s\n", url);
+        return format(Locale.ROOT, "port: %s\n", port) +
+                format(Locale.ROOT,"name: %s\n", name) +
+                format(Locale.ROOT,"username: %s\n", username) +
+                format(Locale.ROOT,"password: %s\n", password) +
+                format(Locale.ROOT,"url: %s\n", url);
     }
 }

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -36,7 +35,7 @@ public class ConfigurationsProvider {
     private void loadYAMLConfigurations() throws IOException {
         Yaml yaml = new Yaml();
 
-        try (InputStream stream = new FileInputStream(configPath)) {
+        try (InputStream stream = getClass().getClassLoader().getResourceAsStream(configPath)) {
             config = yaml.loadAs(stream, Configurations.class);
         }
     }

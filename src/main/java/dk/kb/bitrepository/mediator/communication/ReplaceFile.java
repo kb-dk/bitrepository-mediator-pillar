@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -13,7 +14,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
-import static dk.kb.bitrepository.mediator.database.DatabaseDAO.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
@@ -27,8 +27,9 @@ public class ReplaceFile extends MessageResult<Boolean> {
     private final MockupResponse response;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public ReplaceFile(Configurations config, @NotNull MockupMessageObject message) {
-        this.config = config;
+    public ReplaceFile(PillarContext context, @NotNull MockupMessageObject message) {
+        this.context = context;
+        this.config = context.getConfigurations();
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
         this.payload = message.getPayload();
@@ -44,7 +45,7 @@ public class ReplaceFile extends MessageResult<Boolean> {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
         // Retrieve old and compute new checksums
-        FilesData result = (FilesData) select(collectionID, fileID, FILES_TABLE);
+        FilesData result = (FilesData) context.getDAO().select(collectionID, fileID, FILES_TABLE);
         String storedEncryptedChecksum = result.getEncryptedChecksum();
         String receivedEncryptedChecksum = generateChecksum(new ByteArrayInputStream(responseEncryptedBytes), checksumSpecTYPE);
 
@@ -72,8 +73,8 @@ public class ReplaceFile extends MessageResult<Boolean> {
         int newIterations = AES.getIterations();
 
         // Updated the internal tables in mediator pillar
-        updateFilesTable(collectionID, fileID, receivedTimestamp, newEncryptedTimestamp, newChecksum, newEncryptedChecksum, checksumTimestamp);
-        updateEncryptionParametersTable(collectionID, fileID, newSalt, newIV, newIterations);
+        context.getDAO().updateFilesTable(collectionID, fileID, receivedTimestamp, newEncryptedTimestamp, newChecksum, newEncryptedChecksum, checksumTimestamp);
+        context.getDAO().updateEncryptionParametersTable(collectionID, fileID, newSalt, newIV, newIterations);
 
         // Relay the new encrypted file and checksum to the encrypted pillar
         sendNewEncryptedFileToEncryptedPillar(newEncryptedBytes, newEncryptedChecksum);

@@ -21,7 +21,7 @@ public class DatabaseConnectionManager {
     private void initializeConnectionPool(DatabaseConfigurations pillarConfig) {
         log.debug("Initializing jdbc connection pool");
         HikariConfig poolConfig = new HikariConfig();
-        poolConfig.setJdbcUrl(pillarConfig.getUrl() + ";create=true");
+        poolConfig.setJdbcUrl(pillarConfig.getUrl());
         poolConfig.setUsername(pillarConfig.getUsername());
         poolConfig.setPassword(pillarConfig.getPassword());
         // TODO configure connection pool more and silence logs(?)

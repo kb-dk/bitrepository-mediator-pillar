@@ -29,10 +29,10 @@ public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHand
     protected void sendPositiveResponse(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) {
         IdentifyPillarsForGetFileResponse response = new IdentifyPillarsForGetFileResponse();
         response.setFileID(request.getFileID());
-        response.setPillarID(getSettings().getComponentID());
+        response.setPillarID(getConfigurations().getPillarConfig().getMediatorPillarID());
         response.setTimeToDeliver(
                 TimeMeasurementUtils.getTimeMeasurementFromMiliseconds(
-                        getSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
+                        getConfigurations().getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
 
         ResponseInfo irInfo = new ResponseInfo();
         irInfo.setResponseCode(ResponseCode.IDENTIFICATION_POSITIVE);
