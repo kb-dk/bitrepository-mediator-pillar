@@ -51,8 +51,8 @@ public class PutFile extends MessageResult<Boolean> {
 
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-            context.getDAO().insertInto(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
-            context.getDAO().insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
+            context.getDAO().insertIntoEncParams(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
+            context.getDAO().insertIntoFiles(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
 
             return Boolean.TRUE;
         } else {

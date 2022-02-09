@@ -30,7 +30,7 @@ public class DatabaseDAO {
      * @param iv           The initialization vector used in the encryption.
      * @param iterations   The number of iterations.
      */
-    public void insertInto(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
+    public void insertIntoEncParams(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
         executeQuery(query, collectionID, fileID, salt, iv, iterations);
     }
@@ -40,15 +40,30 @@ public class DatabaseDAO {
      *
      * @param collectionID        The Collection ID, part of the primary key.
      * @param fileID              The File ID, part of the primary key.
-     * @param received_timestamp  The timestamp for when the file was received.
-     * @param encrypted_timestamp The timestamp for when the file was encrypted.
+     * @param receivedTimestamp  The timestamp for when the file was received.
+     * @param encryptedTimestamp The timestamp for when the file was encrypted.
      * @param checksum            The checksum of the un-encrypted file.
-     * @param enc_checksum        The checksum of the encrypted file.
-     * @param checksum_timestamp  The timestamp for when the checksum was computed.
+     * @param encChecksum        The checksum of the encrypted file.
+     * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
-    public void insertInto(String collectionID, String fileID, OffsetDateTime received_timestamp, OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum, OffsetDateTime checksum_timestamp) {
+    public void insertIntoFiles(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encChecksum, OffsetDateTime checksumTimestamp) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
-        executeQuery(query, collectionID, fileID, received_timestamp, encrypted_timestamp, checksum, enc_checksum, checksum_timestamp);
+        executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
+    }
+
+    public boolean hasFile(String fileID, String collectionID) {
+        String sql = "SELECT COUNT(*) FROM " + FILES_TABLE + " WHERE file_id = ? AND collection_id = ?";
+        try (Connection connection = connectionManager.getConnection();
+             PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, sql, fileID, collectionID)) {
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    return result.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            log.error("Error occurred when trying to connect to the database.", e);
+        }
+        return false;
     }
 
     /**

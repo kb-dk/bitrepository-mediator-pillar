@@ -18,7 +18,7 @@ public abstract class IdentifyRequestHandler<T extends MessageRequest> implement
     public IdentifyRequestHandler(PillarContext context) {
         this.context = context;
         configurations = context.getConfigurations();
-        requestValidator = new RequestValidator(configurations.getRefPillarSettings());
+        requestValidator = new RequestValidator(configurations.getRefPillarSettings(), context.getDAO());
     }
 
     @Override

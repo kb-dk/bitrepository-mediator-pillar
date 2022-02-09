@@ -19,9 +19,6 @@ import java.time.OffsetDateTime;
 
 public class DatabaseUtils {
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
-    private static String databaseURL = null;
-    private static String username;
-    private static String password;
 
     private DatabaseUtils() {
     }

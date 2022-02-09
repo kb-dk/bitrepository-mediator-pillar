@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.utils;
 
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.ProtocolVersionLoader;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -16,11 +18,13 @@ public class RequestValidatorTest {
     private static Settings conf;
     private static RequestValidator validator;
     private static String pillarID = "test-pillar";
+    private static DatabaseDAO daoMock;
 
     @BeforeAll
     public static void setup() throws IOException {
-        conf = TestUtils.loadRefPillarSettings(pillarID, "src/test/resources/conf");
-        validator = new RequestValidator(conf);
+        daoMock = Mockito.mock(DatabaseDAO.class);
+        conf = TestUtils.loadRefPillarSettings(pillarID, "conf");
+        validator = new RequestValidator(conf, daoMock);
     }
 
     @BeforeEach
@@ -92,6 +96,25 @@ public class RequestValidatorTest {
         request.setPillarID(pillarID);
         Assertions.assertDoesNotThrow(() -> {
             validator.validatePillarID(request.getPillarID());
+        });
+    }
+
+    @Test
+    public void validateFileExists() {
+        request.setCollectionID("testCollection");
+        Mockito.when(daoMock.hasFile(request.getFileID(), request.getCollectionID()))
+                .thenReturn(true);
+        Assertions.assertDoesNotThrow(() -> {
+            validator.validateFileExists(request.getFileID(), request.getCollectionID());
+        });
+    }
+
+    @Test
+    public void validateFileDoesNotExist() {
+        Mockito.when(daoMock.hasFile(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(false);
+        Assertions.assertThrows(RequestHandlerException.class, () -> {
+            validator.validateFileExists("non-existing-file.txt", "wrong-collection");
         });
     }
 }

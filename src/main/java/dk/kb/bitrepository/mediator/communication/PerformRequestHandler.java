@@ -16,7 +16,7 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
     public PerformRequestHandler(PillarContext context) {
         this.context = context;
         configurations = context.getConfigurations();
-        requestValidator = new RequestValidator(configurations.getRefPillarSettings());
+        requestValidator = new RequestValidator(configurations.getRefPillarSettings(), context.getDAO());
     }
 
     @Override

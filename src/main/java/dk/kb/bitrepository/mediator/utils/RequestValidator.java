@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator.utils;
 
 import dk.kb.bitrepository.mediator.communication.exception.InvalidMessageException;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import org.bitrepository.bitrepositoryelements.ResponseCode;
 import org.bitrepository.bitrepositoryelements.ResponseInfo;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
@@ -10,13 +11,18 @@ import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.utils.FileIDValidator;
 
+/**
+ * Class for validating received requests. Intended for use in the handlers handling the requests.
+ */
 public class RequestValidator {
     private final FileIDValidator fileIDValidator;
     private final Settings pillarSettings;
+    private final DatabaseDAO dao;
 
-    public RequestValidator(Settings pillarSettings) {
+    public RequestValidator(Settings pillarSettings, DatabaseDAO dao) {
         this.pillarSettings = pillarSettings;
         fileIDValidator = new FileIDValidator(pillarSettings);
+        this.dao = dao;
     }
 
     /**
@@ -63,18 +69,44 @@ public class RequestValidator {
         }
     }
 
+    // TODO (?) add verifyChecksumAlgorithm - not sure
+
+    /**
+     * Validates that the file exists by looking for an entry in the database.
+     * @param fileID File ID to look for
+     * @param collectionID Collection to look for file in
+     * @throws InvalidMessageException If file does not exist
+     */
+    public void validateFileExists(String fileID, String collectionID) throws InvalidMessageException {
+        if (!dao.hasFile(fileID, collectionID)) {
+            throw new InvalidMessageException(ResponseCode.FILE_NOT_FOUND_FAILURE,
+                    "File '" + fileID + "' not found in collection '" + collectionID + "'");
+        }
+    }
+
+    /**
+     * Validates IdentifyPillarsForGetFileRequests
+     * @param request Request to validate
+     * @throws RequestHandlerException If the request is wrongly configured or contains demands that can't be met.
+     */
     public void validate(IdentifyPillarsForGetFileRequest request) throws RequestHandlerException {
         String fileID = request.getFileID();
         validateCollectionIdIsSet(request);
         validateFileIDFormat(fileID);
-        //pillarDAO.checkFileExists(fileID, request.getCollectionID());
+        validateFileExists(fileID, request.getCollectionID());
     }
 
+    /**
+     * Validates GetFileRequests
+     * @param request Request to validate
+     * @throws RequestHandlerException If the request is wrongly configured or contains demands that can't be met.
+     */
     public void validate(GetFileRequest request) throws RequestHandlerException {
+        String fileID = request.getFileID();
         validateCollectionIdIsSet(request);
         validatePillarID(request.getPillarID());
-        validateFileIDFormat(request.getFileID());
-        //pillarDAO.checkFileExists(fileID, request.getCollectionID());
+        validateFileIDFormat(fileID);
+        validateFileExists(fileID, request.getCollectionID());
     }
 
     // TODO validate protocol version on messages?
