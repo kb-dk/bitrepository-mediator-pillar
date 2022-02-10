@@ -3,7 +3,6 @@ package dk.kb.bitrepository.mediator.communication;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
-import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -11,8 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class MessageReceivedHandler {
@@ -77,45 +74,21 @@ public class MessageReceivedHandler {
      */
     @Deprecated
     public static boolean createAndEncryptFileFromBytes(CryptoStrategy crypto, byte[] bytes, Path filePath, Path encryptedFilePath) {
-        try {
-            writeBytesToFile(bytes, filePath);
-        } catch (FileExistsException e) {
-            log.error("The file already exists.");
-        }
-
-        // TODO: Check encryption is done correctly from time to time, perhaps decrypt and compare checksums?
-        crypto.encrypt(filePath, encryptedFilePath);
-        boolean encryptedFileExists = Files.exists(encryptedFilePath);
-
-        if (!encryptedFileExists) {
-            log.error("Something went wrong during encryption, and the encrypted file does not exist.");
-            return false;
-        }
+//        try {
+//            writeBytesToFile(bytes, filePath);
+//        } catch (FileExistsException e) {
+//            log.error("The file already exists.");
+//        }
+//
+//        // TODO: Check encryption is done correctly from time to time, perhaps decrypt and compare checksums?
+//        crypto.encrypt(filePath, encryptedFilePath);
+//        boolean encryptedFileExists = Files.exists(encryptedFilePath);
+//
+//        if (!encryptedFileExists) {
+//            log.error("Something went wrong during encryption, and the encrypted file does not exist.");
+//            return false;
+//        }
         return true;
-    }
-
-    /**
-     * Writes the given bytes to a file.
-     *
-     * @param bytes    The bytes to write.
-     * @param filePath The path to the file.
-     */
-    @Deprecated
-    public static void writeBytesToFile(byte[] bytes, Path filePath) throws FileExistsException {
-        boolean fileExist = Files.exists(filePath);
-        if (fileExist) {
-            log.warn("File already exists at {}.", filePath);
-            throw new FileExistsException();
-        } else {
-            try {
-                OutputStream output = Files.newOutputStream(filePath);
-                output.write(bytes);
-                output.close();
-                log.info("Bytes has successfully been written to file {}", filePath);
-            } catch (IOException e) {
-                log.error("Something went wrong writing to the file.", e);
-            }
-        }
     }
 
     /**
@@ -154,16 +127,4 @@ public class MessageReceivedHandler {
         return "src/main/java/dk/kb/bitrepository/mediator/files/file_decrypted:" + collectionID + ":" + fileID;
     }
 
-    /**
-     * Helper method that is used to delete local files.
-     */
-    @Deprecated
-    public static void cleanupFiles() {
-        File dir = new File("src/main/java/dk/kb/bitrepository/mediator/files/");
-        try {
-            FileUtils.cleanDirectory(dir);
-        } catch (IOException e) {
-            log.error("Something went wrong trying to clean up /files/ directory.", e);
-        }
-    }
 }
