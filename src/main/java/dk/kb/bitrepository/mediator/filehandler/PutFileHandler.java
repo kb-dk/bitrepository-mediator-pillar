@@ -1,7 +1,10 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -13,7 +16,6 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
@@ -26,13 +28,16 @@ public class PutFileHandler {
     private final byte[] fileData;
     private final ChecksumDataForFileTYPE checksumData;
     private final String cryptoPassword;
+    private final DatabaseDAO dao;
 
-    public PutFileHandler(String collectionID, String fileID, byte[] fileData, ChecksumDataForFileTYPE checksumData, CryptoConfigurations crypto) {
+    public PutFileHandler(String collectionID, String fileID, byte[] fileData, ChecksumDataForFileTYPE checksumData,
+                          CryptoConfigurations crypto, DatabaseDAO dao) {
         this.collectionID = collectionID;
         this.fileID = fileID;
         this.fileData = fileData;
         this.checksumData = checksumData;
         this.cryptoPassword = crypto.getPassword();
+        this.dao = dao;
     }
 
     public void performPutFile() throws FileExistsException {
@@ -63,8 +68,9 @@ public class PutFileHandler {
             String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedBytes), checksumData.getChecksumSpec());
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-            insertInto(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
-            insertInto(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum, checksumTimestamp);
+            dao.insertIntoEncParams(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
+            dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum,
+                    encryptedChecksum, checksumTimestamp);
         }
     }
 

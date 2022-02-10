@@ -1,8 +1,9 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import org.apache.commons.io.FileExistsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,13 +11,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static dk.kb.bitrepository.mediator.TestConstants.CONFIG_PATH_TEST;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.writeBytesToFile;
@@ -29,14 +28,14 @@ public class TestFileUtils {
     private final String fileDirectory = "src/test/resources/files";
     private final String encryptedFileDirectory = "src/test/resources/encrypted-files";
     private static String encryptionPassword;
-    private static byte[] testString;
+    private static byte[] testFileBytes;
 
     @BeforeAll
-    static void setup() throws FileNotFoundException {
-        new ConfigurationHandler(CONFIG_PATH_TEST);
-        Configurations config = ConfigurationHandler.getConfigurations();
-        encryptionPassword = config.getCryptoConfig().getPassword();
-        testString = "teststring".getBytes(Charset.defaultCharset());
+    static void setup() throws IOException {
+        Configurations testConfig = MediatorComponentFactory.loadMediatorConfigurations("conf");
+        CryptoConfigurations cryptoConfigurations = testConfig.getCryptoConfig();
+        encryptionPassword = cryptoConfigurations.getPassword();
+        testFileBytes = "teststring".getBytes(Charset.defaultCharset());
     }
 
     @AfterEach
@@ -49,7 +48,7 @@ public class TestFileUtils {
     @DisplayName("Test Writing Bytes to File")
     public void testWritingBytesToFile() {
         try {
-            writeBytesToFile(testString, fileDirectory, COLLECTION_ID, FILE_ID);
+            writeBytesToFile(testFileBytes, fileDirectory, COLLECTION_ID, FILE_ID);
         } catch (FileExistsException e) {
             System.out.println("File already exists.");
         }
@@ -60,7 +59,7 @@ public class TestFileUtils {
     @Test
     @DisplayName("Test Encrypting File is Being Written.")
     public void testThatEncryptedFileIsWrittenToDisk() {
-        byte[] encryptedString = new AESCryptoStrategy(encryptionPassword).encrypt(testString);
+        byte[] encryptedString = new AESCryptoStrategy(encryptionPassword).encrypt(testFileBytes);
 
         try {
             writeBytesToFile(encryptedString, encryptedFileDirectory, COLLECTION_ID, FILE_ID);

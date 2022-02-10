@@ -10,11 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.OffsetDateTime;
 
 public class DatabaseUtils {
@@ -98,7 +94,6 @@ public class DatabaseUtils {
      * @throws IllegalStateException if any of the args is of an unknown type
      */
     static PreparedStatement createPreparedStatement(@NotNull Connection dbConnection, String query, Object @NotNull ... args) throws SQLException {
-        //log.trace("Preparing the statement: '" + query + "' with arguments '" + Arrays.asList(args) + "'");
         PreparedStatement s = dbConnection.prepareStatement(query);
         int i = 1;
         for (Object arg : args) {

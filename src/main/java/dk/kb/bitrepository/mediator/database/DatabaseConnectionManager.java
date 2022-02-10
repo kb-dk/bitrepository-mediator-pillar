@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.database;
 
+import ch.qos.logback.classic.Level;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
@@ -19,6 +20,8 @@ public class DatabaseConnectionManager {
     }
 
     private void initializeConnectionPool(DatabaseConfigurations pillarConfig) {
+        ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.zaxxer.hikari");
+        logger.setLevel(Level.OFF);
         log.debug("Initializing jdbc connection pool");
         HikariConfig poolConfig = new HikariConfig();
         poolConfig.setJdbcUrl(pillarConfig.getUrl());

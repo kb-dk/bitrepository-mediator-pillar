@@ -1,8 +1,10 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
+import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -11,15 +13,11 @@ import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static dk.kb.bitrepository.mediator.TestConstants.CONFIG_PATH_TEST;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
@@ -33,12 +31,14 @@ public class TestPutFileHandler {
     private static byte[] fileBytes;
     private static ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private static CryptoConfigurations cryptoConfigurations;
+    private static DatabaseDAO dao;
 
     @BeforeAll
-    static void setup() throws FileNotFoundException {
-        new ConfigurationHandler(CONFIG_PATH_TEST);
-        Configurations config = ConfigurationHandler.getConfigurations();
-        cryptoConfigurations = config.getCryptoConfig();
+    static void setup() throws IOException {
+        Configurations testConfig = MediatorComponentFactory.loadMediatorConfigurations("conf");
+        DatabaseConfigurations databaseConfig = testConfig.getDatabaseConfig();
+        dao = MediatorComponentFactory.getDAO(databaseConfig);
+        cryptoConfigurations = testConfig.getCryptoConfig();
 
         fileBytes = "test-string".getBytes(Charset.defaultCharset());
 
@@ -54,18 +54,19 @@ public class TestPutFileHandler {
     public void afterEach() {
         cleanupFiles(UNENCRYPTED_FILES_PATH);
         cleanupFiles(ENCRYPTED_FILES_PATH);
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
     }
 
     @BeforeEach
     public void beforeEach() {
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
     }
 
     @Test
     @DisplayName("Test PutFile method")
     public void testPutFile() {
-        PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE, cryptoConfigurations);
+        PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
+                cryptoConfigurations, dao);
         try {
             handler.performPutFile();
         } catch (FileExistsException e) {
@@ -74,8 +75,8 @@ public class TestPutFileHandler {
         }
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
-        assertNotNull(select(COLLECTION_ID, FILE_ID, FILES_TABLE));
-        assertNotNull(select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
+        assertNotNull(dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE));
+        assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
     }
 
     public void cleanupFiles(String path) {
