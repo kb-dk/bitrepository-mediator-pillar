@@ -37,7 +37,7 @@ public class MessageRequestDelegator implements MessageListener {
     private List<RequestHandler<? extends MessageRequest>> createMessageHandlers() {
         // TODO probably put handlers in some kind of factory instead
         List<RequestHandler<? extends MessageRequest>> handlers = new ArrayList<>();
-        handlers.add(new IdentifyPillarsForGetFileRequestHandler(context));
+        handlers.add(new IdentifyGetFileRequestHandler(context));
         handlers.add(new GetFileRequestHandler(context));
         return handlers;
     }
@@ -66,11 +66,11 @@ public class MessageRequestDelegator implements MessageListener {
 
     public void startListening() {
         messageBus.addListener(configs.getPrivateMessageDestination(), this);
-        messageBus.addListener(context.getConfiguration().getRepositoryMessageDestination(), this);
+        messageBus.addListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
     }
 
     public void stop() {
         messageBus.removeListener(configs.getPrivateMessageDestination(), this);
-        messageBus.removeListener(context.getConfiguration().getRepositoryMessageDestination(), this);
+        messageBus.removeListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
     }
 }

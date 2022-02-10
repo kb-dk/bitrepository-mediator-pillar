@@ -10,8 +10,8 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
-public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
-    public IdentifyPillarsForGetFileRequestHandler(PillarContext context) {
+public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
+    public IdentifyGetFileRequestHandler(PillarContext context) {
         super(context);
     }
 
@@ -29,10 +29,10 @@ public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHand
     protected void sendPositiveResponse(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) {
         IdentifyPillarsForGetFileResponse response = new IdentifyPillarsForGetFileResponse();
         response.setFileID(request.getFileID());
-        response.setPillarID(getSettings().getComponentID());
+        response.setPillarID(getConfigurations().getPillarConfig().getMediatorPillarID());
         response.setTimeToDeliver(
                 TimeMeasurementUtils.getTimeMeasurementFromMiliseconds(
-                        getSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
+                        getConfigurations().getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
 
         ResponseInfo irInfo = new ResponseInfo();
         irInfo.setResponseCode(ResponseCode.IDENTIFICATION_POSITIVE);

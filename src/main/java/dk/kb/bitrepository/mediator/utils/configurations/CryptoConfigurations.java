@@ -23,8 +23,8 @@ public final class CryptoConfigurations {
     @Override
     public String toString() {
         return "CryptoConfigurations{" +
-                "algorithm='" + algorithm + '\'' +
-                ", password='" + password + '\'' +
+                "algorithm='" + algorithm + "'" +
+                ", password='" + password + "'" +
                 '}';
     }
 }

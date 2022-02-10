@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
@@ -17,25 +18,25 @@ import java.nio.file.Path;
 
 public class MessageReceivedHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
-    private Configurations config;
+    private PillarContext context;
 
-    public MessageReceivedHandler(Configurations configs) {
-        this.config = configs;
+    public MessageReceivedHandler(PillarContext context) {
+        this.context = context;
     }
 
     //TODO: Must be asynchronous to not block up the mediator pillar
     public <T> Object handleReceivedMessage(MockupMessageObject message) {
         switch (message.getType()) {
             case PUT_FILE:
-                return new PutFile(config, message).execute();
+                return new PutFile(context, message).execute();
             case GET_FILE:
-                return new GetFile(config, message).execute();
+                return new GetFile(context, message).execute();
             case DELETE_FILE:
-                return new DeleteFile(message).execute();
+                return new DeleteFile(context, message).execute();
             case REPLACE_FILE:
-                return new ReplaceFile(config, message).execute();
+                return new ReplaceFile(context, message).execute();
             case GET_CHECKSUMS:
-                return new GetChecksums(message).execute();
+                return new GetChecksums(context, message).execute();
             default:
                 log.error("Unsupported message type.");
         }

@@ -1,74 +1,66 @@
 package dk.kb.bitrepository.mediator.database;
 
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.*;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.OffsetDateTime;
 
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler.getConfigurations;
-
 public class DatabaseUtils {
-    private static String databaseURL = null;
-    private static String username;
-    private static String password;
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
     private DatabaseUtils() {
     }
 
     /**
-     * Initializes the configurations in the code, by extracting them from the configurations file.
+     * Runs an SQL file against the database specified by the pillar configuration.
      */
-    private static void initDatabaseConfigurations() {
-        DatabaseConfigurations configs = getConfigurations().getDatabaseConfig();
-        username = configs.getUsername();
-        password = configs.getPassword();
-        databaseURL = String.format("%s:%s/%s", configs.getUrl(), configs.getPort(), configs.getName());
-    }
-
-    /**
-     * Creates the tables as defined in the 'create_tables.sql' file, using the
-     * {@link #parseSQL(String filePath) parseSQL} method.
-     */
-    public static void createTables() {
-        String filePath = "src/main/resources/create_tables.sql";
-        String[] queries = parseSQL(filePath);
-        executeSQLFromStringArray(queries);
-    }
-
-    /**
-     * Connects to the Database through the DriveManager using the configurations set by {@link #initDatabaseConfigurations() initConfigs}.
-     *
-     * @return The connection established.
-     * @throws SQLException Throws an error if the connection could not be established.
-     */
-    static Connection connect() throws SQLException {
-        initDatabaseConfigurations();
-        return DriverManager.getConnection(databaseURL, username, password);
+    public static void runSqlFromFile(DatabaseConfigurations dbConfig, String pathToSqlFile) throws IOException, SQLException {
+        String[] queries = parseSqlFile(pathToSqlFile);
+        try (Connection connection = getNonPooledConnection(dbConfig)) {
+            executeSQLFromStringArray(connection, queries);
+        }
     }
 
     /**
      * Parses SQL queries from a given .sql file to a String array.
      *
-     * @param filePath The .sql files path.
+     * @param pathToSqlFile The .sql files path.
      * @return A string array containing the queries parsed from the file.
      */
-    private static String[] parseSQL(String filePath) {
-        String[] queries = new String[0];
-
-        try {
+    @NotNull
+    private static String[] parseSqlFile(String pathToSqlFile) throws IOException {
+        String[] queries;
+        try (InputStream is = DatabaseUtils.class.getClassLoader().getResourceAsStream(pathToSqlFile)) {
+            if (is == null) {
+                throw new FileNotFoundException("Didn't find any file in classpath corresponding to '" +
+                        pathToSqlFile + "'");
+            }
             // Splitting the string on ";" to separate requests.
-            queries = Files.readString(Path.of(filePath)).split(";");
-        } catch (IOException e) {
-            log.error("No file exists at {}", filePath, e);
+            queries = IOUtils.toString(is, StandardCharsets.UTF_8).split(";");
         }
         return queries;
+    }
+
+    /**
+     * Connects to the Database through the DriveManager using the provided configurations.
+     *
+     * @return The connection established.
+     * @throws SQLException Throws an error if the connection could not be established.
+     */
+    public static Connection getNonPooledConnection(DatabaseConfigurations dbConfig) throws SQLException {
+        return DriverManager.getConnection(dbConfig.getUrl(), dbConfig.getUsername(), dbConfig.getPassword());
     }
 
     /**
@@ -76,8 +68,8 @@ public class DatabaseUtils {
      *
      * @param query String array that contains the queries to be executed.
      */
-    private static void executeSQLFromStringArray(String[] query) {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+    private static void executeSQLFromStringArray(Connection connection, String[] query) {
+        try (Statement statement = connection.createStatement()) {
             log.info("Connection established to the database; trying to execute query.");
             for (String s : query) {
                 //Remove spaces to not execute empty statements
@@ -91,18 +83,6 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             log.error("Error in executing SQL query: ", e);
         }
-    }
-
-    /**
-     * Delete tables 'enc_parameters' and 'files'. Used for testing purposes.
-     *
-     * @throws SQLException Throws a SQLException when failing to connect to the database server.
-     */
-    static void dropTables() throws SQLException {
-        Connection connection = connect();
-        Statement statement = connection.createStatement();
-        statement.executeUpdate("DROP TABLE IF EXISTS enc_parameters");
-        statement.executeUpdate("DROP TABLE IF EXISTS files");
     }
 
     /**

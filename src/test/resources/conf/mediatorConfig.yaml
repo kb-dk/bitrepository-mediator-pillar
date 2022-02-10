@@ -1,4 +1,5 @@
 pillarConfig:
+  mediatorPillarID: "testpillar"
   privateMessageDestination: "topic://mediator-test"
 
 cryptoConfig:
@@ -6,8 +7,6 @@ cryptoConfig:
   password: "testcryptopw"
 
 databaseConfig:
-  name: "testdb"
-  url: "jdbc:postgresql://localhost"
-  port: "5432"
+  url: "jdbc:postgresql://localhost/testdb"
   username: "testuser"
   password: "testpw"
