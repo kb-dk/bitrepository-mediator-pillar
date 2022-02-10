@@ -7,12 +7,12 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ConfigurationsProvider {
+public class ConfigurationsLoader {
     private final String configPath;
     private static Configurations config = null;
-    private static final Logger log = LoggerFactory.getLogger(ConfigurationsProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigurationsLoader.class);
 
-    public ConfigurationsProvider(String configPath) throws IOException {
+    public ConfigurationsLoader(String configPath) throws IOException {
         this.configPath = configPath;
         loadYAMLConfigurations();
         log.info("Config initialized with path: {}", configPath);

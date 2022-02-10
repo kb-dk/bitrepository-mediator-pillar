@@ -37,7 +37,7 @@ public class MessageRequestDelegator implements MessageListener {
     private List<RequestHandler<? extends MessageRequest>> createMessageHandlers() {
         // TODO probably put handlers in some kind of factory instead
         List<RequestHandler<? extends MessageRequest>> handlers = new ArrayList<>();
-        handlers.add(new IdentifyPillarsForGetFileRequestHandler(context));
+        handlers.add(new IdentifyGetFileRequestHandler(context));
         handlers.add(new GetFileRequestHandler(context));
         return handlers;
     }
