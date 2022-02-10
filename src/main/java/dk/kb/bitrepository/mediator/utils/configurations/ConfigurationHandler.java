@@ -16,7 +16,7 @@ public class ConfigurationHandler {
     private static Configurations config = null;
     private static final Logger log = LoggerFactory.getLogger(ConfigurationHandler.class);
 
-    public ConfigurationHandler(String configPath) {
+    public ConfigurationHandler(String configPath) throws FileNotFoundException {
         this.configPath = configPath;
         ensureConfigsExist();
         setConfigurations();
@@ -49,17 +49,11 @@ public class ConfigurationHandler {
     }
 
     /**
-     * Used to check if the configuration file exists, if it doesn't it will be created.
+     * Used to check if the configuration file exists.
      */
-    private void ensureConfigsExist() {
+    private void ensureConfigsExist() throws FileNotFoundException {
         if (!Files.exists(Paths.get(configPath))) {
-            log.info("Config file doesn't exist - creating it now.");
-            try {
-                Files.createFile(Paths.get(configPath));
-            } catch (IOException e) {
-                log.error("Couldn't create the config file at the given path." + e);
-            }
-            log.info("Config file has been created.");
+            throw new FileNotFoundException("Config file was not found at '" + configPath + "'");
         }
     }
 
