@@ -4,9 +4,8 @@ import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.database.DatabaseConnectionManager;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
@@ -42,7 +41,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
     @BeforeAll
     static void setup() throws IOException {
-        ConfigurationsProvider configProvider = new ConfigurationsProvider(CONFIG_PATH_TEST);
+        ConfigurationsLoader configProvider = new ConfigurationsLoader(CONFIG_PATH_TEST);
         Configurations config = configProvider.getConfigurations();
         dao = MediatorComponentFactory.getDAO(config.getDatabaseConfig());
         // TODO add messageBus and responseDispatcher when necessary

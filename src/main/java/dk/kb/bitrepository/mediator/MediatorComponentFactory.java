@@ -3,7 +3,7 @@ package dk.kb.bitrepository.mediator;
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
 import dk.kb.bitrepository.mediator.database.DatabaseConnectionManager;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsProvider;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.bitrepository.common.settings.Settings;
@@ -56,8 +56,8 @@ public class MediatorComponentFactory {
     }
 
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
-        ConfigurationsProvider configProvider = new ConfigurationsProvider(pathToConfiguration + "/mediatorConfig.yaml");
-        Configurations configs = configProvider.getConfigurations();
+        ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
+        Configurations configs = configLoader.getConfigurations();
         String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), mediatorPillarID);
         Settings refPillarSettings = settingsProvider.getSettings();

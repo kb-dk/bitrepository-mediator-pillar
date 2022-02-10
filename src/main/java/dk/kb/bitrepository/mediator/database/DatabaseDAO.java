@@ -56,9 +56,8 @@ public class DatabaseDAO {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, sql, fileID, collectionID)) {
             try (ResultSet result = statement.executeQuery()) {
-                while (result.next()) {
-                    return result.getInt(1) > 0;
-                }
+                result.next();
+                return result.getInt(1) == 1;
             }
         } catch (SQLException e) {
             log.error("Error occurred when trying to connect to the database.", e);

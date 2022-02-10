@@ -10,8 +10,8 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
-public class IdentifyPillarsForGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
-    public IdentifyPillarsForGetFileRequestHandler(PillarContext context) {
+public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
+    public IdentifyGetFileRequestHandler(PillarContext context) {
         super(context);
     }
 
