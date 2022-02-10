@@ -17,13 +17,10 @@ public class PillarMain implements Callable<Integer>{
     @CommandLine.Parameters(index = "1", type = String.class, defaultValue = "src/test/resources/conf/client-01.pem") // Default for now
     private String keyfilePath;
 
-    @CommandLine.Parameters(index = "2", type = String.class, defaultValue = "TestPillar1")
-    private String pillarID;
-
     @Override
     public Integer call() {
         try {
-            MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath, pillarID);
+            MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath);
             log.info("Pillar started");
             synchronized(pillar) {
                 pillar.wait(); // wait indefinitely to keep thread alive

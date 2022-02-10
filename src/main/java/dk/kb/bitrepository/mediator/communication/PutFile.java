@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -12,7 +13,6 @@ import java.io.ByteArrayInputStream;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
 import static dk.kb.bitrepository.mediator.communication.MessageReceivedHandler.initAES;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
@@ -24,8 +24,9 @@ public class PutFile extends MessageResult<Boolean> {
     private final ChecksumSpecTYPE checksumSpecTYPE;
     private final Logger log = LoggerFactory.getLogger(MessageReceivedHandler.class);
 
-    public PutFile(Configurations config, @NotNull MockupMessageObject message) {
-        this.config = config;
+    public PutFile(PillarContext context, @NotNull MockupMessageObject message) {
+        this.context = context;
+        this.config = context.getConfigurations();
         this.bytes = message.getPayload();
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
@@ -36,9 +37,9 @@ public class PutFile extends MessageResult<Boolean> {
     @Override
     public Boolean execute() {
         OffsetDateTime fileReceivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        CryptoStrategy AES = initAES(config.getCryptoConfig().getPassword());
+        CryptoStrategy aes = initAES(config.getCryptoConfig().getPassword());
 
-        byte[] encryptedBytes = AES.encrypt(bytes);
+        byte[] encryptedBytes = aes.encrypt(bytes);
         if (encryptedBytes.length > 0) {
             OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
             {
@@ -50,8 +51,8 @@ public class PutFile extends MessageResult<Boolean> {
 
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-            insertInto(collectionID, fileID, AES.getSalt(), AES.getIV().getIV(), AES.getIterations());
-            insertInto(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
+            context.getDAO().insertIntoEncParams(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
+            context.getDAO().insertIntoFiles(collectionID, fileID, fileReceivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp);
 
             return Boolean.TRUE;
         } else {

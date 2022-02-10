@@ -1,5 +1,8 @@
 package dk.kb.bitrepository.mediator.database;
 
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -9,29 +12,49 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_ITERATIONS;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_IV;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_SALT;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENC_CHECKSUM;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP_MOCKUP;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
-import static dk.kb.bitrepository.mediator.database.DatabaseUtils.dropTables;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Test Database Calls")
-public class DatabaseCallsIT {
+public class DatabaseDaoIT {
+    private static DatabaseDAO dao;
 
     @BeforeAll
     static void setUp() throws Exception {
-        // Drop tables & create tables anew
+        Configurations testConfig = MediatorComponentFactory.loadMediatorConfigurations("conf");
+        DatabaseConfigurations databaseConfig = testConfig.getDatabaseConfig();
+        dao = MediatorComponentFactory.getDAO(databaseConfig);
+        DatabaseTestUtils.dropTables(databaseConfig);
         System.out.println("Database tables has been dropped.");
-        dropTables();
-        DatabaseUtils.createTables();
+        DatabaseTestUtils.createTables(databaseConfig);
         System.out.println("Tables have been created.");
     }
 
     @AfterEach
     public void afterEach() {
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
     }
 
     @Test
@@ -40,10 +63,10 @@ public class DatabaseCallsIT {
         String table = ENC_PARAMS_TABLE;
 
         // Insert some information
-        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+        dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
 
         // Get the information from the table with a SELECT query
-        EncryptedParametersData result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, table);
+        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         // Assert that there is now a result
         assertNotNull(result);
@@ -56,10 +79,10 @@ public class DatabaseCallsIT {
         assertEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
 
         // Delete the information using the composite key (collection_id, file_id)
-        delete(COLLECTION_ID, FILE_ID, table);
+        dao.delete(COLLECTION_ID, FILE_ID, table);
 
         // Perform a SELECT query again
-        result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, table);
+        result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         // Assert that the query returned null since it should have been deleted
         assertNull(result);
@@ -68,10 +91,10 @@ public class DatabaseCallsIT {
     @Test
     @DisplayName("Test Insert, Select, and Delete for 'files' table")
     public void TestInsertSelectAndDeleteForFilesTable() {
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
 
         assertNotNull(result, "Result should be of 'FilesData' type.");
 
@@ -89,16 +112,16 @@ public class DatabaseCallsIT {
     public void TestUpdateEncryptedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = result.getEncryptedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP, newTimestamp);
-        result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP, newTimestamp);
+        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         assertEquals(result.getEncryptedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getEncryptedTimestamp());
@@ -109,16 +132,16 @@ public class DatabaseCallsIT {
     public void TestUpdateChecksumTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = result.getChecksumTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP, newTimestamp);
-        result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP, newTimestamp);
+        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         assertEquals(result.getChecksumTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getChecksumTimestamp());
@@ -129,16 +152,16 @@ public class DatabaseCallsIT {
     public void TestUpdateReceivedTimestampInFilesTable() {
         String table = FILES_TABLE;
 
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         OffsetDateTime oldTimestamp = result.getReceivedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, newTimestamp);
-        result = (FilesData) select(COLLECTION_ID, FILE_ID, table);
+        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, newTimestamp);
+        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
 
         assertEquals(result.getReceivedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getReceivedTimestamp());
@@ -147,11 +170,11 @@ public class DatabaseCallsIT {
     @Test
     @DisplayName("Test that updating 'files' table works")
     public void testUpdatingFilesTable() {
-        insertInto(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
-        updateFilesTable(COLLECTION_ID, FILE_ID, OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
+        dao.updateFilesTable(COLLECTION_ID, FILE_ID, OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
                 FILES_CHECKSUM + "_new", FILES_ENC_CHECKSUM + "_new", OffsetDateTime.now(ZoneOffset.UTC));
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
 
         assertNotEquals(FILES_RECEIVED_TIMESTAMP_MOCKUP, result.getReceivedTimestamp());
         assertNotEquals(FILES_ENCRYPTED_TIMESTAMP_MOCKUP, result.getEncryptedTimestamp());
@@ -165,9 +188,9 @@ public class DatabaseCallsIT {
     @Test
     @DisplayName("Test that updating 'enc_parameters' table works")
     public void testUpdatingEncryptionParametersTable() {
-        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
-        updateEncryptionParametersTable(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
-        EncryptedParametersData result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+        dao.updateEncryptionParametersTable(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
+        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
         assertNotEquals(ENC_PARAMS_SALT, result.getSalt());
         assertNotEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
@@ -179,10 +202,10 @@ public class DatabaseCallsIT {
     @Test
     @DisplayName("Test updating 'enc_parameters' table for non-existing index")
     public void testUpdatingEncryptionParametersTableForNonExistingIndex() {
-        insertInto(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
-        updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test", ENC_PARAMS_SALT
+        dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
+        dao.updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test", ENC_PARAMS_SALT
                 + "_new", ENC_PARAMS_IV, 1234);
-        EncryptedParametersData result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
         assertEquals(COLLECTION_ID, result.getCollectionID());
         assertEquals(FILE_ID, result.getFileID());
@@ -191,5 +214,14 @@ public class DatabaseCallsIT {
         assertEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
         assertNotEquals(ENC_PARAMS_SALT + "_new", result.getSalt());
         assertNotEquals(1234, result.getIterations());
+    }
+
+    @Test
+    public void testDatabaseHasFileAfterInsertion() {
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+                FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
+        assertTrue(dao.hasFile(FILE_ID, COLLECTION_ID));
+        assertFalse(dao.hasFile(FILE_ID, "NonExistingCollection"));
+        assertFalse(dao.hasFile("NonExistingFile.txt", COLLECTION_ID));
     }
 }

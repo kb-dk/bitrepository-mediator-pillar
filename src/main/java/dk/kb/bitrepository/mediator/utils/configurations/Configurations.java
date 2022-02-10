@@ -6,7 +6,7 @@ public final class Configurations {
     private PillarConfigurations pillarConfig;
     private DatabaseConfigurations databaseConfig;
     private CryptoConfigurations cryptoConfig;
-    private Settings pillarSettings;
+    private Settings refPillarSettings;
 
     public PillarConfigurations getPillarConfig() {
         return pillarConfig;
@@ -20,8 +20,8 @@ public final class Configurations {
         return cryptoConfig;
     }
 
-    public Settings getPillarSettings() {
-        return pillarSettings;
+    public Settings getRefPillarSettings() {
+        return refPillarSettings;
     }
 
     public void setPillarConfig(PillarConfigurations pillarConfigurations) {
@@ -36,8 +36,8 @@ public final class Configurations {
         this.cryptoConfig = cryptoConfig;
     }
 
-    public void setPillarSettings(Settings pillarSettings) {
-        this.pillarSettings = pillarSettings;
+    public void setRefPillarSettings(Settings refPillarSettings) {
+        this.refPillarSettings = refPillarSettings;
     }
 
     @Override
@@ -46,6 +46,7 @@ public final class Configurations {
                 "pillarConfig=" + pillarConfig +
                 ", databaseConfig=" + databaseConfig +
                 ", cryptoConfig=" + cryptoConfig +
+                ", refPillarSettings=" + refPillarSettings +
                 '}';
     }
 }

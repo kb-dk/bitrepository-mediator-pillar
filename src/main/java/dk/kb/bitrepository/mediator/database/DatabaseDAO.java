@@ -13,10 +13,12 @@ import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABL
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
-public class DatabaseCalls {
-    private static final Logger log = LoggerFactory.getLogger(DatabaseCalls.class);
+public class DatabaseDAO {
+    private static final Logger log = LoggerFactory.getLogger(DatabaseDAO.class);
+    private final DatabaseConnectionManager connectionManager;
 
-    private DatabaseCalls() {
+    public DatabaseDAO(DatabaseConnectionManager connectionManager) { // name subject to change
+        this.connectionManager = connectionManager;
     }
 
     /**
@@ -28,7 +30,7 @@ public class DatabaseCalls {
      * @param iv           The initialization vector used in the encryption.
      * @param iterations   The number of iterations.
      */
-    public static void insertInto(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
+    public void insertIntoEncParams(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
         executeQuery(query, collectionID, fileID, salt, iv, iterations);
     }
@@ -38,15 +40,29 @@ public class DatabaseCalls {
      *
      * @param collectionID        The Collection ID, part of the primary key.
      * @param fileID              The File ID, part of the primary key.
-     * @param received_timestamp  The timestamp for when the file was received.
-     * @param encrypted_timestamp The timestamp for when the file was encrypted.
+     * @param receivedTimestamp  The timestamp for when the file was received.
+     * @param encryptedTimestamp The timestamp for when the file was encrypted.
      * @param checksum            The checksum of the un-encrypted file.
-     * @param enc_checksum        The checksum of the encrypted file.
-     * @param checksum_timestamp  The timestamp for when the checksum was computed.
+     * @param encChecksum        The checksum of the encrypted file.
+     * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
-    public static void insertInto(String collectionID, String fileID, OffsetDateTime received_timestamp, OffsetDateTime encrypted_timestamp, String checksum, String enc_checksum, OffsetDateTime checksum_timestamp) {
+    public void insertIntoFiles(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encChecksum, OffsetDateTime checksumTimestamp) {
         String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
-        executeQuery(query, collectionID, fileID, received_timestamp, encrypted_timestamp, checksum, enc_checksum, checksum_timestamp);
+        executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
+    }
+
+    public boolean hasFile(String fileID, String collectionID) {
+        String sql = "SELECT COUNT(*) FROM " + FILES_TABLE + " WHERE file_id = ? AND collection_id = ?";
+        try (Connection connection = connectionManager.getConnection();
+             PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, sql, fileID, collectionID)) {
+            try (ResultSet result = statement.executeQuery()) {
+                result.next();
+                return result.getInt(1) == 1;
+            }
+        } catch (SQLException e) {
+            log.error("Error occurred when trying to connect to the database.", e);
+        }
+        return false;
     }
 
     /**
@@ -57,13 +73,13 @@ public class DatabaseCalls {
      * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE.
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
-    public static DatabaseData select(String collectionID, String fileID, String table) {
+    public DatabaseData select(String collectionID, String fileID, String table) {
         String query = String.format(Locale.getDefault(), "SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
         query = query.replace("?", collectionID);
         query = query.replace("@", fileID);
 
         DatabaseData out = null;
-        try (Connection connection = DatabaseUtils.connect(); Statement statement = connection.createStatement()) {
+        try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
             log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
@@ -95,7 +111,7 @@ public class DatabaseCalls {
      * @param fileID       The FileID of the index to be deleted.
      * @param table        The table to delete from.
      */
-    public static void delete(String collectionID, String fileID, String table) {
+    public void delete(String collectionID, String fileID, String table) {
         String query = String.format(Locale.getDefault(), "DELETE FROM %s WHERE collection_id = ? AND file_id = ?", table);
         executeQuery(query, collectionID, fileID);
     }
@@ -105,7 +121,7 @@ public class DatabaseCalls {
      *
      * @param table The table to delete all columns from.
      */
-    public static void delete(String table) {
+    public void delete(String table) {
         String query = String.format(Locale.getDefault(), "DELETE FROM %s", table);
         executeQuery(query);
     }
@@ -116,11 +132,11 @@ public class DatabaseCalls {
      * @param collectionID    The collection id, part of the primary key.
      * @param fileID          The file id, part of the primary key.
      * @param timestampColumn The timestamp column to update, use e.g. 'FILES_ENCRYPTED_TIMESTAMP_NAME' etc.
-     * @param new_timestamp   The new timestamp that will replace the old one.
+     * @param newTimestamp   The new timestamp that will replace the old one.
      */
-    public static void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime new_timestamp) {
+    public void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime newTimestamp) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
-        executeQuery(query, new_timestamp, collectionID, fileID);
+        executeQuery(query, newTimestamp, collectionID, fileID);
     }
 
     /**
@@ -135,7 +151,7 @@ public class DatabaseCalls {
      * @param encryptedChecksum  The encrypted checksum of the new encrypted file.
      * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
-    public static void updateFilesTable(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
+    public void updateFilesTable(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET " + "received_timestamp = ?, " + "encrypted_timestamp = ?, " + "checksum = ?, " + "encrypted_checksum = ?, " + "checksum_timestamp = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE);
         executeQuery(query, receivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp, collectionID, fileID);
 
@@ -151,7 +167,7 @@ public class DatabaseCalls {
      * @param iv           The IV used to encrypt the new file.
      * @param iterations   The number of iterations used in the encryption of the new file.
      */
-    public static void updateEncryptionParametersTable(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
+    public void updateEncryptionParametersTable(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET " + "salt = ?, " + "iv = ?, " + "iterations = ? WHERE collection_id = ? AND file_id = ?", ENC_PARAMS_TABLE);
         executeQuery(query, salt, iv, iterations, collectionID, fileID);
 
@@ -163,29 +179,14 @@ public class DatabaseCalls {
      * @param query The query to execute.
      * @param args  The arguments to put in the given query.
      */
-    private static void executeQuery(String query, @NotNull Object... args) {
-        try (Connection connection = DatabaseUtils.connect()) {
-            prepareStatement(query, connection, args);
+    private void executeQuery(String query, @NotNull Object... args) {
+        try (Connection connection = connectionManager.getConnection();
+             PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args)) {
+
+            log.debug("Executing >>" + statement);
+            statement.executeUpdate();
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);
-            System.out.println("Error in executing SQL query:\n" + e);
         }
-    }
-
-    /**
-     * Used to prepare the statement and execute the given query.
-     *
-     * @param query      The query to be executed.
-     * @param connection The database connect, used to prepare the statement.
-     * @param args       The arguments to be set in the statement.
-     * @throws SQLException Throws an exception if the connection to the Database fails.
-     */
-    private static void prepareStatement(String query, Connection connection, @NotNull Object... args) throws SQLException {
-        PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args);
-
-        log.debug("Executing >>" + statement);
-
-        statement.executeUpdate();
-        statement.close();
     }
 }

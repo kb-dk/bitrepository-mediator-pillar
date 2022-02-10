@@ -1,8 +1,11 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationHandler;
+import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
@@ -10,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -18,12 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static dk.kb.bitrepository.mediator.TestConstants.CONFIG_PATH_TEST;
-import static dk.kb.bitrepository.mediator.communication.MockupMessageType.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
+import static dk.kb.bitrepository.mediator.communication.MockupMessageType.*;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,13 +36,17 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
     private static MessageReceivedHandler handler;
     private static byte[] payload;
     private static ChecksumSpecTYPE checksumSpecTYPE;
+    private static DatabaseDAO dao;
 
 
     @BeforeAll
-    static void setup() throws FileNotFoundException {
-        new ConfigurationHandler(CONFIG_PATH_TEST);
-        Configurations config = ConfigurationHandler.getConfigurations();
-        handler = new MessageReceivedHandler(config);
+    static void setup() throws IOException {
+        ConfigurationsLoader configProvider = new ConfigurationsLoader(CONFIG_PATH_TEST);
+        Configurations config = configProvider.getConfigurations();
+        dao = MediatorComponentFactory.getDAO(config.getDatabaseConfig());
+        // TODO add messageBus and responseDispatcher when necessary
+        PillarContext pillarContext = new PillarContext(config, null, null, dao);
+        handler = new MessageReceivedHandler(pillarContext);
         encryptionPassword = config.getCryptoConfig().getPassword();
 
         testString = "test string";
@@ -60,8 +65,8 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
     @AfterEach
     public void cleanup() {
-        delete(ENC_PARAMS_TABLE);
-        delete(FILES_TABLE);
+        dao.delete(ENC_PARAMS_TABLE);
+        dao.delete(FILES_TABLE);
     }
 
     @Test
@@ -76,7 +81,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
         String newEncryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedPayload), checksumSpecTYPE);
 
         // Assert that checksums match
-        FilesData result = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         assertEquals(result.getChecksum(), newChecksum);
         assertEquals(result.getEncryptedChecksum(), newEncryptedChecksum);
 
@@ -131,8 +136,8 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
         assertEquals(payloadChecksum, checksumDeleted);
 
         // Assert that the local database indexes are deleted
-        FilesData filesData = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        EncryptedParametersData encryptionParameterData = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        FilesData filesData = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        EncryptedParametersData encryptionParameterData = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         assertNull(filesData);
         assertNull(encryptionParameterData);
     }
@@ -147,7 +152,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
     @Test
     @DisplayName("Test of #ReplaceFile()")
     public void testReplaceFile() {
-        FilesData res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData res = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         String oldChecksum = res.getChecksum();
         String oldEncryptedChecksum = res.getEncryptedChecksum();
         OffsetDateTime oldReceivedTimestamp = res.getReceivedTimestamp();
@@ -163,7 +168,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
         String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedNewPayload), checksumSpecTYPE);
 
         // Update 'select' result
-        res = (FilesData) select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        res = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
         // Assert that the table was updated
         assertNotEquals(oldChecksum, res.getChecksum());
         assertNotEquals(oldEncryptedChecksum, res.getEncryptedChecksum());
@@ -177,8 +182,8 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
     @DisplayName("Test #GetChecksums()")
     public void testGetChecksums() {
         // Cleanup the AfterEach block
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         // Performing extra PUT_FILE operations
         List<byte[]> extraPayloads = putExtraFiles(3);
 
@@ -191,7 +196,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
 
         for (int i = 0; i < matchingChecksumsList.size(); i++) {
             EncryptedPillarData e = ((EncryptedPillarData) matchingChecksumsList.get(i));
-            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
+            FilesData res = (FilesData) dao.select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
             assertEquals(COLLECTION_ID + i, e.getCollectionID());
             assertEquals(FILE_ID + i, e.getFileID());
             assertEquals(res.getChecksum(), e.getChecksum());
@@ -202,8 +207,8 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
     @DisplayName("Test #GetChecksums() with one mismatching checksum")
     public void testGetChecksumsOneWrongChecksum() {
         // Cleanup the AfterEach block
-        delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
-        delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         // Performing extra PUT_FILE operations
         List<byte[]> extraPayloads = putExtraFiles(4);
 
@@ -224,7 +229,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
         // Assert that collection id, file id, and checksums of decrypted bytes match
         for (int i = 0; i < matchingChecksumsList.size(); i++) {
             EncryptedPillarData e = (EncryptedPillarData) matchingChecksumsList.get(i);
-            FilesData res = (FilesData) select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
+            FilesData res = (FilesData) dao.select(COLLECTION_ID + i, FILE_ID + i, FILES_TABLE);
 
             assertEquals(COLLECTION_ID + i, e.getCollectionID());
             assertEquals(FILE_ID + i, e.getFileID());
@@ -239,7 +244,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
      */
     @NotNull
     private CryptoStrategy setupCryptoStrategy() {
-        EncryptedParametersData result = (EncryptedParametersData) select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
         String salt = result.getSalt();
         byte[] iv = result.getIv();
 
@@ -279,8 +284,8 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
             String collectionID = COLLECTION_ID + i;
             String fileID = FILE_ID + i;
 
-            FilesData res = (FilesData) select(collectionID, fileID, FILES_TABLE);
-            EncryptedParametersData cry = (EncryptedParametersData) select(collectionID, fileID, ENC_PARAMS_TABLE);
+            FilesData res = (FilesData) dao.select(collectionID, fileID, FILES_TABLE);
+            EncryptedParametersData cry = (EncryptedParametersData) dao.select(collectionID, fileID, ENC_PARAMS_TABLE);
 
             encryptedPillarData.add(new EncryptedPillarData(
                     collectionID, fileID,

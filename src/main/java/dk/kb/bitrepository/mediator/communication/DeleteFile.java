@@ -1,11 +1,10 @@
 package dk.kb.bitrepository.mediator.communication;
 
+import dk.kb.bitrepository.mediator.PillarContext;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.delete;
-import static dk.kb.bitrepository.mediator.database.DatabaseCalls.select;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
@@ -15,14 +14,15 @@ public class DeleteFile extends MessageResult<String> {
     private final String fileID;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public DeleteFile(@NotNull MockupMessageObject message) {
+    public DeleteFile(PillarContext context, @NotNull MockupMessageObject message) {
+        this.context = context;
         this.collectionID = message.getCollectionID();
         this.fileID = message.getFileID();
     }
 
     @Override
     public String execute() {
-        FilesData filesData = (FilesData) select(collectionID, fileID, FILES_TABLE);
+        FilesData filesData = (FilesData) context.getDAO().select(collectionID, fileID, FILES_TABLE);
 
         if (filesData != null) {
             String encryptedChecksum = filesData.getEncryptedChecksum();
@@ -32,8 +32,8 @@ public class DeleteFile extends MessageResult<String> {
 
             if (deletedFromEncryptedPillar) {
                 String checksum = filesData.getChecksum();
-                delete(collectionID, fileID, FILES_TABLE);
-                delete(collectionID, fileID, ENC_PARAMS_TABLE);
+                context.getDAO().delete(collectionID, fileID, FILES_TABLE);
+                context.getDAO().delete(collectionID, fileID, ENC_PARAMS_TABLE);
 
                 return checksum;
             } else {
