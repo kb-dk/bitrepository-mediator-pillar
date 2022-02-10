@@ -12,7 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 
 import static dk.kb.bitrepository.mediator.database.DatabaseCalls.insertInto;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
@@ -36,7 +35,7 @@ public class PutFileHandler {
         this.cryptoPassword = crypto.getPassword();
     }
 
-    public void putFile() throws FileExistsException {
+    public void performPutFile() throws FileExistsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         if (writeBytesToFile(fileData, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
             Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
@@ -50,13 +49,13 @@ public class PutFileHandler {
             //TODO: Init AES somewhere else?
             CryptoStrategy aes = new AESCryptoStrategy(cryptoPassword);
             if (writeBytesToFile(aes.encrypt(unencryptedBytes), ENCRYPTED_FILES_PATH, collectionID, fileID)) {
-                storeFileDataLocally(receivedTimestamp, expectedChecksum, aes);
-                // TODO: Implement JobDoneHandler and state updates
+                updateLocalDatabase(receivedTimestamp, expectedChecksum, aes);
+                // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
             }
         }
     }
 
-    private void storeFileDataLocally(OffsetDateTime receivedTimestamp, String expectedChecksum, CryptoStrategy aes) {
+    private void updateLocalDatabase(OffsetDateTime receivedTimestamp, String expectedChecksum, CryptoStrategy aes) {
         OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         byte[] encryptedBytes = readBytesFromFile(getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID));
 

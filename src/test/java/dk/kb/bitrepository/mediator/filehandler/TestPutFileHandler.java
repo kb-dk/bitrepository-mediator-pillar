@@ -67,7 +67,7 @@ public class TestPutFileHandler {
     public void testPutFile() {
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE, cryptoConfigurations);
         try {
-            handler.putFile();
+            handler.performPutFile();
         } catch (FileExistsException e) {
             System.out.println("File already exists.");
             return;
