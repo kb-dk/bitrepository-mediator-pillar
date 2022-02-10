@@ -18,12 +18,12 @@ public class DatabaseConnectionManager {
         initializeConnectionPool(dbConfig);
     }
 
-    private void initializeConnectionPool(DatabaseConfigurations pillarConfig) {
+    private void initializeConnectionPool(DatabaseConfigurations dbConfig) {
         log.debug("Initializing jdbc connection pool");
         HikariConfig poolConfig = new HikariConfig();
-        poolConfig.setJdbcUrl(pillarConfig.getUrl());
-        poolConfig.setUsername(pillarConfig.getUsername());
-        poolConfig.setPassword(pillarConfig.getPassword());
+        poolConfig.setJdbcUrl(dbConfig.getUrl());
+        poolConfig.setUsername(dbConfig.getUsername());
+        poolConfig.setPassword(dbConfig.getPassword());
         // TODO configure connection pool more and silence logs(?)
         pool = new HikariDataSource(poolConfig);
     }
