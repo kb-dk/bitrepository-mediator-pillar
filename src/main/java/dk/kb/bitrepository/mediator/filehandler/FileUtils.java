@@ -25,7 +25,7 @@ public class FileUtils {
      * @param bytes     The bytes to write.
      * @param directory The string representation of the directory to write the file to.
      */
-    protected static void writeBytesToFile(byte[] bytes, String directory, String collectionID, String fileID) throws FileExistsException {
+    protected static boolean writeBytesToFile(byte[] bytes, String directory, String collectionID, String fileID) throws FileExistsException {
         Locale locale = Locale.getDefault();
         String fileDirectory = format(locale, "%s/%s", directory, collectionID);
         String tempFileDirectory = format(locale, "%s/temp/%s", directory, collectionID);
@@ -48,10 +48,12 @@ public class FileUtils {
 
                 Files.move(tempFilePath, filePath);
                 log.debug("File was moved from {} to {} folder.", tempFilePath, filePath);
+                return true;
             } catch (IOException e) {
                 log.error("Something went wrong with the file.", e);
             }
         }
+        return false;
     }
 
     protected static Path getFilePath(String directory, String collectionID, String fileID) {

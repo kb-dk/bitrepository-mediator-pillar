@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -31,7 +32,7 @@ public class TestFileUtils {
     private static byte[] testString;
 
     @BeforeAll
-    static void setup() {
+    static void setup() throws FileNotFoundException {
         new ConfigurationHandler(CONFIG_PATH_TEST);
         Configurations config = ConfigurationHandler.getConfigurations();
         encryptionPassword = config.getCryptoConfig().getPassword();
