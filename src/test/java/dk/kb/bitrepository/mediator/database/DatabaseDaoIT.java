@@ -30,9 +30,11 @@ import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Test Database Calls")
 public class DatabaseDaoIT {
@@ -212,5 +214,14 @@ public class DatabaseDaoIT {
         assertEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
         assertNotEquals(ENC_PARAMS_SALT + "_new", result.getSalt());
         assertNotEquals(1234, result.getIterations());
+    }
+
+    @Test
+    public void testDatabaseHasFileAfterInsertion() {
+        dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
+                FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
+        assertTrue(dao.hasFile(FILE_ID, COLLECTION_ID));
+        assertFalse(dao.hasFile(FILE_ID, "NonExistingCollection"));
+        assertFalse(dao.hasFile("NonExistingFile.txt", COLLECTION_ID));
     }
 }
