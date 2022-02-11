@@ -1,10 +1,9 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
-import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
+import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,60 +20,114 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class PutFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final String fileID;
-    private final String collectionID;
-    private final byte[] fileData;
-    private final ChecksumDataForFileTYPE checksumData;
-    private final String cryptoPassword;
     private final DatabaseDAO dao;
+    private final AESCryptoStrategy aes;
+    private final String collectionID;
+    private final String fileID;
+    private final byte[] unencryptedBytes;
+    private final ChecksumDataForFileTYPE checksumData;
+    private final OffsetDateTime receivedTimestamp;
 
-    public PutFileHandler(String collectionID, String fileID, byte[] fileData, ChecksumDataForFileTYPE checksumData,
-                          CryptoConfigurations crypto, DatabaseDAO dao) {
+    public PutFileHandler(String collectionID, String fileID, byte[] unencryptedBytes, ChecksumDataForFileTYPE checksumData,
+                          OffsetDateTime receivedTimestamp, DatabaseDAO dao, String cryptoPassword) {
         this.collectionID = collectionID;
         this.fileID = fileID;
-        this.fileData = fileData;
+        this.unencryptedBytes = unencryptedBytes;
         this.checksumData = checksumData;
-        this.cryptoPassword = crypto.getPassword();
+        this.receivedTimestamp = receivedTimestamp;
         this.dao = dao;
+        // FIXME: Reusing same instance of PutFileHandler will NOT create new salt and IV.
+        //  is there another way to store this info, maybe in STATE?
+        this.aes = new AESCryptoStrategy(cryptoPassword);
     }
 
+    /**
+     * The main method that is called to handle the PutFile operation.
+     */
     public void performPutFile() {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        if (writeBytesToFile(fileData, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
-            Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
-            byte[] unencryptedBytes = readBytesFromFile(unencryptedFilePath);
-
-            String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
-            if (!compareChecksums(unencryptedBytes, expectedChecksum)) {
-                log.error("Checksums did not match.");
-                return;
-            }
-            //TODO: Init AES somewhere else?
-            CryptoStrategy aes = new AESCryptoStrategy(cryptoPassword);
-            if (writeBytesToFile(aes.encrypt(unencryptedBytes), ENCRYPTED_FILES_PATH, collectionID, fileID)) {
-                updateLocalDatabase(receivedTimestamp, expectedChecksum, aes);
-                // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
+        if (fileExists(ENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            handleEncryptedFileAlreadyExists();
+        } else if (fileExists(UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            handleUnencryptedFile();
+        } else {
+            if (writeBytesToFile(unencryptedBytes, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+                handleUnencryptedFile();
             }
         }
     }
 
-    private void updateLocalDatabase(OffsetDateTime receivedTimestamp, String expectedChecksum, CryptoStrategy aes) {
-        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        byte[] encryptedBytes = readBytesFromFile(getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID));
+    private void handleUnencryptedFile() {
+        String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
+        Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
+        byte[] unencryptedFileData = readBytesFromFile(unencryptedFilePath);
 
-        if (compareChecksums(aes.decrypt(encryptedBytes), expectedChecksum)) {
-            String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedBytes), checksumData.getChecksumSpec());
+        if (!compareChecksums(unencryptedFileData, checksumData.getChecksumSpec(), expectedChecksum)) {
+            log.error("Checksums did not match. Try PutFile again.");
+            deleteFileLocally(unencryptedFilePath);
+            //TODO: Throw checksums-did-not-match-exception
+        } else {
+            encryptAndCompareChecksums(unencryptedFileData);
+        }
+    }
+
+    private void handleEncryptedFileAlreadyExists() {
+        String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
+        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+        assertEncryptedChecksumAndUpdateLocalDatabase(collectionID, fileID, expectedChecksum, checksumData.getChecksumSpec(),
+                receivedTimestamp, encryptedTimestamp);
+        handleStateAndJobDoneHandler();
+    }
+
+    private void encryptAndCompareChecksums(byte[] unencryptedFileData) {
+        byte[] encryptedBytes = aes.encrypt(unencryptedFileData);
+        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+
+        boolean encryptedFileCreated = writeBytesToFile(encryptedBytes, ENCRYPTED_FILES_PATH, collectionID, fileID);
+
+        if (encryptedFileCreated) {
+            String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
+            assertEncryptedChecksumAndUpdateLocalDatabase(collectionID, fileID, expectedChecksum, checksumData.getChecksumSpec(),
+                    receivedTimestamp, encryptedTimestamp);
+            handleStateAndJobDoneHandler();
+        }
+    }
+
+    private void assertEncryptedChecksumAndUpdateLocalDatabase(String collectionID, String fileID, String expectedChecksum,
+                                                               ChecksumSpecTYPE checksumSpec, OffsetDateTime receivedTimestamp,
+                                                               OffsetDateTime encryptedTimestamp) {
+        Path encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
+        byte[] encryptedFileData = readBytesFromFile(encryptedFilePath);
+
+        if (compareChecksums(aes.decrypt(encryptedFileData), checksumSpec, expectedChecksum)) {
+            String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData), checksumSpec);
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
             dao.insertIntoEncParams(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
-            dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum,
-                    encryptedChecksum, checksumTimestamp);
+            dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum,
+                    checksumTimestamp);
+            log.debug("Local database updated to include: {}/{}", collectionID, fileID);
+        } else {
+            log.error("Checksum of encrypted file did not match. Try PutFile again.");
+            deleteFileLocally(encryptedFilePath);
+            //TODO: Throw checksums-did-not-match-exception
         }
     }
 
-    private boolean compareChecksums(byte[] bytesFromFile, String expectedChecksum) {
-        String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumData.getChecksumSpec());
+    /**
+     * Computes the checksum from byte[] and compare it to some expected checksum.
+     *
+     * @param bytesFromFile    Byte[] to compute checksum of.
+     * @param checksumSpec     The checksum Spec, used when creating a checksum.
+     * @param expectedChecksum The expected checksum.
+     * @return Returns true if the two checksums match.
+     */
+    private boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
+        String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
 
         return newChecksum.equals(expectedChecksum);
+    }
+
+    private void handleStateAndJobDoneHandler() {
+        // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
     }
 }

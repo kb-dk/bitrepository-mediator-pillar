@@ -32,27 +32,33 @@ public class FileUtils {
         Path filePath = getFilePath(directory, collectionID, fileID);
         Path tempFilePath = Path.of(format(locale, "%s/%s/", tempFileDirectory, fileID));
 
-        boolean fileExists = Files.exists(filePath);
+        ensureDirectoryExists(fileDirectory, tempFileDirectory);
 
-        if (fileExists) {
-            log.warn("File already exists.");
-        } else {
-            ensureDirectoryExists(fileDirectory, tempFileDirectory);
+        try {
+            OutputStream output = Files.newOutputStream(tempFilePath);
+            output.write(bytes);
+            output.close();
+            log.debug("Bytes has successfully been written to temp file {}", tempFilePath);
 
-            try {
-                OutputStream output = Files.newOutputStream(tempFilePath);
-                output.write(bytes);
-                output.close();
-                log.debug("Bytes has successfully been written to temp file {}", tempFilePath);
-
-                Files.move(tempFilePath, filePath);
-                log.debug("File was moved from {} to {} folder.", tempFilePath, filePath);
-                return true;
-            } catch (IOException e) {
-                log.error("Something went wrong with the file.", e);
-            }
+            Files.move(tempFilePath, filePath);
+            log.debug("File was moved from {} to {} folder.", tempFilePath, filePath);
+            return true;
+        } catch (IOException e) {
+            log.error("Something went wrong when writing the file.", e);
+            return false;
         }
-        return false;
+    }
+
+    /**
+     * Used to check if the file at the given path exists.
+     *
+     * @param directory    The directory path.
+     * @param collectionID The collections ID.
+     * @param fileID       The files ID.
+     * @return Whether there exists a file at the path directory/collectionID/fileID/ .
+     */
+    public static boolean fileExists(String directory, String collectionID, String fileID) {
+        return Files.exists(getFilePath(directory, collectionID, fileID));
     }
 
     /**
@@ -94,5 +100,18 @@ public class FileUtils {
             log.error("Error occurred when trying to read bytes from file {}.", path);
         }
         return new byte[0];
+    }
+
+    /**
+     * Deletes a local file.
+     *
+     * @param path The path to the file to delete.
+     */
+    protected static void deleteFileLocally(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            log.error("Could no delete file {}.", path);
+        }
     }
 }
