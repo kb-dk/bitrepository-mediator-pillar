@@ -1,17 +1,15 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
-import dk.kb.bitrepository.mediator.database.DatabaseData;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
-import org.apache.commons.io.FileExistsException;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -46,7 +44,7 @@ public class PutFileHandler {
             Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
             byte[] unencryptedBytes = readBytesFromFile(unencryptedFilePath);
 
-            String expectedChecksum = new String(checksumData.getChecksumValue());
+            String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
             if (!compareChecksums(unencryptedBytes, expectedChecksum)) {
                 log.error("Checksums did not match.");
                 return;
