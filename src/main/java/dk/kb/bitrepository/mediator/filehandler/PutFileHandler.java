@@ -40,7 +40,7 @@ public class PutFileHandler {
         this.dao = dao;
     }
 
-    public void performPutFile() throws FileExistsException {
+    public void performPutFile() {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         if (writeBytesToFile(fileData, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
             Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);

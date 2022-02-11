@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import org.apache.commons.io.FileExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +20,12 @@ public class FileUtils {
 
     /**
      * Writes the given bytes to a file.
+     * The file will be located at ".../directory/collectionID/fileID".
      *
      * @param bytes     The bytes to write.
      * @param directory The string representation of the directory to write the file to.
      */
-    protected static boolean writeBytesToFile(byte[] bytes, String directory, String collectionID, String fileID) throws FileExistsException {
+    protected static boolean writeBytesToFile(byte[] bytes, String directory, String collectionID, String fileID) {
         Locale locale = Locale.getDefault();
         String fileDirectory = format(locale, "%s/%s", directory, collectionID);
         String tempFileDirectory = format(locale, "%s/temp/%s", directory, collectionID);
@@ -36,7 +36,6 @@ public class FileUtils {
 
         if (fileExists) {
             log.warn("File already exists.");
-            throw new FileExistsException();
         } else {
             ensureDirectoryExists(fileDirectory, tempFileDirectory);
 
@@ -56,6 +55,14 @@ public class FileUtils {
         return false;
     }
 
+    /**
+     * Returns a complete file path given the directory, collectionID and fileID of a file.
+     *
+     * @param directory    The directory, files or encrypted-files.
+     * @param collectionID The collectionID to find the file under.
+     * @param fileID       The fileID of the file.
+     * @return Returns the complete path created from the above information.
+     */
     protected static Path getFilePath(String directory, String collectionID, String fileID) {
         return Path.of(format(Locale.getDefault(), "%s/%s/%s", directory, collectionID, fileID));
     }
@@ -74,6 +81,12 @@ public class FileUtils {
         }
     }
 
+    /**
+     * Reads bytes from a local file.
+     *
+     * @param path The path to the local file.
+     * @return Returns the file data as a byte array.
+     */
     protected static byte[] readBytesFromFile(Path path) {
         try {
             return Files.readAllBytes(path);

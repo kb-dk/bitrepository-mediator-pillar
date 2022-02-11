@@ -51,7 +51,7 @@ public class DatabaseDAO {
         executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
     }
 
-    public boolean hasFile(String fileID, String collectionID) {
+    public boolean hasFile(String collectionID, String fileID) {
         String sql = "SELECT COUNT(*) FROM " + FILES_TABLE + " WHERE file_id = ? AND collection_id = ?";
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, sql, fileID, collectionID)) {

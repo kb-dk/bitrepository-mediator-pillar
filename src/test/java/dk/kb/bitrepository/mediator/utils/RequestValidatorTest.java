@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.utils;
 
+import dk.kb.bitrepository.mediator.TestingUtilities;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
@@ -23,7 +24,7 @@ public class RequestValidatorTest {
     @BeforeAll
     public static void setup() throws IOException {
         daoMock = Mockito.mock(DatabaseDAO.class);
-        conf = TestUtils.loadRefPillarSettings(pillarID, "conf");
+        conf = TestingUtilities.loadRefPillarSettings(pillarID, "conf");
         validator = new RequestValidator(conf, daoMock);
     }
 
@@ -102,10 +103,10 @@ public class RequestValidatorTest {
     @Test
     public void validateFileExists() {
         request.setCollectionID("testCollection");
-        Mockito.when(daoMock.hasFile(request.getFileID(), request.getCollectionID()))
+        Mockito.when(daoMock.hasFile(request.getCollectionID(), request.getFileID()))
                 .thenReturn(true);
         Assertions.assertDoesNotThrow(() -> {
-            validator.validateFileExists(request.getFileID(), request.getCollectionID());
+            validator.validateFileExists(request.getCollectionID(), request.getFileID());
         });
     }
 
@@ -114,7 +115,7 @@ public class RequestValidatorTest {
         Mockito.when(daoMock.hasFile(Mockito.anyString(), Mockito.anyString()))
                 .thenReturn(false);
         Assertions.assertThrows(RequestHandlerException.class, () -> {
-            validator.validateFileExists("non-existing-file.txt", "wrong-collection");
+            validator.validateFileExists("wrong-collection", "non-existing-file");
         });
     }
 }
