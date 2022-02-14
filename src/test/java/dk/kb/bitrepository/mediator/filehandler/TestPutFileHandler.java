@@ -67,12 +67,24 @@ public class TestPutFileHandler {
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
                 receivedTimestamp, dao, cryptoConfigurations.getPassword());
         handler.performPutFile();
-        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
-
-        handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
+
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        cleanupFiles(ENCRYPTED_FILES_PATH);
+
+        // Tests using the unencrypted existing file
+        handler.performPutFile();
+        assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
+        assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
+
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        cleanupFiles(UNENCRYPTED_FILES_PATH);
+
+        // Test using the encrypted existing file
+        handler.performPutFile();
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
     }

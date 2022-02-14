@@ -46,8 +46,10 @@ public class PutFileHandler {
      */
     public void performPutFile() {
         if (fileExists(ENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            log.debug("Using existing encrypted file");
             handleEncryptedFileAlreadyExists();
         } else if (fileExists(UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            log.debug("Using existing unencrypted file");
             handleUnencryptedFile();
         } else {
             if (writeBytesToFile(unencryptedBytes, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {

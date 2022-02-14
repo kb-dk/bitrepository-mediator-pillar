@@ -6,6 +6,8 @@ import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -16,6 +18,8 @@ import static org.apache.commons.io.FileUtils.cleanDirectory;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class TestingUtilities {
+    private static final Logger log = LoggerFactory.getLogger(TestingUtilities.class);
+
     public static Settings loadRefPillarSettings(String pillarID, String pathToConfiguration) throws IOException {
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), pillarID);
         return settingsProvider.getSettings();
@@ -48,8 +52,9 @@ public class TestingUtilities {
         if (dir.exists()) {
             try {
                 cleanDirectory(dir);
+                log.info("Cleaned up directory {}", dir);
             } catch (IOException e) {
-                System.out.println("Something went wrong trying to clean up /files/ directory." + e);
+                log.error("Something went wrong trying to clean up /files/ directory.");
             }
         }
     }

@@ -15,7 +15,7 @@ public class ConfigurationsLoader {
     public ConfigurationsLoader(String configPath) throws IOException {
         this.configPath = configPath;
         loadYAMLConfigurations();
-        log.info("Config initialized with path: {}", configPath);
+        log.trace("Config initialized with path: {}", configPath);
     }
 
     /**
