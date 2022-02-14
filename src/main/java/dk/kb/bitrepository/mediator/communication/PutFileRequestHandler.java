@@ -2,7 +2,6 @@ package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
-import org.apache.commons.collections4.Put;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
@@ -23,12 +22,12 @@ public class PutFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     @Override
-    protected void validateRequest(GetFileRequest request, MessageContext requestContext) throws RequestHandlerException {
+    protected void validateRequest(GetFileRequest request) throws RequestHandlerException {
         requestValidator.validate(request);
     }
 
     @Override
-    protected void performAction() { // TODO
+    protected void performAction(GetFileRequest request, MessageContext context) { // TODO
         System.out.println("Performing action!");
         // Check DAO
         // If file does not exist send failed response
@@ -37,7 +36,7 @@ public class PutFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     @Override
-    protected void sendProgressResponse() { // TODO
+    protected void sendProgressResponse(GetFileRequest request) { // TODO
         // In refpillar checks that collection has an archive for the collection and
         // gets back a DefaultFileInfo from there with the File object - this is used to set the file size on the response
         // Not sure if we should keep entries of file sizes in database? Ask Kim.

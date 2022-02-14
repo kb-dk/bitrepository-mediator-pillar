@@ -9,14 +9,16 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
 public abstract class PerformRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
-    private final Configurations configurations;
+    protected final Configurations configurations;
     protected PillarContext context;
     protected RequestValidator requestValidator;
+    protected String pillarID;
 
     public PerformRequestHandler(PillarContext context) {
         this.context = context;
         configurations = context.getConfigurations();
         requestValidator = new RequestValidator(configurations.getRefPillarSettings(), context.getDAO());
+        pillarID = configurations.getPillarConfig().getMediatorPillarID();
     }
 
     @Override
@@ -24,9 +26,9 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
 
     @Override
     public void processRequest(T request, MessageContext messageContext) throws RequestHandlerException {
-        validateRequest(request, messageContext);
-        sendProgressResponse();
-        performAction();
+        validateRequest(request);
+        sendProgressResponse(request);
+        performAction(request, messageContext);
     }
 
     @Override
@@ -36,12 +38,11 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
      * Validate both that the given request is possible to perform and that it is allowed.
      *
      * @param request        The request to validate.
-     * @param requestContext The context for the request.
      * @throws RequestHandlerException If something in the request is inconsistent with the possibilities of the pillar.
      */
-    protected abstract void validateRequest(T request, MessageContext requestContext) throws RequestHandlerException;
+    protected abstract void validateRequest(T request) throws RequestHandlerException;
 
-    protected abstract void performAction();
+    protected abstract void performAction(T request, MessageContext context);
 
-    protected abstract void sendProgressResponse();
+    protected abstract void sendProgressResponse(T request);
 }

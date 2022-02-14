@@ -1,9 +1,13 @@
 package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
+import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import dk.kb.bitrepository.mediator.utils.configurations.PillarConfigurations;
+import org.bitrepository.bitrepositoryelements.ResponseCode;
+import org.bitrepository.bitrepositoryelements.ResponseInfo;
 import org.bitrepository.bitrepositorymessages.Message;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
+import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageListener;
@@ -46,12 +50,22 @@ public class MessageRequestDelegator implements MessageListener {
     @Override
     public void onMessage(Message message, MessageContext messageContext) {
         if (message instanceof MessageRequest) {
+            MessageRequest request = (MessageRequest) message;
             RequestHandler handler = handlerMap.get(message.getClass().getSimpleName());
             if (handler != null) {
                 try {
-                    handler.processRequest((MessageRequest) message, messageContext);
-                } catch (Exception e) { // TODO handle different exceptions and dispatch negative response.
-                    log.error("Something went wrong!", e);
+                    handler.processRequest(request, messageContext);
+                } catch (IllegalArgumentException e) {
+                    log.debug("Stack trace for illegal argument", e);
+                    ResponseInfo responseInfo = new ResponseInfo();
+                    responseInfo.setResponseCode(ResponseCode.REQUEST_NOT_UNDERSTOOD_FAILURE);
+                    responseInfo.setResponseText(e.getMessage());
+                    sendFailedResponse(request, handler, responseInfo);
+                    // TODO alarm?
+                } catch (RequestHandlerException e) {
+                    log.debug("Failed to handle request '" + message + "'", e);
+                    sendFailedResponse(request, handler, e.getResponseInfo());
+                    // TODO alarm?
                 }
             } else {
                 if (MessageUtils.isIdentifyRequest(message)) {
@@ -62,6 +76,21 @@ public class MessageRequestDelegator implements MessageListener {
         } else {
             log.trace("Can only handle message requests, but received: \n{}", message);
         }
+    }
+
+    /**
+     * Method to send the corresponding failed response when an exception occurs in the handling of a request.
+     *
+     * @param request The request that is being handled.
+     * @param handler The corresponding handler.
+     * @param responseInfo ResponseInfo that should be modified to the specific failed scenario.
+     * @param <T> The type of the request that failed.
+     */
+    private <T extends MessageRequest> void sendFailedResponse(T request, RequestHandler<T> handler, ResponseInfo responseInfo) {
+        log.info("Cannot perform operation. Sending failed response. Cause: " + responseInfo.getResponseText());
+        MessageResponse response = handler.generateFailedResponse(request);
+        response.setResponseInfo(responseInfo);
+        context.getResponseDispatcher().completeAndSendResponseToRequest(request, response);
     }
 
     public void startListening() {
