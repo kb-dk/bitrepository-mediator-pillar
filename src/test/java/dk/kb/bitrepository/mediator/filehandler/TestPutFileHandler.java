@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.TestingSetup;
+import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -51,7 +52,7 @@ public class TestPutFileHandler {
     public void testPutFile() {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
-                receivedTimestamp, dao, cryptoConfigurations.getPassword());
+                receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
         handler.performPutFile();
 
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -65,7 +66,7 @@ public class TestPutFileHandler {
     public void testPutFileUsingExistingFile() {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
-                receivedTimestamp, dao, cryptoConfigurations.getPassword());
+                receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
         handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));

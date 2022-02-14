@@ -1,6 +1,6 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
@@ -8,10 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
@@ -21,24 +25,28 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 public class PutFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final DatabaseDAO dao;
-    private final AESCryptoStrategy aes;
+    private final CryptoStrategy crypto;
     private final String collectionID;
     private final String fileID;
+    private final String expectedChecksum;
     private final byte[] unencryptedBytes;
-    private final ChecksumDataForFileTYPE checksumData;
+    private final ChecksumSpecTYPE checksumSpec;
     private final OffsetDateTime receivedTimestamp;
+    private final Path unencryptedFilePath;
+    private final Path encryptedFilePath;
 
     public PutFileHandler(String collectionID, String fileID, byte[] unencryptedBytes, ChecksumDataForFileTYPE checksumData,
-                          OffsetDateTime receivedTimestamp, DatabaseDAO dao, String cryptoPassword) {
+                          OffsetDateTime receivedTimestamp, DatabaseDAO dao, CryptoStrategy crypto) {
         this.collectionID = collectionID;
         this.fileID = fileID;
         this.unencryptedBytes = unencryptedBytes;
-        this.checksumData = checksumData;
+        this.checksumSpec = checksumData.getChecksumSpec();
+        this.expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
         this.receivedTimestamp = receivedTimestamp;
         this.dao = dao;
-        // FIXME: Reusing same instance of PutFileHandler will NOT create new salt and IV.
-        //  is there another way to store this info, maybe in STATE?
-        this.aes = new AESCryptoStrategy(cryptoPassword);
+        this.crypto = crypto;
+        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
+        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
     }
 
     /**
@@ -47,7 +55,16 @@ public class PutFileHandler {
     public void performPutFile() {
         if (fileExists(ENCRYPTED_FILES_PATH, collectionID, fileID)) {
             log.debug("Using existing encrypted file");
-            handleEncryptedFileAlreadyExists();
+
+            try {
+                BasicFileAttributes attributes = Files.readAttributes(encryptedFilePath, BasicFileAttributes.class);
+                OffsetDateTime encryptedTimestamp = OffsetDateTime.ofInstant(
+                        attributes.creationTime().toInstant(), ZoneId.systemDefault());
+                handleEncryptedFileExists(encryptedTimestamp);
+            } catch (IOException e) {
+                log.error("An error occurred when trying to read from path {}", unencryptedFilePath);
+            }
+
         } else if (fileExists(UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
             log.debug("Using existing unencrypted file");
             handleUnencryptedFile();
@@ -58,12 +75,18 @@ public class PutFileHandler {
         }
     }
 
+    /**
+     * This method handles the process that happens after a local unencrypted file exists.
+     * <p/>
+     * The checksum of the local file is compared to the expected checksum.
+     * If the checksums do not match, an exception is thrown. If the checksums match the data
+     * of the unencrypted file (as a byte[]) is delegated to the
+     * {@link #encryptAndCompareChecksums(byte[])} method.
+     */
     private void handleUnencryptedFile() {
-        String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
-        Path unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
         byte[] unencryptedFileData = readBytesFromFile(unencryptedFilePath);
 
-        if (!compareChecksums(unencryptedFileData, checksumData.getChecksumSpec(), expectedChecksum)) {
+        if (!compareChecksums(unencryptedFileData, checksumSpec, expectedChecksum)) {
             log.error("Checksums did not match. Try PutFile again.");
             deleteFileLocally(unencryptedFilePath);
             //TODO: Throw checksums-did-not-match-exception
@@ -72,39 +95,64 @@ public class PutFileHandler {
         }
     }
 
-    private void handleEncryptedFileAlreadyExists() {
-        String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
+    /**
+     * This method is called when an encrypted file exists locally.
+     * Creates the encrypted timestamp and calls
+     * {@link #assertEncryptedChecksumAndUpdateLocalDatabase(OffsetDateTime)}
+     * to further ensure the encryption is correct, and update the local database.
+     */
+    private void handleEncryptedFileExists() {
         OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        assertEncryptedChecksumAndUpdateLocalDatabase(collectionID, fileID, expectedChecksum, checksumData.getChecksumSpec(),
-                receivedTimestamp, encryptedTimestamp);
+        assertEncryptedChecksumAndUpdateLocalDatabase(encryptedTimestamp);
         handleStateAndJobDoneHandler();
     }
 
-    private void encryptAndCompareChecksums(byte[] unencryptedFileData) {
-        byte[] encryptedBytes = aes.encrypt(unencryptedFileData);
-        OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+    /**
+     * This method is called when an encrypted file exists locally, but
+     * was not created in this run of the {@link #performPutFile()}.
+     * Given an encrypted timestamp it calls
+     * {@link #assertEncryptedChecksumAndUpdateLocalDatabase(OffsetDateTime)}
+     * to further ensure the encryption is correct, and update the local database.
+     *
+     * @param encryptedTimestamp The created timestamp of the encrypted local file.
+     */
+    private void handleEncryptedFileExists(OffsetDateTime encryptedTimestamp) {
+        assertEncryptedChecksumAndUpdateLocalDatabase(encryptedTimestamp);
+        handleStateAndJobDoneHandler();
+    }
 
+    /**
+     * Encrypts the given byte[] data using the given CryptoStrategy, then proceeds to write the encrypted bytes to a local file.
+     * Once the file has been written, the method {@link #handleEncryptedFileExists()} is called.
+     *
+     * @param unencryptedFileData The unencrypted data, read from a file, as a byte[].
+     */
+    private void encryptAndCompareChecksums(byte[] unencryptedFileData) {
+        byte[] encryptedBytes = crypto.encrypt(unencryptedFileData);
         boolean encryptedFileCreated = writeBytesToFile(encryptedBytes, ENCRYPTED_FILES_PATH, collectionID, fileID);
 
         if (encryptedFileCreated) {
-            String expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
-            assertEncryptedChecksumAndUpdateLocalDatabase(collectionID, fileID, expectedChecksum, checksumData.getChecksumSpec(),
-                    receivedTimestamp, encryptedTimestamp);
-            handleStateAndJobDoneHandler();
+            handleEncryptedFileExists();
         }
     }
 
-    private void assertEncryptedChecksumAndUpdateLocalDatabase(String collectionID, String fileID, String expectedChecksum,
-                                                               ChecksumSpecTYPE checksumSpec, OffsetDateTime receivedTimestamp,
-                                                               OffsetDateTime encryptedTimestamp) {
-        Path encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
+    /**
+     * Compares the checksums of the decrypted bytes with the expected checksum to ensure correct encryption.
+     * If the checksums match, then a checksum of the encrypted data will be generated, together with a timestamp.
+     * <p/>
+     * Afterwards the local database will be updated to include information about the file and the encryption parameters.
+     *
+     * @param encryptedTimestamp The timestamp for when the file was encrypted.
+     */
+    private void assertEncryptedChecksumAndUpdateLocalDatabase(OffsetDateTime encryptedTimestamp) {
         byte[] encryptedFileData = readBytesFromFile(encryptedFilePath);
 
-        if (compareChecksums(aes.decrypt(encryptedFileData), checksumSpec, expectedChecksum)) {
+        if (compareChecksums(crypto.decrypt(encryptedFileData), checksumSpec, expectedChecksum)) {
             String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData), checksumSpec);
             OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-            dao.insertIntoEncParams(collectionID, fileID, aes.getSalt(), aes.getIV().getIV(), aes.getIterations());
+            //FIXME: Only do this after we know the data is added to the pillar?
+            dao.insertIntoEncParams(collectionID, fileID, crypto.getSalt(), crypto.getIV().getIV(), crypto.getIterations());
             dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum,
                     checksumTimestamp);
             log.debug("Local database updated to include: {}/{}", collectionID, fileID);
