@@ -2,12 +2,15 @@ package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
+import dk.kb.bitrepository.mediator.communication.messagehandling.GetFileRequestHandler;
+import dk.kb.bitrepository.mediator.communication.messagehandling.IdentifyGetFileRequestHandler;
 import dk.kb.bitrepository.mediator.utils.configurations.PillarConfigurations;
 import org.bitrepository.bitrepositoryelements.ResponseCode;
 import org.bitrepository.bitrepositoryelements.ResponseInfo;
 import org.bitrepository.bitrepositorymessages.Message;
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
+import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.MessageContext;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageListener;
@@ -25,12 +28,14 @@ public class MessageRequestDelegator implements MessageListener {
     private final Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
     private final MessageBus messageBus;
     private final PillarContext context;
-    private final PillarConfigurations configs;
+    private final Settings refPillarSettings;
+    private final PillarConfigurations mediatorPillarConfig;
 
-    public MessageRequestDelegator(MessageBus messageBus, PillarContext context, PillarConfigurations configs) {
+    public MessageRequestDelegator(MessageBus messageBus, PillarContext context) {
         this.messageBus = messageBus;
         this.context = context;
-        this.configs = configs;
+        this.refPillarSettings = context.getConfigurations().getRefPillarSettings();
+        this.mediatorPillarConfig = context.getConfigurations().getPillarConfig();
 
         handlerMap = new HashMap<>();
         for (RequestHandler<? extends MessageRequest> handler : createMessageHandlers()) {
@@ -94,12 +99,12 @@ public class MessageRequestDelegator implements MessageListener {
     }
 
     public void startListening() {
-        messageBus.addListener(configs.getPrivateMessageDestination(), this);
-        messageBus.addListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
+        messageBus.addListener(mediatorPillarConfig.getPrivateMessageDestination(), this);
+        messageBus.addListener(refPillarSettings.getCollectionDestination(), this);
     }
 
     public void stop() {
-        messageBus.removeListener(configs.getPrivateMessageDestination(), this);
-        messageBus.removeListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
+        messageBus.removeListener(mediatorPillarConfig.getPrivateMessageDestination(), this);
+        messageBus.removeListener(refPillarSettings.getCollectionDestination(), this);
     }
 }

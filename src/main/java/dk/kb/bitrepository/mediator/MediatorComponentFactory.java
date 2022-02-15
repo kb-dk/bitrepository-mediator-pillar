@@ -52,7 +52,7 @@ public class MediatorComponentFactory {
         DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
         PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
 
-        return new MediatorPillar(refPillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
+        return new MediatorPillar(refPillarSettings, pillarContext, messageBus);
     }
 
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {

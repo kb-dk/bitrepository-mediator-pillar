@@ -1,6 +1,7 @@
-package dk.kb.bitrepository.mediator.communication;
+package dk.kb.bitrepository.mediator.communication.messagehandling;
 
 import dk.kb.bitrepository.mediator.PillarContext;
+import dk.kb.bitrepository.mediator.communication.RequestHandler;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import dk.kb.bitrepository.mediator.utils.RequestValidator;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
@@ -8,13 +9,14 @@ import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public abstract class PerformRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
+public abstract class IdentifyRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
+    protected static final String RESPONSE_FOR_POSITIVE_IDENTIFICATION = "Operation acknowledged and accepted.";
     protected final Configurations configurations;
     protected PillarContext context;
     protected RequestValidator requestValidator;
     protected String pillarID;
 
-    public PerformRequestHandler(PillarContext context) {
+    public IdentifyRequestHandler(PillarContext context) {
         this.context = context;
         configurations = context.getConfigurations();
         requestValidator = new RequestValidator(configurations.getRefPillarSettings(), context.getDAO());
@@ -27,22 +29,24 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
     @Override
     public void processRequest(T request, MessageContext messageContext) throws RequestHandlerException {
         validateRequest(request);
-        sendProgressResponse(request);
-        performAction(request, messageContext);
+        sendPositiveResponse(request, messageContext);
     }
 
     @Override
     public abstract MessageResponse generateFailedResponse(T request);
 
     /**
-     * Validate both that the given request is possible to perform and that it is allowed.
-     *
-     * @param request        The request to validate.
+     * Validate both that the given request it is possible to perform and that it is allowed.
+     * @param request The request to validate.
      * @throws RequestHandlerException If something in the request is inconsistent with the possibilities of the pillar.
      */
     protected abstract void validateRequest(T request) throws RequestHandlerException;
 
-    protected abstract void performAction(T request, MessageContext context);
-
-    protected abstract void sendProgressResponse(T request);
+    /**
+     * Sends a identification response.
+     * @param request The request to respond to.
+     * @param requestContext The context for the request.
+     * @throws RequestHandlerException If the positive response could not be created.
+     */
+    protected abstract void sendPositiveResponse(T request, MessageContext requestContext) throws RequestHandlerException;
 }

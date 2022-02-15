@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.mediator.communication;
+package dk.kb.bitrepository.mediator.communication.messagehandling;
 
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;

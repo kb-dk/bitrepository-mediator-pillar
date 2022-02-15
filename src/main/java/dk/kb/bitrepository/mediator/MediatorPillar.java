@@ -28,12 +28,12 @@ public class MediatorPillar {
      * - GetFileIDs: Just check dao and respond with file IDs from there no?
      * - DeleteFile: Check dao if file exists, propagate message to pillar, and get response back from pillar to client
      */
-    public MediatorPillar(Settings settings, PillarContext pillarContext, PillarConfigurations configs, MessageBus messageBus) {
+    public MediatorPillar(Settings settings, PillarContext pillarContext, MessageBus messageBus) {
         log.debug("Creating mediator pillar");
         this.messageBus = messageBus;
         this.settings = settings;
         messageBus.setCollectionFilter(getPillarCollectionIDs());
-        messageRequestDelegator = new MessageRequestDelegator(messageBus, pillarContext, configs);
+        messageRequestDelegator = new MessageRequestDelegator(messageBus, pillarContext);
         messageRequestDelegator.startListening();
     }
 
