@@ -12,22 +12,35 @@ import java.nio.charset.Charset;
 import static dk.kb.bitrepository.mediator.TestingUtilities.loadChecksumData;
 
 public class TestingSetup {
-    private final byte[] fileBytes;
-    private final ChecksumDataForFileTYPE checksumDataForFileTYPE;
-    private final CryptoConfigurations cryptoConfigurations;
-    private final DatabaseDAO dao;
-    private final DatabaseConfigurations databaseConfigurations;
-    private final Configurations configurations;
+    private byte[] fileBytes;
+    private ChecksumDataForFileTYPE checksumDataForFileTYPE;
+    private CryptoConfigurations cryptoConfigurations;
+    private DatabaseDAO dao = null;
+    private DatabaseConfigurations databaseConfigurations = null;
+    private Configurations configurations;
 
+    public TestingSetup(boolean setupDatabase) throws IOException {
+        setup(setupDatabase);
+    }
+
+    /**
+     * No parameter defaults setting up the database configurations to true. Should only be used in integration tests.
+     */
     public TestingSetup() throws IOException {
+        setup(true);
+    }
+
+    private void setup(boolean setupDatabase) throws IOException {
         configurations = MediatorComponentFactory.loadMediatorConfigurations("conf");
-        databaseConfigurations = configurations.getDatabaseConfig();
         cryptoConfigurations = configurations.getCryptoConfig();
-        dao = MediatorComponentFactory.getDAO(databaseConfigurations);
 
         fileBytes = "test-string".getBytes(Charset.defaultCharset());
-
         checksumDataForFileTYPE = loadChecksumData(fileBytes);
+
+        if (setupDatabase) {
+            databaseConfigurations = configurations.getDatabaseConfig();
+            dao = MediatorComponentFactory.getDAO(databaseConfigurations);
+        }
     }
 
     public byte[] getFileBytes() {
