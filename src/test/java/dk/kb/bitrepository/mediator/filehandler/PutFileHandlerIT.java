@@ -21,7 +21,7 @@ import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
-public class TestPutFileHandlerIT {
+public class PutFileHandlerIT {
     private static byte[] fileBytes;
     private static ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private static DatabaseDAO dao;
