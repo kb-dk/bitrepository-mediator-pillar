@@ -20,6 +20,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Observer class to use for listening on a message bus, that delegates the incoming messages on the bus to its
+ * registered handlers. This also handles exceptions thrown in the handlers while processing requests.
+ *
+ * When registered on the message bus, listens for messages on the mediator pillar specific destination
+ * and the broadcast destination for the whole repository.
+ */
 public class MessageRequestDelegator implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(MessageRequestDelegator.class);
     private final Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
@@ -27,6 +34,12 @@ public class MessageRequestDelegator implements MessageListener {
     private final PillarContext context;
     private final PillarConfigurations configs;
 
+    /**
+     * Constructor that initializes variables and registers handlers
+     * @param messageBus The bus to register this listener on for observing messages
+     * @param context PillarContext containing the relevant objects for carrying out pillar operations
+     * @param configs Configuration specific to the mediator pillar
+     */
     public MessageRequestDelegator(MessageBus messageBus, PillarContext context, PillarConfigurations configs) {
         this.messageBus = messageBus;
         this.context = context;
@@ -38,6 +51,11 @@ public class MessageRequestDelegator implements MessageListener {
         }
     }
 
+    /**
+     * Helper method for creating MessageRequest-handlers
+     *
+     * @return List of handlers to register.
+     */
     private List<RequestHandler<? extends MessageRequest>> createMessageHandlers() {
         // TODO probably put handlers in some kind of factory instead
         List<RequestHandler<? extends MessageRequest>> handlers = new ArrayList<>();
@@ -86,18 +104,25 @@ public class MessageRequestDelegator implements MessageListener {
      * @param responseInfo ResponseInfo that should be modified to the specific failed scenario.
      * @param <T> The type of the request that failed.
      */
-    private <T extends MessageRequest> void sendFailedResponse(T request, RequestHandler<T> handler, ResponseInfo responseInfo) {
+    private <T extends MessageRequest> void sendFailedResponse(T request, RequestHandler<T> handler,
+                                                               ResponseInfo responseInfo) {
         log.info("Cannot perform operation. Sending failed response. Cause: " + responseInfo.getResponseText());
         MessageResponse response = handler.generateFailedResponse(request);
         response.setResponseInfo(responseInfo);
         context.getResponseDispatcher().completeAndSendResponseToRequest(request, response);
     }
 
+    /**
+     * Registers this MessageRequestDelegator as an observer on the message bus provided through the constructor.
+     */
     public void startListening() {
         messageBus.addListener(configs.getPrivateMessageDestination(), this);
         messageBus.addListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);
     }
 
+    /**
+     * Removes this object as an observer on the message bus.
+     */
     public void stop() {
         messageBus.removeListener(configs.getPrivateMessageDestination(), this);
         messageBus.removeListener(context.getConfigurations().getRefPillarSettings().getCollectionDestination(), this);

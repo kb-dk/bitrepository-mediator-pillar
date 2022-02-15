@@ -12,6 +12,9 @@ import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The mediator pillar class.
+ */
 public class MediatorPillar {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final MessageBus messageBus;
@@ -19,14 +22,11 @@ public class MediatorPillar {
     private final MessageRequestDelegator messageRequestDelegator;
 
     /**
-     * Rough sketch:
-     * Should initialize all necessary stuff so that we listen for new requests on the messagebus (or initialize something that does it)
-     * Initialize database etc. (collection_id, file_id, file_receival_timestamp, file_encryption_timestamp, crypto_algo, checksum, crypto_checksum)
-     * Listen for incoming messages and delegate them to appropriate handlers (spawn new thread for each?)
-     * - GetFile: check dao if file exists, propagate message to pillar ("client-side"), and get response back to original client
-     * - PutFile: check dao if file already exists (name can't be same right?), put stuff in db, propagate message to pillar, and get response back to original client
-     * - GetFileIDs: Just check dao and respond with file IDs from there no?
-     * - DeleteFile: Check dao if file exists, propagate message to pillar, and get response back from pillar to client
+     * Constructor instantiating the mediator pillar and registering it as a listener on the message bus
+     * @param settings The Settings object containing both the Repository- and ReferenceSettings (TODO replace with just Configurations?)
+     * @param pillarContext The pillar context containing necessary components.
+     * @param configs The configurations specific to the mediator pillar (TODO see above TODO)
+     * @param messageBus The message bus.
      */
     public MediatorPillar(Settings settings, PillarContext pillarContext, PillarConfigurations configs, MessageBus messageBus) {
         log.debug("Creating mediator pillar");
@@ -37,6 +37,10 @@ public class MediatorPillar {
         messageRequestDelegator.startListening();
     }
 
+    /**
+     * TODO should use this in the future when nearing a more complete mediator pillar
+     * Shuts down all the components of the mediator pillar.
+     */
     public void shutdown() {
         try {
             messageRequestDelegator.stop();

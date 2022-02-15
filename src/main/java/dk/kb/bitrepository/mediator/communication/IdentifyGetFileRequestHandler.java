@@ -10,6 +10,9 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
+/**
+ * Class for handling IdentifyPillarsForGetFileRequests.
+ */
 public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
     public IdentifyGetFileRequestHandler(PillarContext context) {
         super(context);

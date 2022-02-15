@@ -8,6 +8,11 @@ import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
+/**
+ * Parent class for <X>IdentifyRequestHandlers that initializes variables common to all Identify-handlers
+ * and defines the template method {@link #processRequest} describing how to process these requests.
+ * @param <T> The type of request that is handled.
+ */
 public abstract class IdentifyRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
     protected static final String RESPONSE_FOR_POSITIVE_IDENTIFICATION = "Operation acknowledged and accepted.";
     protected final Configurations configurations;

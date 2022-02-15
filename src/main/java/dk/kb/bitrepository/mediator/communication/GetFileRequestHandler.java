@@ -10,7 +10,10 @@ import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest> {
+/**
+ * Class for initial handling of GetFileRequests.
+ */
+public class GetFileRequestHandler extends OperationRequestHandler<GetFileRequest> {
     public GetFileRequestHandler(PillarContext context) {
         super(context);
     }
@@ -31,7 +34,7 @@ public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     @Override
-    protected void performAction(GetFileRequest request, MessageContext context) {
+    protected void scheduleOperation(GetFileRequest request, MessageContext context) {
         // TODO insert jobscheduler.queue(actionThingy) here or something along those lines
     }
 

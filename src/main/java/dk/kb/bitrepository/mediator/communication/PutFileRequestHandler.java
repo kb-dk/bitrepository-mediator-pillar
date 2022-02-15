@@ -6,7 +6,7 @@ import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public class PutFileRequestHandler extends PerformRequestHandler<GetFileRequest> {
+public class PutFileRequestHandler extends OperationRequestHandler<GetFileRequest> {
     public PutFileRequestHandler(PillarContext context) {
         super(context);
     }
@@ -27,7 +27,7 @@ public class PutFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     @Override
-    protected void performAction(GetFileRequest request, MessageContext context) { // TODO
+    protected void scheduleOperation(GetFileRequest request, MessageContext context) { // TODO
         System.out.println("Performing action!");
         // Check DAO
         // If file does not exist send failed response
