@@ -46,7 +46,7 @@ public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     /**
-     * Creates a GetFileProgressResponse based on a GetFileRequest.
+     * Creates a partly configured GetFileProgressResponse based on a GetFileRequest.
      * @param request The GetFileRequest to base the progress response on.
      * @return The GetFileProgressResponse based on the request.
      */

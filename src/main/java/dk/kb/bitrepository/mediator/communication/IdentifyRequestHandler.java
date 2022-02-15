@@ -35,14 +35,14 @@ public abstract class IdentifyRequestHandler<T extends MessageRequest> implement
     public abstract MessageResponse generateFailedResponse(T request);
 
     /**
-     * Validate both that the given request it is possible to perform and that it is allowed.
+     * Validate both that the given request is possible to perform and that it is allowed.
      * @param request The request to validate.
      * @throws RequestHandlerException If something in the request is inconsistent with the possibilities of the pillar.
      */
     protected abstract void validateRequest(T request) throws RequestHandlerException;
 
     /**
-     * Sends a identification response.
+     * Sends an identification response.
      * @param request The request to respond to.
      * @param requestContext The context for the request.
      * @throws RequestHandlerException If the positive response could not be created.
