@@ -17,7 +17,7 @@ import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 
 @DisplayName("Test #GetFileHandler")
-public class TestGetFileHandlerIT {
+public class GetFileHandlerIT {
     private static byte[] fileBytes;
     private static ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private static DatabaseDAO dao;
