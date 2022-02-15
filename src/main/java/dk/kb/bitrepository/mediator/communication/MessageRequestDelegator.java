@@ -33,10 +33,10 @@ import java.util.Map;
 public class MessageRequestDelegator implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(MessageRequestDelegator.class);
     private final Map<String, RequestHandler<? extends MessageRequest>> handlerMap;
-    private final PillarContext context;
     private final MessageBus messageBus;
-    private final Settings refPillarSettings;
+    private final PillarContext context;
     private final PillarConfigurations mediatorPillarConfig;
+    private final Settings refPillarSettings;
 
     /**
      * Constructor that initializes variables and registers handlers
@@ -46,8 +46,8 @@ public class MessageRequestDelegator implements MessageListener {
     public MessageRequestDelegator(MessageBus messageBus, PillarContext context) {
         this.messageBus = messageBus;
         this.context = context;
-        this.refPillarSettings = context.getConfigurations().getRefPillarSettings();
         this.mediatorPillarConfig = context.getConfigurations().getPillarConfig();
+        this.refPillarSettings = context.getConfigurations().getRefPillarSettings();
 
         handlerMap = new HashMap<>();
         for (RequestHandler<? extends MessageRequest> handler : createMessageHandlers()) {
