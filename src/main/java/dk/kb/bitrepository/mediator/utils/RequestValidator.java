@@ -113,6 +113,7 @@ public class RequestValidator {
         validatePillarID(request.getPillarID());
         validateFileIDFormat(fileID);
         validateFileExists(request.getCollectionID(), fileID);
+        // TODO: Validate checksum??
     }
 
     // TODO validate protocol version on messages?

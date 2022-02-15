@@ -3,12 +3,10 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.TestingSetup;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,10 +47,11 @@ public class TestPutFileHandler {
 
     @Test
     @DisplayName("Test PutFile method")
-    public void testPutFile() {
+    public void testPutFile() throws MismatchingChecksumsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
                 receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
+
         handler.performPutFile();
 
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -63,7 +62,7 @@ public class TestPutFileHandler {
 
     @Test
     @DisplayName("Test PutFile method using already existing files")
-    public void testPutFileUsingExistingFile() {
+    public void testPutFileUsingExistingFile() throws MismatchingChecksumsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
                 receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
@@ -91,8 +90,14 @@ public class TestPutFileHandler {
     }
 
     @Test
-    @DisplayName("Test PutFile doesn't work when checksums does not match")
+    @DisplayName("Test PutFile throws MismatchingChecksumsException when checksums does not match")
     public void testPutFileChecksumsDoesntMatch() {
-        //TODO: Implement
+        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+        ChecksumDataForFileTYPE checksumDataWithWrongChecksum = checksumDataForFileTYPE;
+        checksumDataWithWrongChecksum.setChecksumValue(new byte[12]);
+        PutFileHandler handler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataWithWrongChecksum,
+                receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
+
+        Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
     }
 }
