@@ -18,8 +18,7 @@ import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
 public class TestPutFileHandler {
@@ -99,5 +98,8 @@ public class TestPutFileHandler {
                 receivedTimestamp, dao, new AESCryptoStrategy(cryptoConfigurations.getPassword()));
 
         Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
+        assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
+        assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
+        assertFalse(dao.hasFile(COLLECTION_ID, FILE_ID));
     }
 }
