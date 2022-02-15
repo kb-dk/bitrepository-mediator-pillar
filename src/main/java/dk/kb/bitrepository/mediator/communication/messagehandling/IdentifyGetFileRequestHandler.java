@@ -10,6 +10,9 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
+/**
+ * Class for handling IdentifyPillarsForGetFileRequests.
+ */
 public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
     public IdentifyGetFileRequestHandler(PillarContext context) {
         super(context);
@@ -40,9 +43,9 @@ public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<Identi
     }
 
     /**
-     * Creates a GetFileFinalResponse based on a GetFileRequest.
-     * @param request The GetFileRequest to base the final response on.
-     * @return The GetFileFinalResponse based on the request.
+     * Creates a partly configured IdentifyPillarsForGetFileResponse based on am IdentifyPillarsForGetFileRequest.
+     * @param request The IdentifyPillarsForGetFileRequest to base the response on.
+     * @return The IdentifyPillarsForGetFileResponse based on the request.
      */
     private IdentifyPillarsForGetFileResponse createPartlyConfiguredResponse(IdentifyPillarsForGetFileRequest request) {
         IdentifyPillarsForGetFileResponse response = new IdentifyPillarsForGetFileResponse();

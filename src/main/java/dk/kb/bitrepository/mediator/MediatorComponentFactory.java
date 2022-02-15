@@ -23,11 +23,22 @@ import org.bitrepository.protocol.security.SecurityManager;
 
 import java.io.IOException;
 
+/**
+ * Component factory for the mediator pillar.
+ */
 public class MediatorComponentFactory {
     private static MediatorComponentFactory instance;
 
+    /**
+     * Singleton so private constructor.
+     */
     private MediatorComponentFactory() {}
 
+    /**
+     * Get the instance of this singleton.
+     *
+     * @return The MediatorComponentFactory instance.
+     */
     public static MediatorComponentFactory getInstance() {
         if (instance == null) {
             synchronized (MediatorComponentFactory.class) {
@@ -39,6 +50,16 @@ public class MediatorComponentFactory {
         return instance;
     }
 
+    /**
+     * Creates a pillar from the configurations located at the provided configuration paths.
+     *
+     * @param pathToConfiguration Path to the directory containing the mediator pillar settings,
+     *                            ReferenceSettings and RepositorySettings
+     * @param pathToKeyFile Path to private key
+     *                      - optional if required authorization/authentication is disabled in RepositorySettings
+     * @return A new mediator pillar
+     * @throws IOException If something fails when loading configurations.
+     */
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
         Configurations configs = loadMediatorConfigurations(pathToConfiguration);
         Settings refPillarSettings = configs.getRefPillarSettings();
@@ -46,15 +67,22 @@ public class MediatorComponentFactory {
         SecurityManager securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
         ResponseDispatcher responseDispatcher = new ResponseDispatcher(
-                refPillarSettings,
-                configs.getPillarConfig().getPrivateMessageDestination(),
-                messageBus);
+                messageBus, refPillarSettings,
+                configs.getPillarConfig().getPrivateMessageDestination()
+        );
         DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
         PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
 
         return new MediatorPillar(refPillarSettings, pillarContext, messageBus);
     }
 
+    /**
+     * Load a Configurations instance from the configuration files located at the provided configuration path.
+     *
+     * @param pathToConfiguration Path to directory containing configuration files.
+     * @return A new Configurations instance.
+     * @throws IOException If the Configurations can not be loaded from the provided path.
+     */
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
         ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
         Configurations configs = configLoader.getConfigurations();
@@ -82,6 +110,12 @@ public class MediatorComponentFactory {
                 refPillarSettings.getComponentID());
     }
 
+    /**
+     * Instantiates a new DAO from the provided database configurations.
+     *
+     * @param dbConfig The database configurations.
+     * @return A new DAO to make database operations on.
+     */
     public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
         DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
         return new DatabaseDAO(connectionManager);

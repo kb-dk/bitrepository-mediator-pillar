@@ -17,9 +17,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.OffsetDateTime;
 
+/**
+ * Class providing util methods for use in database interactions.
+ */
 public class DatabaseUtils {
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
 
+    /**
+     * Private constructor - should not instantiate utils class
+     */
     private DatabaseUtils() {
     }
 

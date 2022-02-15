@@ -9,13 +9,18 @@ import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public abstract class PerformRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
+/**
+ * Parent class for <Operation>RequestHandlers that initializes variables common to all Operation-handlers
+ * and defines the template method {@link #processRequest} describing how to process these requests.
+ * @param <T> The type of request that is handled.
+ */
+public abstract class OperationRequestHandler<T extends MessageRequest> implements RequestHandler<T> {
     protected final Configurations configurations;
     protected PillarContext context;
     protected RequestValidator requestValidator;
     protected String pillarID;
 
-    public PerformRequestHandler(PillarContext context) {
+    public OperationRequestHandler(PillarContext context) {
         this.context = context;
         configurations = context.getConfigurations();
         requestValidator = new RequestValidator(configurations.getRefPillarSettings(), context.getDAO());
@@ -29,7 +34,7 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
     public void processRequest(T request, MessageContext messageContext) throws RequestHandlerException {
         validateRequest(request);
         sendProgressResponse(request);
-        performAction(request, messageContext);
+        scheduleOperation(request, messageContext);
     }
 
     @Override
@@ -43,7 +48,17 @@ public abstract class PerformRequestHandler<T extends MessageRequest> implements
      */
     protected abstract void validateRequest(T request) throws RequestHandlerException;
 
-    protected abstract void performAction(T request, MessageContext context);
+    /**
+     * Ask the backend to schedule the actual operation
+     * 
+     * @param request The request being handled
+     * @param context Context containing information about the request (message)
+     */
+    protected abstract void scheduleOperation(T request, MessageContext context);
 
+    /**
+     * Send a progress response matching the request being handled.
+     * @param request The request being handled.
+     */
     protected abstract void sendProgressResponse(T request);
 }
