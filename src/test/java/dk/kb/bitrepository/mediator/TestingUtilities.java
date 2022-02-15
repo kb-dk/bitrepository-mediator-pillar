@@ -42,6 +42,16 @@ public class TestingUtilities {
         return checksumDataForFileTYPE;
     }
 
+    public static ChecksumDataForFileTYPE loadIncorrectChecksumData() {
+        ChecksumDataForFileTYPE checksumDataWithWrongChecksum = new ChecksumDataForFileTYPE();
+        checksumDataWithWrongChecksum.setChecksumValue(new byte[12]);
+        ChecksumSpecTYPE checksumSpecType = new ChecksumSpecTYPE();
+        checksumSpecType.setChecksumType(ChecksumType.MD5);
+        checksumDataWithWrongChecksum.setChecksumSpec(checksumSpecType);
+
+        return checksumDataWithWrongChecksum;
+    }
+
     /**
      * Removes all files in a given directory.
      *

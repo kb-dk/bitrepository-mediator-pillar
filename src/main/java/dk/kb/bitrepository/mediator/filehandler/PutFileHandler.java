@@ -86,9 +86,9 @@ public class PutFileHandler {
         byte[] unencryptedFileData = readBytesFromFile(unencryptedFilePath);
 
         if (!compareChecksums(unencryptedFileData, checksumSpec, expectedChecksum)) {
-            log.error("Checksums did not match. Try PutFile again.");
+            log.error("Checksums of unencrypted file did not match. Try PutFile again.");
             deleteFileLocally(unencryptedFilePath);
-            throw new MismatchingChecksumsException("Checksums did not match. Try PutFile again.");
+            throw new MismatchingChecksumsException("Checksums of unencrypted file did not match. Try PutFile again.");
         } else {
             encryptAndCompareChecksums(unencryptedFileData);
         }
