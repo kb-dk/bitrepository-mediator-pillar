@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.database;
 
 import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.TestingSetup;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.junit.jupiter.api.AfterEach;
@@ -12,29 +13,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_ITERATIONS;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_IV;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_SALT;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_CHECKSUM_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENCRYPTED_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_ENC_CHECKSUM;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_RECEIVED_TIMESTAMP_MOCKUP;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test Database Calls")
 public class DatabaseDaoIT {
@@ -42,12 +24,11 @@ public class DatabaseDaoIT {
 
     @BeforeAll
     static void setUp() throws Exception {
-        Configurations testConfig = MediatorComponentFactory.loadMediatorConfigurations("conf");
-        DatabaseConfigurations databaseConfig = testConfig.getDatabaseConfig();
-        dao = MediatorComponentFactory.getDAO(databaseConfig);
-        DatabaseTestUtils.dropTables(databaseConfig);
+        TestingSetup setup = new TestingSetup();
+        dao = setup.getDao();
+        DatabaseTestUtils.dropTables(setup.getDatabaseConfigurations());
         System.out.println("Database tables has been dropped.");
-        DatabaseTestUtils.createTables(databaseConfig);
+        DatabaseTestUtils.createTables(setup.getDatabaseConfigurations());
         System.out.println("Tables have been created.");
     }
 
@@ -203,8 +184,8 @@ public class DatabaseDaoIT {
     @DisplayName("Test updating 'enc_parameters' table for non-existing index")
     public void testUpdatingEncryptionParametersTableForNonExistingIndex() {
         dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
-        dao.updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test", ENC_PARAMS_SALT
-                + "_new", ENC_PARAMS_IV, 1234);
+        dao.updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test",
+                ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
         EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
         assertEquals(COLLECTION_ID, result.getCollectionID());
@@ -220,8 +201,8 @@ public class DatabaseDaoIT {
     public void testDatabaseHasFileAfterInsertion() {
         dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
-        assertTrue(dao.hasFile(FILE_ID, COLLECTION_ID));
-        assertFalse(dao.hasFile(FILE_ID, "NonExistingCollection"));
-        assertFalse(dao.hasFile("NonExistingFile.txt", COLLECTION_ID));
+        assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
+        assertFalse(dao.hasFile("NonExistingCollection", FILE_ID));
+        assertFalse(dao.hasFile(COLLECTION_ID, "NonExistingFile.txt"));
     }
 }

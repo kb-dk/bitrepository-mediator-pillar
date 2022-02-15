@@ -21,8 +21,14 @@ public class DatabaseTestUtils {
         }
     }
 
+    /**
+     * Creates the tables by running the script 'create_tables.sql'.
+     *
+     * @param testConfig An instance of Configurations, can be created using the TestingSetup class.
+     * @throws SQLException An exception that the SQL was malformed or otherwise corrupt.
+     * @throws IOException  An exception thrown if the file was not found, or damaged.
+     */
     public static void createTables(DatabaseConfigurations testConfig) throws SQLException, IOException {
-        // TODO consider making this not always use default - is probably what we want though
         DatabaseUtils.runSqlFromFile(testConfig, DatabaseConstants.DEFAULT_DATABASE_CREATION_SCRIPT);
     }
 }

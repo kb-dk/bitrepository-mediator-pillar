@@ -24,7 +24,7 @@ public class DatabaseConnectionManager {
         poolConfig.setJdbcUrl(pillarConfig.getUrl());
         poolConfig.setUsername(pillarConfig.getUsername());
         poolConfig.setPassword(pillarConfig.getPassword());
-        // TODO configure connection pool more and silence logs(?)
+        // TODO configure connection pool more(?)
         pool = new HikariDataSource(poolConfig);
     }
 

@@ -27,10 +27,11 @@ public class RequestValidator {
 
     /**
      * Validates that the collection ID has been set.
+     *
      * @param request The request to check the collection ID for.
      */
     public void validateCollectionIdIsSet(MessageRequest request) {
-        if(!request.isSetCollectionID()) {
+        if (!request.isSetCollectionID()) {
             throw new IllegalArgumentException(request.getClass().getSimpleName() +
                     "'s requires a CollectionID");
         }
@@ -39,6 +40,7 @@ public class RequestValidator {
     /**
      * Uses the FileIDValidator to validate the format of a given file ID.
      * Also validates, that the file ID does not start with illegal 'path' characters (e.g. '..' or starts with a '/').
+     *
      * @param fileID The ID to validate.
      * @throws RequestHandlerException If the ID of the file was invalid.
      */
@@ -59,10 +61,11 @@ public class RequestValidator {
 
     /**
      * Validates that the request has the correct pillar ID.
+     *
      * @param pillarID The pillar ID.
      */
     public void validatePillarID(String pillarID) {
-        if(!pillarID.equals(pillarSettings.getComponentID())) {
+        if (!pillarID.equals(pillarSettings.getComponentID())) {
             throw new IllegalArgumentException("The request had a wrong PillarID: "
                     + "Expected '" + pillarSettings.getComponentID()
                     + "' but was '" + pillarID + "'.");
@@ -73,12 +76,13 @@ public class RequestValidator {
 
     /**
      * Validates that the file exists by looking for an entry in the database.
-     * @param fileID File ID to look for
+     *
+     * @param fileID       File ID to look for
      * @param collectionID Collection to look for file in
      * @throws InvalidMessageException If file does not exist
      */
-    public void validateFileExists(String fileID, String collectionID) throws InvalidMessageException {
-        if (!dao.hasFile(fileID, collectionID)) {
+    public void validateFileExists(String collectionID, String fileID) throws InvalidMessageException {
+        if (!dao.hasFile(collectionID, fileID)) {
             throw new InvalidMessageException(ResponseCode.FILE_NOT_FOUND_FAILURE,
                     "File '" + fileID + "' not found in collection '" + collectionID + "'");
         }
@@ -86,6 +90,7 @@ public class RequestValidator {
 
     /**
      * Validates IdentifyPillarsForGetFileRequests
+     *
      * @param request Request to validate
      * @throws RequestHandlerException If the request is wrongly configured or contains demands that can't be met.
      */
@@ -93,11 +98,12 @@ public class RequestValidator {
         String fileID = request.getFileID();
         validateCollectionIdIsSet(request);
         validateFileIDFormat(fileID);
-        validateFileExists(fileID, request.getCollectionID());
+        validateFileExists(request.getCollectionID(), fileID);
     }
 
     /**
      * Validates GetFileRequests
+     *
      * @param request Request to validate
      * @throws RequestHandlerException If the request is wrongly configured or contains demands that can't be met.
      */
@@ -106,7 +112,8 @@ public class RequestValidator {
         validateCollectionIdIsSet(request);
         validatePillarID(request.getPillarID());
         validateFileIDFormat(fileID);
-        validateFileExists(fileID, request.getCollectionID());
+        validateFileExists(request.getCollectionID(), fileID);
+        // TODO: Validate checksum??
     }
 
     // TODO validate protocol version on messages?

@@ -38,11 +38,11 @@ public class DatabaseDAO {
     /**
      * Performs the INSERT query into the 'files' table.
      *
-     * @param collectionID        The Collection ID, part of the primary key.
-     * @param fileID              The File ID, part of the primary key.
+     * @param collectionID       The Collection ID, part of the primary key.
+     * @param fileID             The File ID, part of the primary key.
      * @param receivedTimestamp  The timestamp for when the file was received.
      * @param encryptedTimestamp The timestamp for when the file was encrypted.
-     * @param checksum            The checksum of the un-encrypted file.
+     * @param checksum           The checksum of the un-encrypted file.
      * @param encChecksum        The checksum of the encrypted file.
      * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
@@ -51,7 +51,7 @@ public class DatabaseDAO {
         executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
     }
 
-    public boolean hasFile(String fileID, String collectionID) {
+    public boolean hasFile(String collectionID, String fileID) {
         String sql = "SELECT COUNT(*) FROM " + FILES_TABLE + " WHERE file_id = ? AND collection_id = ?";
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, sql, fileID, collectionID)) {
@@ -132,7 +132,7 @@ public class DatabaseDAO {
      * @param collectionID    The collection id, part of the primary key.
      * @param fileID          The file id, part of the primary key.
      * @param timestampColumn The timestamp column to update, use e.g. 'FILES_ENCRYPTED_TIMESTAMP_NAME' etc.
-     * @param newTimestamp   The new timestamp that will replace the old one.
+     * @param newTimestamp    The new timestamp that will replace the old one.
      */
     public void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime newTimestamp) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
@@ -183,7 +183,9 @@ public class DatabaseDAO {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args)) {
 
-            log.debug("Executing >>" + statement);
+            String finalQuery = statement.toString();
+            log.debug("Executing >>" +
+                    finalQuery.substring(finalQuery.indexOf("wrapping")).replace("wrapping ", ""));
             statement.executeUpdate();
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);
