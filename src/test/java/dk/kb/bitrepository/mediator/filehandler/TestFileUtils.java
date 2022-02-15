@@ -27,7 +27,7 @@ public class TestFileUtils {
 
     @BeforeAll
     static void setup() throws IOException {
-        TestingSetup setup = new TestingSetup();
+        TestingSetup setup = new TestingSetup(false);
         encryptionPassword = setup.getCryptoConfigurations().getPassword();
         testFileBytes = setup.getFileBytes();
     }
