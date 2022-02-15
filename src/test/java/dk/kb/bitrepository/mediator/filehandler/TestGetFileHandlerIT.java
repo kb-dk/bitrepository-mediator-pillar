@@ -13,12 +13,11 @@ import java.io.IOException;
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.TestingUtilities.loadIncorrectChecksumData;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 
 @DisplayName("Test #GetFileHandler")
-public class TestGetFileHandler {
+public class TestGetFileHandlerIT {
     private static byte[] fileBytes;
     private static ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private static DatabaseDAO dao;
