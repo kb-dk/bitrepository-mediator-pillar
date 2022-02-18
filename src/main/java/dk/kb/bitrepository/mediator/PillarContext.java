@@ -3,7 +3,7 @@ package dk.kb.bitrepository.mediator;
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
-import org.bitrepository.protocol.messagebus.MessageBus;
+import org.bitrepository.protocol.  messagebus.MessageBus;
 
 public class PillarContext {
     private final MessageBus messageBus;

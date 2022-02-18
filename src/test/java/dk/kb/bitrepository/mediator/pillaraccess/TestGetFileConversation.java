@@ -1,37 +1,34 @@
-package dk.kb.bitrepository.mediator.communication.pillar;
+package dk.kb.bitrepository.mediator.pillaraccess;
 
+import dk.kb.bitrepository.mediator.PillarMain;
 import dk.kb.bitrepository.mediator.TestSettingsProvider;
-import dk.kb.bitrepository.mediator.TestingSetup;
-import dk.kb.bitrepository.mediator.pillaraccess.AccessPillarFactory;
-import dk.kb.bitrepository.mediator.pillaraccess.GetFileConversation;
 import org.bitrepository.client.conversation.mediator.ConversationMediator;
 import org.bitrepository.common.settings.Settings;
+import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.security.DummySecurityManager;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestGetFileConversation {
-    private static Settings pillarSettings;
     private static ConversationMediator conversationMediator;
     private static final SecurityManager securityManager = createSecurityManager();
     private static Settings settingsForTestClient;
+    private static MessageBus messageBus;
 
     @BeforeAll
-    public static void setup() throws IOException {
-        TestingSetup setup = new TestingSetup();
-        pillarSettings = setup.getConfigurations().getRefPillarSettings();
+    public static void setup() {
         settingsForTestClient = TestSettingsProvider.reloadSettings("TestSuiteInitializer");
+        PillarMain.main();
+        messageBus = null;
     }
 
     @Test
     @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
-    public void verifyGetFileClientFromFactory() throws Exception {
+    public void verifyGetFileClientFromFactory() {
         assertTrue(AccessPillarFactory.getInstance().createGetFileClient(
                         settingsForTestClient, securityManager, settingsForTestClient.getComponentID())
                         instanceof GetFileConversation,

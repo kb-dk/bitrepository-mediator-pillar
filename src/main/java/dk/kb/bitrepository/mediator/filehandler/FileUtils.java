@@ -127,6 +127,7 @@ public class FileUtils {
      * @return Returns true if the two checksums match.
      */
     public static boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
+        log.debug("Comparing checksums");
         String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
 
         return newChecksum.equals(expectedChecksum);

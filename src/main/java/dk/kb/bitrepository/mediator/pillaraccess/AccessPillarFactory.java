@@ -72,8 +72,10 @@ public final class AccessPillarFactory {
      * @return A GetFileClient.
      */
     public GetFileClient createGetFileClient(Settings settings, SecurityManager securityManager, String clientID) {
-        return new GetFileConversation(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager),
-                ConversationMediatorManager.getConversationMediator(settings, securityManager), settings, clientID);
+        return new GetFileConversation(
+                ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager),
+                ConversationMediatorManager.getConversationMediator(settings, securityManager),
+                settings, clientID);
     }
 
     /**
