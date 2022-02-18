@@ -163,20 +163,6 @@ public class PutFileHandler {
         log.debug("Local database updated to include: {}/{}", collectionID, fileID);
     }
 
-    /**
-     * Computes the checksum from byte[] and compare it to some expected checksum.
-     *
-     * @param bytesFromFile    Byte[] to compute checksum of.
-     * @param checksumSpec     The checksum Spec, used when creating a checksum.
-     * @param expectedChecksum The expected checksum.
-     * @return Returns true if the two checksums match.
-     */
-    private boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
-        String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
-
-        return newChecksum.equals(expectedChecksum);
-    }
-
     private void handleStateAndJobDoneHandler() {
         // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
     }

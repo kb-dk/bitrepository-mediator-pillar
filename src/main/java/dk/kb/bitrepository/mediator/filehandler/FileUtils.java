@@ -1,8 +1,10 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
+import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,6 +13,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 
 import static java.lang.String.format;
+import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class FileUtils {
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
@@ -113,5 +116,19 @@ public class FileUtils {
         } catch (IOException e) {
             log.error("Could no delete file {}.", path);
         }
+    }
+
+    /**
+     * Computes the checksum from byte[] and compare it to some expected checksum.
+     *
+     * @param bytesFromFile    Byte[] to compute checksum of.
+     * @param checksumSpec     The checksum Spec, used when creating a checksum.
+     * @param expectedChecksum The expected checksum.
+     * @return Returns true if the two checksums match.
+     */
+    public static boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
+        String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
+
+        return newChecksum.equals(expectedChecksum);
     }
 }

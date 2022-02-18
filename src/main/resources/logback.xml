@@ -21,7 +21,7 @@
   <!-- Appender for System.out.print of logging. -->"
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%-5level - %msg%n</pattern>
+      <pattern>%-5level - %logger - %msg%n</pattern>
     </encoder>
   </appender>
 
