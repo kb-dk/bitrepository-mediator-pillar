@@ -2,11 +2,18 @@ package dk.kb.bitrepository.mediator.communication;
 
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
+import org.bitrepository.bitrepositoryelements.ResponseCode;
+import org.bitrepository.bitrepositoryelements.ResponseInfo;
+import org.bitrepository.bitrepositorymessages.GetFileFinalResponse;
+import org.bitrepository.bitrepositorymessages.GetFileProgressResponse;
 import org.bitrepository.bitrepositorymessages.GetFileRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
 
-public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest> {
+/**
+ * Class for initial handling of GetFileRequests.
+ */
+public class GetFileRequestHandler extends OperationRequestHandler<GetFileRequest> {
     public GetFileRequestHandler(PillarContext context) {
         super(context);
     }
@@ -17,30 +24,57 @@ public class GetFileRequestHandler extends PerformRequestHandler<GetFileRequest>
     }
 
     @Override
-    public MessageResponse generateFailedResponse(GetFileRequest request) { // TODO
-        return null;
+    public MessageResponse generateFailedResponse(GetFileRequest request) {
+        return createPartlyConfiguredFinalResponse(request);
     }
 
     @Override
-    protected void validateRequest(GetFileRequest request, MessageContext requestContext) throws RequestHandlerException {
+    protected void validateRequest(GetFileRequest request) throws RequestHandlerException {
         requestValidator.validate(request);
     }
 
     @Override
-    protected void performAction() { // TODO
-        System.out.println("Performing action!");
-        // Check DAO
-        // If file does not exist send failed response
-        // Else start client towards underlying pillar
-        // and return progress response and results in final response
+    protected void scheduleOperation(GetFileRequest request, MessageContext context) {
+        // TODO insert jobscheduler.queue(actionThingy) here or something along those lines
     }
 
     @Override
-    protected void sendProgressResponse() { // TODO
-        // In refpillar checks that collection has an archive for the collection and
-        // gets back a DefaultFileInfo from there with the File object - this is used to set the file size on the response
-        // Not sure if we should keep entries of file sizes in database? Ask Kim.
-        // For now ignore file size - it is not required for the Response object.
-        System.out.println("Sending progress response!");
+    protected void sendProgressResponse(GetFileRequest request) {
+        GetFileProgressResponse progressResponse = createGetFileProgressResponse(request);
+        ResponseInfo responseInfo = new ResponseInfo();
+        responseInfo.setResponseCode(ResponseCode.OPERATION_ACCEPTED_PROGRESS);
+        responseInfo.setResponseText("Request accepted");
+        progressResponse.setResponseInfo(responseInfo);
+        context.getResponseDispatcher().completeAndSendResponseToRequest(request, progressResponse);
+    }
+
+    /**
+     * Creates a partly configured GetFileProgressResponse based on a GetFileRequest.
+     * @param request The GetFileRequest to base the progress response on.
+     * @return The GetFileProgressResponse based on the request.
+     */
+    private GetFileProgressResponse createGetFileProgressResponse(GetFileRequest request) {
+        GetFileProgressResponse res = new GetFileProgressResponse();
+        res.setFileAddress(request.getFileAddress());
+        res.setFileID(request.getFileID());
+        res.setFilePart(request.getFilePart());
+        res.setPillarID(configurations.getPillarConfig().getMediatorPillarID());
+
+        return res;
+    }
+
+    /**
+     * Creates a GetFileFinalResponse based on a GetFileRequest.
+     * @param request The GetFileRequest to base the final response on.
+     * @return The GetFileFinalResponse based on the request.
+     */
+    public GetFileFinalResponse createPartlyConfiguredFinalResponse(GetFileRequest request) {
+        GetFileFinalResponse finalResponse = new GetFileFinalResponse();
+        finalResponse.setFileAddress(request.getFileAddress());
+        finalResponse.setFileID(request.getFileID());
+        finalResponse.setFilePart(request.getFilePart());
+        finalResponse.setPillarID(configurations.getPillarConfig().getMediatorPillarID());
+
+        return finalResponse;
     }
 }

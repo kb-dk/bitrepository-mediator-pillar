@@ -29,7 +29,7 @@ public class RequestValidator {
      * Validates that the collection ID has been set.
      * @param request The request to check the collection ID for.
      */
-    public void validateCollectionIdIsSet(MessageRequest request) {
+    public void validateCollectionIdIsSet(MessageRequest request) { // TODO validate we actually have the collection?
         if(!request.isSetCollectionID()) {
             throw new IllegalArgumentException(request.getClass().getSimpleName() +
                     "'s requires a CollectionID");

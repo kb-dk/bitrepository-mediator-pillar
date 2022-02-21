@@ -4,7 +4,6 @@ import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerExcept
 import org.bitrepository.bitrepositorymessages.MessageRequest;
 import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.protocol.MessageContext;
-//import org.bitrepository.service.exception.RequestHandlerException;
 
 /**
  * Provides functionality for handling a single type of request.

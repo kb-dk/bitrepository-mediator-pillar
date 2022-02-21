@@ -7,6 +7,9 @@ import picocli.CommandLine;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
+/**
+ * The 'main' class for starting the mediator pillar through the commandline.
+ */
 @CommandLine.Command()
 public class PillarMain implements Callable<Integer>{
     private static final Logger log = LoggerFactory.getLogger(PillarMain.class);
@@ -17,6 +20,11 @@ public class PillarMain implements Callable<Integer>{
     @CommandLine.Parameters(index = "1", type = String.class, defaultValue = "src/test/resources/conf/client-01.pem") // Default for now
     private String keyfilePath;
 
+    /**
+     * Part of the main method that instantiates the mediator pillar.
+     *
+     * @return exit code of the mediator pillar execution. // TODO will never exit normally so exit code makes no sense?
+     */
     @Override
     public Integer call() {
         try {
@@ -31,7 +39,12 @@ public class PillarMain implements Callable<Integer>{
         }
         return 0;
     }
-    
+
+    /**
+     * Start the commandline tool.
+     *
+     * @param args Commandline args.
+     */
     public static void main(String... args) {
         System.out.println("Arguments passed by commandline is: " + Arrays.asList(args));
         CommandLine app = new CommandLine(new PillarMain());

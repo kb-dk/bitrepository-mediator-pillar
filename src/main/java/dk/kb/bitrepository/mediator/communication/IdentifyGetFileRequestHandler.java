@@ -10,6 +10,9 @@ import org.bitrepository.bitrepositorymessages.MessageResponse;
 import org.bitrepository.common.utils.TimeMeasurementUtils;
 import org.bitrepository.protocol.MessageContext;
 
+/**
+ * Class for handling IdentifyPillarsForGetFileRequests.
+ */
 public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<IdentifyPillarsForGetFileRequest> {
     public IdentifyGetFileRequestHandler(PillarContext context) {
         super(context);
@@ -21,18 +24,16 @@ public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<Identi
     }
 
     @Override
-    protected void validateRequest(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) throws RequestHandlerException {
+    protected void validateRequest(IdentifyPillarsForGetFileRequest request) throws RequestHandlerException {
         requestValidator.validate(request);
     }
 
     @Override
     protected void sendPositiveResponse(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) {
-        IdentifyPillarsForGetFileResponse response = new IdentifyPillarsForGetFileResponse();
-        response.setFileID(request.getFileID());
-        response.setPillarID(getConfigurations().getPillarConfig().getMediatorPillarID());
+        IdentifyPillarsForGetFileResponse response = createPartlyConfiguredResponse(request);
         response.setTimeToDeliver(
                 TimeMeasurementUtils.getTimeMeasurementFromMiliseconds(
-                        getConfigurations().getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
+                        configurations.getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
 
         ResponseInfo irInfo = new ResponseInfo();
         irInfo.setResponseCode(ResponseCode.IDENTIFICATION_POSITIVE);
@@ -41,8 +42,20 @@ public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<Identi
         context.getResponseDispatcher().completeAndSendResponseToRequest(request, response);
     }
 
+    /**
+     * Creates a partly configured IdentifyPillarsForGetFileResponse based on am IdentifyPillarsForGetFileRequest.
+     * @param request The IdentifyPillarsForGetFileRequest to base the response on.
+     * @return The IdentifyPillarsForGetFileResponse based on the request.
+     */
+    private IdentifyPillarsForGetFileResponse createPartlyConfiguredResponse(IdentifyPillarsForGetFileRequest request) {
+        IdentifyPillarsForGetFileResponse response = new IdentifyPillarsForGetFileResponse();
+        response.setFileID(request.getFileID());
+        response.setPillarID(pillarID);
+        return response;
+    }
+
     @Override
-    public MessageResponse generateFailedResponse(IdentifyPillarsForGetFileRequest request) { // TODO
-        return null;
+    public MessageResponse generateFailedResponse(IdentifyPillarsForGetFileRequest request) {
+        return createPartlyConfiguredResponse(request);
     }
 }
