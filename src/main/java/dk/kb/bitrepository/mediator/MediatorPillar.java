@@ -20,11 +20,13 @@ public class MediatorPillar {
 
     /**
      * Rough sketch:
-     * Should initialize all necessary stuff so that we listen for new requests on the messagebus (or initialize something that does it)
-     * Initialize database etc. (collection_id, file_id, file_receival_timestamp, file_encryption_timestamp, crypto_algo, checksum, crypto_checksum)
+     * Should initialize all necessary stuff so that we listen for new requests on the messageBus (or initialize something that does it)
+     * Initialize database etc. (collection_id, file_id, file_received_timestamp, file_encryption_timestamp, crypto_algo, checksum,
+     * crypto_checksum)
      * Listen for incoming messages and delegate them to appropriate handlers (spawn new thread for each?)
      * - GetFile: check dao if file exists, propagate message to pillar ("client-side"), and get response back to original client
-     * - PutFile: check dao if file already exists (name can't be same right?), put stuff in db, propagate message to pillar, and get response back to original client
+     * - PutFile: check dao if file already exists (name can't be same right?), put stuff in db, propagate message to pillar, and get
+     * response back to original client
      * - GetFileIDs: Just check dao and respond with file IDs from there no?
      * - DeleteFile: Check dao if file exists, propagate message to pillar, and get response back from pillar to client
      */

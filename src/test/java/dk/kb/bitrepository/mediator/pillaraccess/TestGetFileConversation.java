@@ -8,20 +8,18 @@ import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.ProtocolComponentFactory;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageBusManager;
-import org.bitrepository.protocol.messagebus.SimpleMessageBus;
 import org.bitrepository.protocol.security.DummySecurityManager;
 import org.bitrepository.protocol.security.SecurityManager;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.jms.JMSException;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//@Disabled("Disabled until MessageBus and SecurityManager works.")
-public class GetFileConversationIT {
+public class TestGetFileConversation {
     private static final SecurityManager securityManager = createSecurityManager();
     private static Settings settingsForTestClient;
     private static LocalActiveMQBroker broker;
@@ -29,15 +27,16 @@ public class GetFileConversationIT {
 
     @BeforeAll
     public static void setup() {
-        //settingsForTestClient = TestSettingsProvider.reloadSettings("TestSuiteInitializer");
-        settingsForTestClient = TestSettingsProvider.getSettings(GetFileConversationIT.class.getSimpleName());
+        settingsForTestClient = TestSettingsProvider.getSettings(TestGetFileConversation.class.getSimpleName());
         settingsForTestClient.getRepositorySettings().getProtocolSettings().setMessageBusConfiguration(
                 MessageBusConfigurationFactory.createEmbeddedMessageBusConfiguration()
         );
-        messageBus = new SimpleMessageBus();
-        messageBus.setCollectionFilter(List.of());
-        messageBus.setComponentFilter(List.of());
         setupMessageBus();
+    }
+
+    @AfterAll
+    public static void cleanup() {
+        teardownMessageBus();
     }
 
     @Test
@@ -67,10 +66,9 @@ public class GetFileConversationIT {
         }
         messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(
                 settingsForTestClient, securityManager));
-
     }
 
-    private void teardownMessageBus() {
+    private static void teardownMessageBus() {
         MessageBusManager.clear();
         if (messageBus != null) {
             try {
