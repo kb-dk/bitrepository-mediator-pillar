@@ -3,28 +3,22 @@ package dk.kb.bitrepository.mediator;
 import dk.kb.bitrepository.mediator.communication.ResponseDispatcher;
 import dk.kb.bitrepository.mediator.database.DatabaseConnectionManager;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
-import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
+import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
 import org.bitrepository.protocol.activemq.ActiveMQMessageBus;
 import org.bitrepository.protocol.messagebus.MessageBus;
-import org.bitrepository.protocol.security.BasicMessageAuthenticator;
-import org.bitrepository.protocol.security.BasicMessageSigner;
-import org.bitrepository.protocol.security.BasicOperationAuthorizor;
-import org.bitrepository.protocol.security.BasicSecurityManager;
-import org.bitrepository.protocol.security.MessageAuthenticator;
-import org.bitrepository.protocol.security.MessageSigner;
-import org.bitrepository.protocol.security.OperationAuthorizor;
-import org.bitrepository.protocol.security.PermissionStore;
 import org.bitrepository.protocol.security.SecurityManager;
+import org.bitrepository.protocol.security.*;
 
 import java.io.IOException;
 
 public class MediatorComponentFactory {
     private static MediatorComponentFactory instance;
+    private static SecurityManager securityManager = null;
 
     private MediatorComponentFactory() {}
 
@@ -43,7 +37,7 @@ public class MediatorComponentFactory {
         Configurations configs = loadMediatorConfigurations(pathToConfiguration);
         Settings refPillarSettings = configs.getRefPillarSettings();
 
-        SecurityManager securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
+        securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
         ResponseDispatcher responseDispatcher = new ResponseDispatcher(
                 refPillarSettings,
@@ -85,5 +79,9 @@ public class MediatorComponentFactory {
     public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
         DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
         return new DatabaseDAO(connectionManager);
+    }
+
+    public static SecurityManager getSecurityManager() {
+        return securityManager;
     }
 }

@@ -86,7 +86,7 @@
     <AlarmDestination>topic://dummy-collection-id.alarms</AlarmDestination>
     <MessageBusConfiguration>
     <!-- Identifier for the message bus configuration -->
-      <Name>my messagebus</Name>
+      <Name>Local ActiveMQ</Name>
       <!--
         The URL for connecting to the messagebus (network). For encrypted communication with 
         the messagebus, use ssl:// as protocol. For unencrypted, use tcp://

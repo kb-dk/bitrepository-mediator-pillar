@@ -38,4 +38,5 @@ public class GetFileConversation extends AbstractClient implements GetFileClient
                 Collections.singleton(settings.getComponentID()), settings, messageBus, clientID, eventHandler, auditTrailInformation);
         startConversation(context, new EncryptedPillarGetFileRequest(context));
     }
+
 }

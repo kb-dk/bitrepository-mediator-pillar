@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
+import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.pillaraccess.AccessPillarFactory;
 import dk.kb.bitrepository.mediator.pillaraccess.clients.GetFileClient;
@@ -52,7 +53,7 @@ public class GetFileHandler {
             log.info("Getting file from pillar.");
             fileBytes = getFileFromPillar();
         }
-        // TODO: Remember getPartialFile
+        // TODO: Remember getPartialFile CAN USE LOCAL
         // TODO: Check local files, assume we have checked local database before calling this method
     }
 
@@ -81,7 +82,7 @@ public class GetFileHandler {
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromSpecificPillarTest";
 
-        SecurityManager securityManager = null;
+        SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
         /* FIXME: Missing securityManager
         String id = settings.getReferenceSettings().getIntegrityServiceSettings().getID();
         securityManager = SecurityManagerUtil.getSecurityManager(settings, Paths.get(privateKeyFile), id); */
