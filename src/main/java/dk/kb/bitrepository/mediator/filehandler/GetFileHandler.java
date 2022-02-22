@@ -43,17 +43,17 @@ public class GetFileHandler {
     }
 
     public void performGetFile() {
-        byte[] fileBytes = null;
-        if (filePart == null) {
-            log.debug("Attempting to find file locally.");
-            fileBytes = checkLocalStorageForFile();
-            // TODO: Upload to URL (?)
-        }
+        log.debug("Attempting to find file locally.");
+        byte[] fileBytes = checkLocalStorageForFile();
+        // TODO: Upload to URL (?)
         if (fileBytes == null) {
-            log.info("Getting file from pillar.");
+            log.debug("Getting file from pillar.");
             fileBytes = getFileFromPillar();
         }
-        // TODO: Remember getPartialFile CAN USE LOCAL
+        if (filePart != null) {
+            log.debug("Getting file part");
+            fileBytes = getFilePart(fileBytes);
+        }
         // TODO: Check local files, assume we have checked local database before calling this method
     }
 
@@ -80,19 +80,18 @@ public class GetFileHandler {
         AccessPillarFactory pillarAccess = AccessPillarFactory.getInstance();
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
-        String auditTrailInformation = "AuditTrailInfo for getFileFromSpecificPillarTest";
-
+        String auditTrailInformation = "AuditTrailInfo for getFileFromPillar";
         SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
-        /* FIXME: Missing securityManager
-        String id = settings.getReferenceSettings().getIntegrityServiceSettings().getID();
-        securityManager = SecurityManagerUtil.getSecurityManager(settings, Paths.get(privateKeyFile), id); */
-        //TODO: Use this: fileUrl = extractUrl(fileID); instead of getUrlForResult(); ?
 
         GetFileClient client = pillarAccess.createGetFileClient(settings, securityManager, context.getClientID());
         client.getFileFromEncryptedPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
                 context.getUrlForResult(), eventHandler, auditTrailInformation);
-        // TODO: Get response from the URL 
+        // TODO: Get response from the URL AND decrypt it before returning the bytes? (If locally written then run decrypt file)
         return new byte[0];
+    }
+
+    private byte[] getFilePart(byte[] fileBytes) {
+        return null;
     }
 
     private void handleStateAndJobDoneHandler() {
