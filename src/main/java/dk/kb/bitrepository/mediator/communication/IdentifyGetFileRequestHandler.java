@@ -33,7 +33,6 @@ public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<Identi
         response.setTimeToDeliver(
                 TimeMeasurementUtils.getTimeMeasurementFromMiliseconds(
                         getConfigurations().getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
-
         ResponseInfo irInfo = new ResponseInfo();
         irInfo.setResponseCode(ResponseCode.IDENTIFICATION_POSITIVE);
         irInfo.setResponseText(RESPONSE_FOR_POSITIVE_IDENTIFICATION);

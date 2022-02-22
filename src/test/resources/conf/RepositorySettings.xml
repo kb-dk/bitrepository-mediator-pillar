@@ -26,17 +26,16 @@
   <!-- The list of collection in this repository -->
   <Collections>
     <Collection>
-      <ID>TestCollection1</ID>
-        <!--List of pillars that belongs in the collection. Clients will only expect answers from
-        pillars listed here.
-      -->
+      <ID>COLLECTION_ID</ID>
+      <!--List of pillars that belongs in the collection. Clients will only expect answers from
+      pillars listed here.
+    -->
       <PillarIDs>
         <PillarID>TestPillar1</PillarID>
-        <PillarID>TestPillar2</PillarID>
       </PillarIDs>
     </Collection>
     <Collection>
-      <ID>TestCollection2</ID>
+      <ID>COLLECTION_ID2</ID>
       <PillarIDs>
         <PillarID>TestPillar1</PillarID>
       </PillarIDs>
@@ -85,7 +84,7 @@
     -->
     <AlarmDestination>topic://dummy-collection-id.alarms</AlarmDestination>
     <MessageBusConfiguration>
-    <!-- Identifier for the message bus configuration -->
+      <!-- Identifier for the message bus configuration -->
       <Name>Local ActiveMQ</Name>
       <!--
         The URL for connecting to the messagebus (network). For encrypted communication with 
@@ -151,15 +150,14 @@
 
   <!-- Specific settings for Status monitoring -->
   <GetStatusSettings>
-      <!-- 
-        List of components expected to deliver status information 
-        Only components listed here will be asked for status information. 
-      -->
-      <NonPillarContributorIDs>pillar1</NonPillarContributorIDs>
-      <NonPillarContributorIDs>pillar2</NonPillarContributorIDs>
-      <NonPillarContributorIDs>alarm-service</NonPillarContributorIDs>
-      <NonPillarContributorIDs>integrity-service</NonPillarContributorIDs>
-      <NonPillarContributorIDs>audittrail-service</NonPillarContributorIDs>
+    <!--
+      List of components expected to deliver status information
+      Only components listed here will be asked for status information.
+    -->
+    <NonPillarContributorIDs>pillar1</NonPillarContributorIDs>
+    <NonPillarContributorIDs>alarm-service</NonPillarContributorIDs>
+    <NonPillarContributorIDs>integrity-service</NonPillarContributorIDs>
+    <NonPillarContributorIDs>audittrail-service</NonPillarContributorIDs>
   </GetStatusSettings>
 
   <!-- 
@@ -221,7 +219,7 @@
         is valid. 
   -->
   <PermissionSet>
-     <Permission>
+    <Permission>
       <Description>Messagebus and HTTPS server certificate</Description>
       <Certificate>
         <CertificateData>
@@ -249,5 +247,5 @@
         <Operation>All</Operation>
       </OperationPermission>
     </Permission>
-</PermissionSet>
+  </PermissionSet>
 </RepositorySettings>

@@ -86,6 +86,7 @@ public class GetFileHandler {
         GetFileClient client = pillarAccess.createGetFileClient(settings, securityManager, context.getClientID());
         client.getFileFromEncryptedPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
                 context.getUrlForResult(), eventHandler, auditTrailInformation);
+
         // TODO: Get response from the URL AND decrypt it before returning the bytes? (If locally written then run decrypt file)
         return new byte[0];
     }
@@ -95,6 +96,6 @@ public class GetFileHandler {
     }
 
     private void handleStateAndJobDoneHandler() {
-        // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
+        // TODO: Implement : update state, let JobHandler know the job is done (?)
     }
 }
