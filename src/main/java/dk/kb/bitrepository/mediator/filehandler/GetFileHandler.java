@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
+import static org.bitrepository.client.eventhandler.OperationEvent.OperationEventType;
 
 public class GetFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
@@ -31,6 +32,7 @@ public class GetFileHandler {
     private final Path encryptedFilePath;
     private final ChecksumDataForFileTYPE checksumData;
     private final CryptoStrategy crypto;
+    private CompleteEventAwaiter eventHandler;
 
     public GetFileHandler(GetFileConversationContext context, ChecksumDataForFileTYPE checksumData, CryptoStrategy crypto) {
         this.context = context;
@@ -48,13 +50,26 @@ public class GetFileHandler {
         // TODO: Upload to URL (?)
         if (fileBytes == null) {
             log.debug("Getting file from pillar.");
-            fileBytes = getFileFromPillar();
+            getFileFromPillar();
+            OperationEventType eventType = eventHandler.getFinish().getEventType();
+            while (true) {
+                if (!eventType.equals(OperationEventType.PROGRESS)) break;
+            }
+            if (eventType.equals(OperationEventType.FAILED)) {
+                return;
+            }
+            if (eventType.equals(OperationEventType.COMPLETE)) {
+                Path filePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+                //fileExchange.getFile(new File(filePath), fileURL.toExternalForm());
+                //fileBytes = readBytesFromFile(filePath);
+            }
+
         }
         if (filePart != null) {
             log.debug("Getting file part");
             fileBytes = getFilePart(fileBytes);
         }
-        // TODO: Check local files, assume we have checked local database before calling this method
+        //TODO: handle the bytes either as a Response or delegate to JobHandler?
     }
 
     private byte[] checkLocalStorageForFile() {
@@ -75,11 +90,11 @@ public class GetFileHandler {
         return null;
     }
 
-    private byte[] getFileFromPillar() {
+    private void getFileFromPillar() {
         Settings settings = context.getSettings();
         AccessComponentFactory pillarAccess = AccessComponentFactory.getInstance();
         OutputHandler output = new DefaultOutputHandler(getClass());
-        CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
+        eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
 
@@ -92,9 +107,7 @@ public class GetFileHandler {
             client.getFileFromSpecificPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
                     context.getUrlForResult(), context.getContributors().iterator().next(), eventHandler, auditTrailInformation);
         }
-
         // TODO: Get response from the URL AND decrypt it before returning the bytes? (If locally written then run decrypt file)
-        return new byte[0];
     }
 
     private byte[] getFilePart(byte[] fileBytes) {

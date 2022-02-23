@@ -42,6 +42,8 @@ package dk.kb.bitrepository.mediator.pillaraccess.factories;
 import org.bitrepository.bitrepositoryelements.FilePart;
 import org.bitrepository.bitrepositorymessages.*;
 
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
+
 /**
  * Constructs the GetFile specific messages.
  * <p>
@@ -57,7 +59,7 @@ public class TestGetFileMessageFactory extends ClientTestMessageFactory {
         IdentifyPillarsForGetFileRequest identifyPillarsForGetFileRequest = new IdentifyPillarsForGetFileRequest();
         initializeMessageDetails(identifyPillarsForGetFileRequest);
         identifyPillarsForGetFileRequest.setCorrelationID(CORRELATION_ID_DEFAULT);
-        identifyPillarsForGetFileRequest.setFileID(FILE_ID_DEFAULT);
+        identifyPillarsForGetFileRequest.setFileID(FILE_ID);
         return identifyPillarsForGetFileRequest;
     }
 
@@ -104,7 +106,7 @@ public class TestGetFileMessageFactory extends ClientTestMessageFactory {
         GetFileRequest getFileRequest = new GetFileRequest();
         initializeMessageDetails(getFileRequest);
         getFileRequest.setCorrelationID(CORRELATION_ID_DEFAULT);
-        getFileRequest.setFileID(FILE_ID_DEFAULT);
+        getFileRequest.setFileID(FILE_ID);
         getFileRequest.setPillarID(pillarID);
         getFileRequest.setDestination(toTopic);
         getFileRequest.setFrom(from);

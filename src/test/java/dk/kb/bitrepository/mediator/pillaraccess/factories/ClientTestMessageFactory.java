@@ -5,16 +5,16 @@
  * Copyright (C) 2010 - 2012 The State and University Library, The Royal Library and The State Archives, Denmark
  * %%
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as 
- * published by the Free Software Foundation, either version 2.1 of the 
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2.1 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public 
+ *
+ * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
@@ -37,10 +37,9 @@ public abstract class ClientTestMessageFactory extends TestMessageFactory {
     //ToDo All default messages should be converted to be loaded from the ExampleMessageFactory. This means all the
     // default attributes is specified through the example messages and the constants below can be removed
     protected static final String CORRELATION_ID_DEFAULT = "CorrelationID";
-    public static final String FILE_ID_DEFAULT = "default-test-file.txt";
 
     protected static final TimeMeasureUnit TIME_MEASURE_UNIT_DEFAULT =
-        TimeMeasureUnit.MILLISECONDS;
+            TimeMeasureUnit.MILLISECONDS;
     protected static final BigInteger TIME_MEASURE_VALUE_DEFAULT = BigInteger.valueOf(1000L);
     protected static final ResponseCode RESPONSE_CODE_DEFAULT = ResponseCode.OPERATION_ACCEPTED_PROGRESS;
     protected static final ResponseCode IDENTIFY_RESPONSE_CODE_DEFAULT = ResponseCode.IDENTIFICATION_POSITIVE;
@@ -54,6 +53,7 @@ public abstract class ClientTestMessageFactory extends TestMessageFactory {
     }
 
     protected static final ResponseInfo PROGRESS_INFO_DEFAULT = new ResponseInfo();
+
     static {
         PROGRESS_INFO_DEFAULT.setResponseCode(RESPONSE_CODE_DEFAULT);
         PROGRESS_INFO_DEFAULT.setResponseText("First test progress response message");
