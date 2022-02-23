@@ -24,9 +24,10 @@
  */
 package dk.kb.bitrepository.mediator.pillaraccess;
 
-import dk.kb.bitrepository.mediator.pillaraccess.clients.GetFileClient;
 import org.bitrepository.access.getaudittrails.AuditTrailClient;
 import org.bitrepository.access.getchecksums.GetChecksumsClient;
+import org.bitrepository.access.getfile.ConversationBasedGetFileClient;
+import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.access.getfileids.GetFileIDsClient;
 import org.bitrepository.access.getstatus.GetStatusClient;
 import org.bitrepository.client.conversation.mediator.ConversationMediatorManager;
@@ -72,7 +73,7 @@ public final class AccessPillarFactory {
      * @return A GetFileClient.
      */
     public GetFileClient createGetFileClient(Settings settings, SecurityManager securityManager, String clientID) {
-        return new GetFileConversation(
+        return new ConversationBasedGetFileClient(
                 ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager),
                 ConversationMediatorManager.getConversationMediator(settings, securityManager),
                 settings, clientID);

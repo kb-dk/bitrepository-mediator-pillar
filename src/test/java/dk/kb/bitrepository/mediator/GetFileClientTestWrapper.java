@@ -24,7 +24,7 @@
  */
 package dk.kb.bitrepository.mediator;
 
-import dk.kb.bitrepository.mediator.pillaraccess.clients.GetFileClient;
+import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.bitrepositoryelements.FilePart;
 import org.bitrepository.client.eventhandler.EventHandler;
 
@@ -42,8 +42,15 @@ public class GetFileClientTestWrapper implements GetFileClient {
 
 
     @Override
-    public void getFileFromEncryptedPillar(String collectionID, String fileID, FilePart filePart, URL uploadUrl,
-                                           EventHandler eventHandler, String auditTrailInformation) {
-        createGetFileClient.getFileFromEncryptedPillar(collectionID, fileID, filePart, uploadUrl, eventHandler, auditTrailInformation);
+    public void getFileFromFastestPillar(String collectionID, String fileID, FilePart filePart, URL uploadUrl, EventHandler eventHandler,
+                                         String auditTrailInformation) {
+        createGetFileClient.getFileFromFastestPillar(collectionID, fileID, filePart, uploadUrl, eventHandler, auditTrailInformation);
+    }
+
+    @Override
+    public void getFileFromSpecificPillar(String collectionID, String fileID, FilePart filePart, URL uploadUrl, String pillarID,
+                                          EventHandler eventHandler, String auditTrailInformation) {
+        createGetFileClient.getFileFromSpecificPillar(collectionID, fileID, filePart, uploadUrl, pillarID, eventHandler,
+                auditTrailInformation);
     }
 }

@@ -3,7 +3,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.pillaraccess.AccessPillarFactory;
-import dk.kb.bitrepository.mediator.pillaraccess.clients.GetFileClient;
+import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.access.getfile.conversation.GetFileConversationContext;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.FilePart;
@@ -68,8 +68,8 @@ public class GetFileHandler {
             byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
             localBytes = crypto.decrypt(encryptedBytes);
         }
-        if (compareChecksums(localBytes, checksumData.getChecksumSpec(), new String(checksumData.getChecksumValue(),
-                Charset.defaultCharset()))) {
+        if (compareChecksums(localBytes, checksumData.getChecksumSpec(),
+                new String(checksumData.getChecksumValue(), Charset.defaultCharset()))) {
             return localBytes;
         }
         return null;
@@ -80,12 +80,18 @@ public class GetFileHandler {
         AccessPillarFactory pillarAccess = AccessPillarFactory.getInstance();
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
-        String auditTrailInformation = "AuditTrailInfo for getFileFromPillar";
+        String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
 
         GetFileClient client = pillarAccess.createGetFileClient(settings, securityManager, context.getClientID());
-        client.getFileFromEncryptedPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
-                context.getUrlForResult(), eventHandler, auditTrailInformation);
+
+        if (context.getContributors().size() > 1) {
+            client.getFileFromFastestPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
+                    context.getUrlForResult(), eventHandler, auditTrailInformation);
+        } else {
+            client.getFileFromSpecificPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
+                    context.getUrlForResult(), context.getContributors().iterator().next(), eventHandler, auditTrailInformation);
+        }
 
         // TODO: Get response from the URL AND decrypt it before returning the bytes? (If locally written then run decrypt file)
         return new byte[0];

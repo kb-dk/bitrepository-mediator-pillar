@@ -1,7 +1,9 @@
 package dk.kb.bitrepository.mediator.pillaraccess;
 
 import dk.kb.bitrepository.mediator.*;
-import dk.kb.bitrepository.mediator.pillaraccess.clients.GetFileClient;
+import org.bitrepository.access.getfile.ConversationBasedGetFileClient;
+import org.bitrepository.access.getfile.GetFileClient;
+import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
 import org.bitrepository.client.conversation.mediator.CollectionBasedConversationMediator;
 import org.bitrepository.client.conversation.mediator.ConversationMediator;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
@@ -77,8 +79,9 @@ public class TestGetFileConversation {
     @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
     public void verifyGetFileClientFromFactory() {
         assertTrue(AccessPillarFactory.getInstance()
-                        .createGetFileClient(settings, securityManager, settings.getComponentID()) instanceof GetFileConversation,
-                "The default GetFileClient from the Access factory should be of the type '" + GetFileConversation.class.getName() + "'.");
+                        .createGetFileClient(settings, securityManager, settings.getComponentID()) instanceof ConversationBasedGetFileClient,
+                "The default GetFileClient from the Access factory should be of the type '" +
+                        ConversationBasedGetFileClient.class.getName() + "'.");
     }
 
     @Test
@@ -124,10 +127,11 @@ public class TestGetFileConversation {
         receiverManager.addReceiver(pillarReceiver);
         receiverManager.startListeners();
 
-        client.getFileFromEncryptedPillar(collectionID, FILE_ID, null, fileURL, eventHandler,
+        client.getFileFromSpecificPillar(collectionID, FILE_ID, null, fileURL, encryptedPillarID, eventHandler,
                 "AuditTrailInfo for getFileFromSpecificPillarTest");
-        EncryptedPillarGetFileRequest receivedIdentifyRequestMessage = pillarReceiver.waitForMessage(EncryptedPillarGetFileRequest.class);
-        assertEquals(receivedIdentifyRequestMessage.getContext().getCollectionID(), collectionID);
+        IdentifyPillarsForGetFileRequest receivedIdentifyRequestMessage =
+                pillarReceiver.waitForMessage(IdentifyPillarsForGetFileRequest.class);
+        assertEquals(receivedIdentifyRequestMessage.getCollectionID(), collectionID);
     }
 
     private void putFileLocally(FileExchange fileExchange) throws IOException {
@@ -151,7 +155,8 @@ public class TestGetFileConversation {
     }
 
     private GetFileClient createGetFileClient(ConversationMediator conversationMediator) {
-        return new GetFileClientTestWrapper(new GetFileConversation(messageBus, conversationMediator, settings, settings.getComponentID()));
+        return new GetFileClientTestWrapper(
+                new ConversationBasedGetFileClient(messageBus, conversationMediator, settings, settings.getComponentID()));
     }
 
     private static SecurityManager createSecurityManager() {
