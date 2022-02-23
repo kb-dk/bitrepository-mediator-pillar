@@ -64,7 +64,7 @@ public class GetFileHandlerIT {
         GetFileConversationContext context = new GetFileConversationContext(COLLECTION_ID, FILE_ID, null, null,
                 null, settings, null,
                 settings.getComponentID(), null, "GetFileHandler Test");
-        GetFileHandler getFileHandler = new GetFileHandler(context, checksumDataForFileTYPE, crypto);
+        GetFileHandler getFileHandler = new GetFileHandler(context, checksumDataForFileTYPE, crypto, null);
         assertDoesNotThrow(getFileHandler::performGetFile);
 
         //Test with only encrypted file

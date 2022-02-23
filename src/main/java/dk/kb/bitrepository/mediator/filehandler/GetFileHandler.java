@@ -12,10 +12,13 @@ import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
 import org.bitrepository.common.settings.Settings;
+import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
@@ -27,49 +30,61 @@ import static org.bitrepository.client.eventhandler.OperationEvent.OperationEven
 public class GetFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final GetFileConversationContext context;
-    private final FilePart filePart;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
     private final ChecksumDataForFileTYPE checksumData;
     private final CryptoStrategy crypto;
+    private final FileExchange fileExchange;
     private CompleteEventAwaiter eventHandler;
 
-    public GetFileHandler(GetFileConversationContext context, ChecksumDataForFileTYPE checksumData, CryptoStrategy crypto) {
+    public GetFileHandler(GetFileConversationContext context, ChecksumDataForFileTYPE checksumData, CryptoStrategy crypto,
+                          FileExchange fileExchange) {
         this.context = context;
-        this.filePart = context.getFilePart();
         this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.checksumData = checksumData;
         // Crypto needs to be initialized with the IV and Salt that was used to decrypt the file
         this.crypto = crypto;
+        this.fileExchange = fileExchange;
     }
 
     public void performGetFile() {
+        FilePart filePart = context.getFilePart();
+
         log.debug("Attempting to find file locally.");
         byte[] fileBytes = checkLocalStorageForFile();
-        // TODO: Upload to URL (?)
         if (fileBytes == null) {
-            log.debug("Getting file from pillar.");
+            log.debug("Attempting to get file from pillar.");
             getFileFromPillar();
-            OperationEventType eventType = eventHandler.getFinish().getEventType();
-            while (true) {
-                if (!eventType.equals(OperationEventType.PROGRESS)) break;
-            }
-            if (eventType.equals(OperationEventType.FAILED)) {
+            if (waitForPillarToHandleRequest()) {
+                Path filePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+                try {
+                    fileExchange.getFile(new File(filePath.toString()), fileExchange.getURL(context.getFileID()).toExternalForm());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                fileBytes = readBytesFromFile(filePath);
+            } else {
+                log.error("Error occurred on pillar.");
                 return;
             }
-            if (eventType.equals(OperationEventType.COMPLETE)) {
-                Path filePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
-                //fileExchange.getFile(new File(filePath), fileURL.toExternalForm());
-                //fileBytes = readBytesFromFile(filePath);
-            }
-
         }
         if (filePart != null) {
             log.debug("Getting file part");
             fileBytes = getFilePart(fileBytes);
         }
         //TODO: handle the bytes either as a Response or delegate to JobHandler?
+    }
+
+    private boolean waitForPillarToHandleRequest() {
+        OperationEventType eventType = eventHandler.getFinish().getEventType();
+        while (true) {
+            if (!eventType.equals(OperationEventType.PROGRESS)) break;
+        }
+        if (eventType.equals(OperationEventType.FAILED)) {
+            return false;
+        }
+        return eventType.equals(OperationEventType.COMPLETE);
     }
 
     private byte[] checkLocalStorageForFile() {
