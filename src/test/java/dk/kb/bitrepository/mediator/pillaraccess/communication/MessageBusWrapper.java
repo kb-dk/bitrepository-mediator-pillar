@@ -22,7 +22,7 @@
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
  */
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.pillaraccess.communication;
 
 import org.bitrepository.bitrepositorymessages.Message;
 import org.bitrepository.protocol.messagebus.MessageBus;

@@ -22,7 +22,7 @@
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
  */
-package dk.kb.bitrepository.mediator;
+package dk.kb.bitrepository.mediator.pillaraccess.factories;
 
 import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.bitrepositoryelements.FilePart;

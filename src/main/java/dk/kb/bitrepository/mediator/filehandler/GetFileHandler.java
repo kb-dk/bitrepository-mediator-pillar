@@ -2,7 +2,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.pillaraccess.AccessPillarFactory;
+import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.access.getfile.conversation.GetFileConversationContext;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -77,7 +77,7 @@ public class GetFileHandler {
 
     private byte[] getFileFromPillar() {
         Settings settings = context.getSettings();
-        AccessPillarFactory pillarAccess = AccessPillarFactory.getInstance();
+        AccessComponentFactory pillarAccess = AccessComponentFactory.getInstance();
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";

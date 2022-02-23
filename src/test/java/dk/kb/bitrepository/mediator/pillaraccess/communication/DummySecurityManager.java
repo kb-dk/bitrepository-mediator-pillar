@@ -19,8 +19,9 @@
  * <http://www.gnu.org/licenses/lgpl-2.1.html>.
  * #L%
  */
-package org.bitrepository.protocol.security;
+package dk.kb.bitrepository.mediator.pillaraccess.communication;
 
+import org.bitrepository.protocol.security.SecurityManager;
 import org.bitrepository.protocol.security.exception.CertificateUseException;
 import org.bitrepository.protocol.security.exception.MessageAuthenticationException;
 import org.bitrepository.protocol.security.exception.MessageSigningException;
