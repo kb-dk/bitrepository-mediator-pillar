@@ -50,7 +50,8 @@ public class TestGetFileConversation {
     private static String BASE_FILE_EXCHANGE_DIR;
 
 
-    @BeforeAll public static void setup() throws IOException {
+    @BeforeAll
+    public static void setup() throws IOException {
         setup = new TestingSetup();
         settings = TestSettingsProvider.getSettings("TestPillar1");
         settings.getRepositorySettings().getProtocolSettings()
@@ -64,21 +65,25 @@ public class TestGetFileConversation {
         }
     }
 
-    @AfterAll public static void cleanup() {
+    @AfterAll
+    public static void cleanup() {
         teardownMessageBus();
         cleanupFiles("src/test/" + UNENCRYPTED_FILES_PATH);
         cleanupFiles("src/test/" + ENCRYPTED_FILES_PATH);
         cleanupFiles(BASE_FILE_EXCHANGE_DIR);
     }
 
-    @Test @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
+    @Test
+    @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
     public void verifyGetFileClientFromFactory() {
         assertTrue(AccessPillarFactory.getInstance()
                         .createGetFileClient(settings, securityManager, settings.getComponentID()) instanceof GetFileConversation,
                 "The default GetFileClient from the Access factory should be of the type '" + GetFileConversation.class.getName() + "'.");
     }
 
-    @Test @DisplayName("Test local fileExchange") public void testLocalFileExchange() throws IOException {
+    @Test
+    @DisplayName("Test local fileExchange")
+    public void testLocalFileExchange() throws IOException {
         FileExchange fileExchange = new LocalFileExchange(BASE_FILE_EXCHANGE_DIR);
         putFileLocally(fileExchange);
 
@@ -91,7 +96,9 @@ public class TestGetFileConversation {
         assertTrue(actualFile.delete());
     }
 
-    @Test @DisplayName("Test #GetFileConversation") public void testIdentifyPillarGetFileRequest() throws IOException {
+    @Test
+    @DisplayName("Test #GetFileConversation")
+    public void testIdentifyPillarGetFileRequest() throws IOException {
         String encryptedPillarID = "TestPillar1";
         settings.getRepositorySettings().getCollections().getCollection().get(0).getPillarIDs().getPillarID().clear();
         settings.getRepositorySettings().getCollections().getCollection().get(0).getPillarIDs().getPillarID().add(encryptedPillarID);
