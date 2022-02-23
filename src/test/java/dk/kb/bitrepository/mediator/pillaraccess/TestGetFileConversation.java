@@ -17,6 +17,7 @@ import org.bitrepository.protocol.messagebus.MessageBusManager;
 import org.bitrepository.protocol.security.DummySecurityManager;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.bitrepository.settings.referencesettings.FileExchangeSettings;
+import org.bitrepository.settings.referencesettings.ProtocolType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -97,16 +98,16 @@ public class TestGetFileConversation {
 
         FileExchangeSettings fileExchangeSettings = settings.getReferenceSettings().getFileExchangeSettings();
         fileExchangeSettings.setPath(BASE_FILE_EXCHANGE_DIR);
+        fileExchangeSettings.setProtocolType(ProtocolType.FILE);
         FileExchange fileExchange = new LocalFileExchange(BASE_FILE_EXCHANGE_DIR);
         putFileLocally(fileExchange);
         URL fileURL = fileExchange.getURL(FILE_ID);
 
-        HttpServerConfiguration httpServerConfiguration = new HttpServerConfiguration(fileExchangeSettings);
-        fileURL = httpServerConfiguration.getURL(FILE_ID);
+        //HttpServerConfiguration httpServerConfiguration = new HttpServerConfiguration(fileExchangeSettings);
+        //fileURL = httpServerConfiguration.getURL(FILE_ID);
 
         CollectionBasedConversationMediator conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
 
-        String auditTrailInformation = "AuditTrailInfo for getFileFromSpecificPillarTest";
         GetFileClient client = createGetFileClient(conversationMediator);
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
@@ -116,7 +117,8 @@ public class TestGetFileConversation {
         receiverManager.addReceiver(pillarReceiver);
         receiverManager.startListeners();
 
-        client.getFileFromEncryptedPillar(collectionID, FILE_ID, null, fileURL, eventHandler, auditTrailInformation);
+        client.getFileFromEncryptedPillar(collectionID, FILE_ID, null, fileURL, eventHandler,
+                "AuditTrailInfo for getFileFromSpecificPillarTest");
         EncryptedPillarGetFileRequest receivedIdentifyRequestMessage = pillarReceiver.waitForMessage(EncryptedPillarGetFileRequest.class);
         assertEquals(receivedIdentifyRequestMessage.getContext().getCollectionID(), collectionID);
     }

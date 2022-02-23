@@ -77,12 +77,12 @@
       CollectionDestination, defines the destination topic for broadcast messages within the collection
       I.e. for identify* requests. 
     -->
-    <CollectionDestination>topic://dummy-collection-id</CollectionDestination>
+    <CollectionDestination>topic://COLLECTION_ID</CollectionDestination>
     <!-- 
       AlarmDestination, defines the destination to where alarms are send. This should be a topic, 
       so that multiple components interested in receiving alarms won't steal them from eachother. 
     -->
-    <AlarmDestination>topic://dummy-collection-id.alarms</AlarmDestination>
+    <AlarmDestination>topic://COLLECTION_ID.alarms</AlarmDestination>
     <MessageBusConfiguration>
       <!-- Identifier for the message bus configuration -->
       <Name>Local ActiveMQ</Name>
