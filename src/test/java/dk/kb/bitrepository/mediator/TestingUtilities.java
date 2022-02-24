@@ -1,11 +1,13 @@
 package dk.kb.bitrepository.mediator;
 
+import dk.kb.bitrepository.mediator.pillaraccess.communication.DummySecurityManager;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
+import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,5 +69,9 @@ public class TestingUtilities {
                 log.error("Something went wrong trying to clean up /files/ directory.");
             }
         }
+    }
+
+    public static SecurityManager createSecurityManager() {
+        return new DummySecurityManager();
     }
 }

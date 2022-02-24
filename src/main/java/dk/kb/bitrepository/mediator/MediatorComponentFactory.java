@@ -84,4 +84,8 @@ public class MediatorComponentFactory {
     public static SecurityManager getSecurityManager() {
         return securityManager;
     }
+
+    public static void setSecurityManager(SecurityManager securityManager) {
+        MediatorComponentFactory.securityManager = securityManager;
+    }
 }

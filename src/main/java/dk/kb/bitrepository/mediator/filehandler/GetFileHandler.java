@@ -49,6 +49,7 @@ public class GetFileHandler {
     }
 
     public void performGetFile() {
+
         FilePart filePart = context.getFilePart();
 
         log.debug("Attempting to find file locally.");
@@ -78,12 +79,9 @@ public class GetFileHandler {
 
     private boolean waitForPillarToHandleRequest() {
         OperationEventType eventType = eventHandler.getFinish().getEventType();
-        while (true) {
-            if (!eventType.equals(OperationEventType.PROGRESS)) break;
-        }
-        if (eventType.equals(OperationEventType.FAILED)) {
-            return false;
-        }
+
+        if (eventType.equals(OperationEventType.FAILED)) return false;
+
         return eventType.equals(OperationEventType.COMPLETE);
     }
 
@@ -98,22 +96,21 @@ public class GetFileHandler {
             byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
             localBytes = crypto.decrypt(encryptedBytes);
         }
-        if (compareChecksums(localBytes, checksumData.getChecksumSpec(),
-                new String(checksumData.getChecksumValue(), Charset.defaultCharset()))) {
-            return localBytes;
+        if (localBytes != null) {
+            if (compareChecksums(localBytes, checksumData.getChecksumSpec(),
+                    new String(checksumData.getChecksumValue(), Charset.defaultCharset()))) return localBytes;
         }
         return null;
     }
 
     private void getFileFromPillar() {
         Settings settings = context.getSettings();
-        AccessComponentFactory pillarAccess = AccessComponentFactory.getInstance();
         OutputHandler output = new DefaultOutputHandler(getClass());
         eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
-
-        GetFileClient client = pillarAccess.createGetFileClient(settings, securityManager, context.getClientID());
+        GetFileClient client = AccessComponentFactory.getInstance()
+                .createGetFileClient(settings, securityManager, settings.getComponentID());
 
         if (context.getContributors().size() > 1) {
             client.getFileFromFastestPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
