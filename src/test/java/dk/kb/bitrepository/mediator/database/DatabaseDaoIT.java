@@ -1,10 +1,6 @@
 package dk.kb.bitrepository.mediator.database;
 
-import dk.kb.bitrepository.mediator.MediatorComponentFactory;
-import dk.kb.bitrepository.mediator.TestingSetup;
-import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
-import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
-import org.junit.jupiter.api.AfterEach;
+import dk.kb.bitrepository.mediator.TestingDAO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,23 +15,15 @@ import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test Database Calls")
-public class DatabaseDaoIT {
-    private static DatabaseDAO dao;
+public class DatabaseDaoIT extends TestingDAO {
 
     @BeforeAll
     static void setUp() throws Exception {
-        TestingSetup setup = new TestingSetup();
-        dao = setup.getDao();
-        DatabaseTestUtils.dropTables(setup.getDatabaseConfigurations());
+        initTestingDAO();
+        DatabaseTestUtils.dropTables(databaseConfigurations);
         System.out.println("Database tables has been dropped.");
-        DatabaseTestUtils.createTables(setup.getDatabaseConfigurations());
+        DatabaseTestUtils.createTables(databaseConfigurations);
         System.out.println("Tables have been created.");
-    }
-
-    @AfterEach
-    public void afterEach() {
-        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
     }
 
     @Test

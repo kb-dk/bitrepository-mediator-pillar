@@ -1,8 +1,6 @@
 package dk.kb.bitrepository.mediator.pillaraccess;
 
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
-import dk.kb.bitrepository.mediator.pillaraccess.communication.MessageReceiver;
-import dk.kb.bitrepository.mediator.pillaraccess.communication.MessageReceiverManager;
 import dk.kb.bitrepository.mediator.pillaraccess.factories.GetFileClientTestWrapper;
 import dk.kb.bitrepository.mediator.pillaraccess.factories.TestGetFileMessageFactory;
 import org.bitrepository.access.AccessComponentFactory;
@@ -18,8 +16,6 @@ import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.LocalFileExchange;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -30,27 +26,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestGetFileConversation extends IntegrationFileHandlerTest {
-    @BeforeAll
-    public static void setup() throws IOException {
-        setupSettingsAndFileExchange();
-        setupMessageBus(settings, securityManager);
-    }
-
-    @AfterAll
-    public static void cleanup() {
-        teardownMessageBus();
-        cleanupFiles("src/test/" + UNENCRYPTED_FILES_PATH);
-        cleanupFiles("src/test/" + ENCRYPTED_FILES_PATH);
-        cleanupFiles(BASE_FILE_EXCHANGE_DIR);
-    }
-
     @Test
     @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
     public void verifyGetFileClientFromFactory() {
@@ -84,15 +64,6 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
         GetFileClient client = createGetFileClient(conversationMediator);
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
-
-        MessageReceiverManager receiverManager = new MessageReceiverManager(messageBus);
-        MessageReceiver collectionReceiver = new MessageReceiver(settings.getCollectionDestination());
-        MessageReceiver pillarReceiver = new MessageReceiver(pillarDestinationId);
-        MessageReceiver clientReceiver = new MessageReceiver(settings.getReceiverDestinationID());
-        receiverManager.addReceiver(pillarReceiver);
-        receiverManager.addReceiver(collectionReceiver);
-        receiverManager.addReceiver(clientReceiver);
-        receiverManager.startListeners();
 
         client.getFileFromSpecificPillar(collectionID, FILE_ID, null, fileURL, encryptedPillarID, eventHandler,
                 "AuditTrailInfo for getFileFromSpecificPillarTest");

@@ -1,8 +1,6 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.TestingSetup;
-import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.TestingDAO;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.junit.jupiter.api.*;
@@ -21,20 +19,12 @@ import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
-public class PutFileHandlerIT {
-    private static byte[] fileBytes;
-    private static ChecksumDataForFileTYPE checksumDataForFileTYPE;
-    private static DatabaseDAO dao;
-    private static AESCryptoStrategy crypto;
+public class PutFileHandlerIT extends TestingDAO {
     private static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
 
     @BeforeAll
     static void setup() throws IOException {
-        TestingSetup setup = new TestingSetup();
-        fileBytes = setup.getFileBytes();
-        checksumDataForFileTYPE = setup.getChecksumDataForFileTYPE();
-        dao = setup.getDao();
-        crypto = new AESCryptoStrategy(setup.getCryptoConfigurations().getPassword());
+        initTestingDAO();
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
     }
 

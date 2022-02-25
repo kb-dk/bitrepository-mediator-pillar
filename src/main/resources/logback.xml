@@ -28,6 +28,10 @@
   <!-- Change log level of these specific loggers. -->
   <logger name="com.zaxxer.hikari" level="ERROR"/>
   <logger name="org.bitrepository.common" level="ERROR"/>
+  <logger name="org.apache.activemq.transport" level="ERROR"/>
+  <logger name="org.apache.activemq.broker.jmx.ManagementContext" level="ERROR"/>
+  <logger name="org.apache.activemq.util.ThreadPoolUtils" level="ERROR"/>
+  <logger name="org.apache.activemq.thread.TaskRunnerFactory" level="ERROR"/>
 
   <root level="DEBUG">
     <appender-ref ref="FILE"/>

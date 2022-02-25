@@ -98,7 +98,7 @@
           If no collection ids are defined, then it will be used as default directory for the collections, which
           does not have a specific set of directories defined.              
         -->
-      <CollectionID>TestCollection1</CollectionID>
+      <CollectionID>collection_id</CollectionID>
       
       <!-- 
         Paths to the base directory for file storage and checksum files.

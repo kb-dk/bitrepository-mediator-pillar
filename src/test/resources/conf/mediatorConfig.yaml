@@ -1,5 +1,5 @@
 pillarConfig:
-  mediatorPillarID: "testpillar"
+  mediatorPillarID: "TestMediatorPillar"
   privateMessageDestination: "topic://mediator-test"
 
 cryptoConfig:

@@ -26,7 +26,7 @@
   <!-- The list of collection in this repository -->
   <Collections>
     <Collection>
-      <ID>COLLECTION_ID</ID>
+      <ID>collection_id</ID>
       <!--List of pillars that belongs in the collection. Clients will only expect answers from
       pillars listed here.
     -->
@@ -35,7 +35,7 @@
       </PillarIDs>
     </Collection>
     <Collection>
-      <ID>COLLECTION_ID2</ID>
+      <ID>collection_id_2</ID>
       <PillarIDs>
         <PillarID>TestPillar1</PillarID>
       </PillarIDs>
@@ -77,12 +77,12 @@
       CollectionDestination, defines the destination topic for broadcast messages within the collection
       I.e. for identify* requests. 
     -->
-    <CollectionDestination>topic://COLLECTION_ID</CollectionDestination>
+    <CollectionDestination>topic://collection_id</CollectionDestination>
     <!-- 
       AlarmDestination, defines the destination to where alarms are send. This should be a topic, 
       so that multiple components interested in receiving alarms won't steal them from eachother. 
     -->
-    <AlarmDestination>topic://COLLECTION_ID.alarms</AlarmDestination>
+    <AlarmDestination>topic://collection_id.alarms</AlarmDestination>
     <MessageBusConfiguration>
       <!-- Identifier for the message bus configuration -->
       <Name>Local ActiveMQ</Name>

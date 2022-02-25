@@ -24,7 +24,7 @@ public class DatabaseTestUtils {
     /**
      * Creates the tables by running the script 'create_tables.sql'.
      *
-     * @param testConfig An instance of Configurations, can be created using the TestingSetup class.
+     * @param testConfig An instance of Configurations, can be created using the {@link dk.kb.bitrepository.mediator.TestingDAO} class.
      * @throws SQLException An exception that the SQL was malformed or otherwise corrupt.
      * @throws IOException  An exception thrown if the file was not found, or damaged.
      */
