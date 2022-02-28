@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.pillaraccess.communication.*;
+import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.client.conversation.mediator.CollectionBasedConversationMediator;
 import org.bitrepository.client.conversation.mediator.ConversationMediatorManager;
 import org.bitrepository.common.settings.Settings;
@@ -25,11 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
-import static dk.kb.bitrepository.mediator.TestingUtilities.createSecurityManager;
+import static dk.kb.bitrepository.mediator.TestingUtilities.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationFileHandlerTest extends TestingDAO {
@@ -47,6 +45,9 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static MessageReceiver collectionReceiver;
     protected static MessageReceiver pillarReceiver;
     protected static MessageReceiver clientReceiver;
+    protected static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
+    protected static String ENCRYPTED_FILES_PATH = "src/test/resources/encrypted-files";
+    protected static String UNENCRYPTED_FILES_PATH = "src/test/resources/files";
 
     @BeforeAll
     protected static void initSuite() throws IOException {
@@ -55,6 +56,9 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         setupMessageBus(settings, securityManager);
         setupMessageReceiverManager();
         crypto = new AESCryptoStrategy(cryptoConfigurations.getPassword());
+        checksumDataWithWrongChecksum = loadIncorrectChecksumData();
+        configurations.getPillarConfig().setEncryptedFilesPath(ENCRYPTED_FILES_PATH);
+        configurations.getPillarConfig().setUnencryptedFilesPath(UNENCRYPTED_FILES_PATH);
     }
 
     @AfterEach

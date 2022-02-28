@@ -1,41 +1,22 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.TestingDAO;
+import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
-import static dk.kb.bitrepository.mediator.TestingUtilities.loadIncorrectChecksumData;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
-public class PutFileHandlerIT extends TestingDAO {
-    private static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
-
-    @BeforeAll
-    static void setup() throws IOException {
-        initTestingDAO();
-        checksumDataWithWrongChecksum = loadIncorrectChecksumData();
-    }
-
-    @AfterEach
-    public void cleanup() {
-        cleanupFiles(UNENCRYPTED_FILES_PATH);
-        cleanupFiles(ENCRYPTED_FILES_PATH);
-        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
-        dao.delete(COLLECTION_ID, FILE_ID, FILES_TABLE);
-    }
-
+public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test PutFile method")
     public void testPutFile() throws MismatchingChecksumsException {

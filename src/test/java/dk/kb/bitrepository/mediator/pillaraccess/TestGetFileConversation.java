@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestGetFileConversation extends IntegrationFileHandlerTest {
@@ -47,9 +46,8 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
         putFileLocally(fileExchange);
 
         URL fileURL = fileExchange.getURL(FILE_ID);
-        fileExchange.getFile(new File("src/test/" + ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
-        assertEquals("lorem ipsum",
-                Files.readString(Path.of("src/test/" + ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
+        fileExchange.getFile(new File(ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
+        assertEquals("lorem ipsum", Files.readString(Path.of(ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
 
         File actualFile = new File(fileURL.getFile());
         assertTrue(actualFile.delete());
@@ -67,8 +65,8 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
 
         client.getFileFromSpecificPillar(collectionID, FILE_ID, null, fileURL, encryptedPillarID, eventHandler,
                 "AuditTrailInfo for getFileFromSpecificPillarTest");
-        IdentifyPillarsForGetFileRequest receivedIdentifyRequestMessage =
-                collectionReceiver.waitForMessage(IdentifyPillarsForGetFileRequest.class);
+        IdentifyPillarsForGetFileRequest receivedIdentifyRequestMessage = collectionReceiver.waitForMessage(
+                IdentifyPillarsForGetFileRequest.class);
         assertEquals(collectionID, receivedIdentifyRequestMessage.getCollectionID());
         assertEquals(FILE_ID, receivedIdentifyRequestMessage.getFileID());
         assertNotNull(receivedIdentifyRequestMessage.getCorrelationID());
@@ -79,9 +77,8 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
 
         TestGetFileMessageFactory messageFactory = new TestGetFileMessageFactory(settings.getComponentID());
         //IdentifyPillarsForGetFileResponse tes = clientReceiver.waitForMessage(IdentifyPillarsForGetFileResponse.class);
-        IdentifyPillarsForGetFileResponse receivedIdentifyResponse =
-                messageFactory.createIdentifyPillarsForGetFileResponse(receivedIdentifyRequestMessage, encryptedPillarID,
-                        pillarDestinationId);
+        IdentifyPillarsForGetFileResponse receivedIdentifyResponse = messageFactory.createIdentifyPillarsForGetFileResponse(
+                receivedIdentifyRequestMessage, encryptedPillarID, pillarDestinationId);
         assertEquals(ResponseCode.IDENTIFICATION_POSITIVE, receivedIdentifyResponse.getResponseInfo().getResponseCode());
         assertEquals(encryptedPillarID, receivedIdentifyResponse.getPillarID());
         assertEquals(FILE_ID, receivedIdentifyResponse.getFileID());
@@ -91,16 +88,15 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
         //assertEquals(testEventHandler.waitForEvent().getEventType(), OperationEvent.OperationEventType.COMPONENT_IDENTIFIED);
         //assertEquals(testEventHandler.waitForEvent().getEventType(), OperationEvent.OperationEventType.IDENTIFICATION_COMPLETE);
         //assertEquals(testEventHandler.waitForEvent().getEventType(), OperationEvent.OperationEventType.REQUEST_SENT);
-        GetFileProgressResponse getFileProgressResponse = messageFactory.createGetFileProgressResponse(
-                receivedGetFileRequest, encryptedPillarID, pillarDestinationId);
+        GetFileProgressResponse getFileProgressResponse = messageFactory.createGetFileProgressResponse(receivedGetFileRequest,
+                encryptedPillarID, pillarDestinationId);
         messageBus.sendMessage(getFileProgressResponse);
-        GetFileFinalResponse completeMsg = messageFactory.createGetFileFinalResponse(
-                receivedGetFileRequest, encryptedPillarID, pillarDestinationId);
+        GetFileFinalResponse completeMsg = messageFactory.createGetFileFinalResponse(receivedGetFileRequest, encryptedPillarID,
+                pillarDestinationId);
         messageBus.sendMessage(completeMsg);
         assertEquals(fileURL.toExternalForm(), completeMsg.getFileAddress());
-        fileExchange.getFile(new File("src/test/" + ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
-        assertEquals("lorem ipsum",
-                Files.readString(Path.of("src/test/" + ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
+        fileExchange.getFile(new File(ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
+        assertEquals("lorem ipsum", Files.readString(Path.of(ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
 
         //assertEquals(testEventHandler.waitForEvent().getEventType(), OperationEventType.COMPONENT_COMPLETE);
         //assertEquals(testEventHandler.waitForEvent().getEventType(), OperationEventType.COMPLETE);

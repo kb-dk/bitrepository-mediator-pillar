@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.MediatorComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
@@ -22,6 +21,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
+import static dk.kb.bitrepository.mediator.MediatorComponentFactory.getSecurityManager;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
@@ -40,8 +40,11 @@ public class GetFileHandler {
     public GetFileHandler(GetFileConversationContext context, ChecksumDataForFileTYPE checksumData, CryptoStrategy crypto,
                           FileExchange fileExchange) {
         this.context = context;
-        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
-        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+
+        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(),
+                context.getFileID());
+        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(),
+                context.getFileID());
         this.checksumData = checksumData;
         // Crypto needs to be initialized with the IV and Salt that was used to decrypt the file
         this.crypto = crypto;
@@ -108,7 +111,7 @@ public class GetFileHandler {
         OutputHandler output = new DefaultOutputHandler(getClass());
         eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
-        SecurityManager securityManager = MediatorComponentFactory.getSecurityManager();
+        SecurityManager securityManager = getSecurityManager();
         GetFileClient client = AccessComponentFactory.getInstance()
                 .createGetFileClient(settings, securityManager, settings.getComponentID());
 

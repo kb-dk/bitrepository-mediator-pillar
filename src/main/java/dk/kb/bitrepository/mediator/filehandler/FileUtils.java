@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -47,7 +46,7 @@ public class FileUtils {
             log.debug("File was moved from {} to {} folder.", tempFilePath, filePath);
             return true;
         } catch (IOException e) {
-            log.error("Something went wrong when writing the file.", e);
+            log.error("Could not write to the specified file.", e);
             return false;
         }
     }
@@ -81,10 +80,13 @@ public class FileUtils {
      * If this is not the case, then the directories will be created.
      */
     private static void ensureDirectoryExists(String... directories) {
-        for (String directory : directories) {
-            if (!Files.exists(Path.of(directory))) {
-                if (new File(directory).mkdirs()) {
-                    log.debug("Created directory {}", directory);
+        for (String dir : directories) {
+            if (!Files.exists(Path.of(dir))) {
+                try {
+                    Files.createDirectories(Path.of(dir));
+                    log.debug("Created directory {}", dir);
+                } catch (IOException e) {
+                    log.error("Could not create directory {}", dir, e);
                 }
             }
         }

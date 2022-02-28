@@ -15,7 +15,6 @@ import java.util.Collections;
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,7 +45,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     public void testGetFileHandlerUsingPillarFile() throws IOException {
         putFileLocally(fileExchange);
 
-        GetFileConversationContext context = new GetFileConversationContext(COLLECTION_ID, FILE_ID, fileExchange.getURL(FILE_ID), null,
+        GetFileConversationContext context = new GetFileConversationContext(COLLECTION_ID, FILE_ID, fileURL, null,
                 Collections.singleton(encryptedPillarID), settings, null, settings.getComponentID(), null, "");
         GetFileHandler handler = new GetFileHandler(context, checksumDataForFileTYPE, crypto, fileExchange);
         handler.performGetFile();

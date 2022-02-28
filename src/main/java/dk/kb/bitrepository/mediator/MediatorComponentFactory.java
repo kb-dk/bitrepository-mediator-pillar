@@ -6,6 +6,7 @@ import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import dk.kb.bitrepository.mediator.utils.configurations.ConfigurationsLoader;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
+import dk.kb.bitrepository.mediator.utils.configurations.PillarConfigurations;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
@@ -19,6 +20,7 @@ import java.io.IOException;
 public class MediatorComponentFactory {
     private static MediatorComponentFactory instance;
     private static SecurityManager securityManager = null;
+    private static PillarConfigurations pillarConfigurations;
 
     private MediatorComponentFactory() {}
 
@@ -36,13 +38,10 @@ public class MediatorComponentFactory {
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
         Configurations configs = loadMediatorConfigurations(pathToConfiguration);
         Settings refPillarSettings = configs.getRefPillarSettings();
-
         securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
-        ResponseDispatcher responseDispatcher = new ResponseDispatcher(
-                refPillarSettings,
-                configs.getPillarConfig().getPrivateMessageDestination(),
-                messageBus);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(refPillarSettings,
+                configs.getPillarConfig().getPrivateMessageDestination(), messageBus);
         DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
         PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
 
@@ -52,10 +51,13 @@ public class MediatorComponentFactory {
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
         ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
         Configurations configs = configLoader.getConfigurations();
+        pillarConfigurations = configs.getPillarConfig();
+
         String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
         SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), mediatorPillarID);
         Settings refPillarSettings = settingsProvider.getSettings();
         configs.setRefPillarSettings(refPillarSettings);
+
         return configs;
     }
 
@@ -71,9 +73,8 @@ public class MediatorComponentFactory {
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();
         OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);
-        return new BasicSecurityManager(refPillarSettings.getRepositorySettings(), pathToPrivateKeyFile,
-                authenticator, signer, authorizer, permissionStore,
-                refPillarSettings.getComponentID());
+        return new BasicSecurityManager(refPillarSettings.getRepositorySettings(), pathToPrivateKeyFile, authenticator, signer, authorizer,
+                permissionStore, refPillarSettings.getComponentID());
     }
 
     public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
@@ -83,6 +84,14 @@ public class MediatorComponentFactory {
 
     public static SecurityManager getSecurityManager() {
         return securityManager;
+    }
+
+    public static PillarConfigurations getPillarConfigurations() {
+        return pillarConfigurations;
+    }
+
+    public static void setPillarConfigurations(PillarConfigurations pillarConfigurations) {
+        MediatorComponentFactory.pillarConfigurations = pillarConfigurations;
     }
 
     public static void setSecurityManager(SecurityManager securityManager) {
