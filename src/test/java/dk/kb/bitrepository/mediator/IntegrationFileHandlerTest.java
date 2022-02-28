@@ -164,6 +164,4 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         f.deleteOnExit();
         return f;
     }
-
-
 }

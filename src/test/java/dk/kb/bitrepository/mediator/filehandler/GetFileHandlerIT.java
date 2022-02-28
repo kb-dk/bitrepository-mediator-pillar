@@ -54,5 +54,22 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
                 IdentifyPillarsForGetFileRequest.class);
         assertEquals(collectionID, receivedIdentifyRequestMessage.getCollectionID());
         assertEquals(FILE_ID, receivedIdentifyRequestMessage.getFileID());
+//
+//        TestGetFileMessageFactory messageFactory = new TestGetFileMessageFactory(settings.getComponentID());
+//        IdentifyPillarsForGetFileResponse receivedIdentifyResponse = messageFactory.createIdentifyPillarsForGetFileResponse(
+//                receivedIdentifyRequestMessage, encryptedPillarID, pillarDestinationId);
+//        messageBus.sendMessage(receivedIdentifyResponse);
+//
+//        GetFileRequest receivedGetFileRequest = pillarReceiver.waitForMessage(GetFileRequest.class);
+//        GetFileProgressResponse getFileProgressResponse = messageFactory.createGetFileProgressResponse(receivedGetFileRequest,
+//                encryptedPillarID, pillarDestinationId);
+//        messageBus.sendMessage(getFileProgressResponse);
+//
+//        GetFileFinalResponse completeMsg = messageFactory.createGetFileFinalResponse(receivedGetFileRequest, encryptedPillarID,
+//                pillarDestinationId);
+//        messageBus.sendMessage(completeMsg);
+
+//        fileExchange.getFile(new File(ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
+//        assertEquals("lorem ipsum", Files.readString(Path.of(ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
     }
 }

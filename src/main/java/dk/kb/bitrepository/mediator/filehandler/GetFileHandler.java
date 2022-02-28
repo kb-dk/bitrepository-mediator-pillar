@@ -108,10 +108,10 @@ public class GetFileHandler {
 
     private void getFileFromPillar() {
         Settings settings = context.getSettings();
-        OutputHandler output = new DefaultOutputHandler(getClass());
-        eventHandler = new GetFileEventHandler(settings, output);
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = getSecurityManager();
+        OutputHandler output = new DefaultOutputHandler(getClass());
+        CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
         GetFileClient client = AccessComponentFactory.getInstance()
                 .createGetFileClient(settings, securityManager, settings.getComponentID());
 
