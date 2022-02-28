@@ -46,8 +46,8 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static MessageReceiver pillarReceiver;
     protected static MessageReceiver clientReceiver;
     protected static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
-    protected static String ENCRYPTED_FILES_PATH = "src/test/resources/encrypted-files";
-    protected static String UNENCRYPTED_FILES_PATH = "src/test/resources/files";
+    protected static String ENCRYPTED_FILES_PATH;
+    protected static String UNENCRYPTED_FILES_PATH;
 
     @BeforeAll
     protected static void initSuite() throws IOException {
@@ -57,8 +57,8 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         setupMessageReceiverManager();
         crypto = new AESCryptoStrategy(cryptoConfigurations.getPassword());
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
-        configurations.getPillarConfig().setEncryptedFilesPath(ENCRYPTED_FILES_PATH);
-        configurations.getPillarConfig().setUnencryptedFilesPath(UNENCRYPTED_FILES_PATH);
+        ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
+        UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
     }
 
     @AfterEach
