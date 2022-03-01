@@ -1,6 +1,7 @@
 pillarConfig:
   mediatorPillarID: "testpillar"
   privateMessageDestination: "topic://mediator-test"
+  jobSchedulerThreadCount: 8
 
 cryptoConfig:
   algorithm: "AES"

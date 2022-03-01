@@ -3,6 +3,7 @@ package dk.kb.bitrepository.mediator.utils.configurations;
 public final class PillarConfigurations {
     private String privateMessageDestination;
     private String mediatorPillarID;
+    private int jobSchedulerThreadCount;
 
     public String getMediatorPillarID() {
         return mediatorPillarID;
@@ -18,6 +19,14 @@ public final class PillarConfigurations {
 
     public void setPrivateMessageDestination(String privateMessageDestination) {
         this.privateMessageDestination = privateMessageDestination;
+    }
+
+    public int getJobSchedulerThreadCount() {
+        return jobSchedulerThreadCount;
+    }
+
+    public void setJobSchedulerThreadCount(int jobSchedulerThreadCount) {
+        this.jobSchedulerThreadCount = jobSchedulerThreadCount;
     }
 
     @Override
