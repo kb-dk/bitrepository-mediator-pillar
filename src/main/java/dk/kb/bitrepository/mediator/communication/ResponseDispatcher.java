@@ -9,11 +9,9 @@ import org.bitrepository.protocol.messagebus.MessageSender;
 public class ResponseDispatcher {
     private final Settings refPillarSettings;
     private final MessageSender sender;
-    private final String privateMessageDestination;
 
-    public ResponseDispatcher(Settings refPillarSettings, String privateMessageDestination, MessageSender sender) {
+    public ResponseDispatcher(Settings refPillarSettings, MessageSender sender) {
         this.refPillarSettings = refPillarSettings;
-        this.privateMessageDestination = privateMessageDestination;
         this.sender = sender;
     }
 
@@ -30,7 +28,7 @@ public class ResponseDispatcher {
 
         response.setCorrelationID(request.getCorrelationID());
         response.setCollectionID(request.getCollectionID());
-        response.setReplyTo(privateMessageDestination);
+        response.setReplyTo(refPillarSettings.getContributorDestinationID());
         response.setDestination(request.getReplyTo());
         response.setTo(request.getFrom());
     }

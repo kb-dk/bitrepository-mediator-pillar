@@ -29,8 +29,7 @@
       Currently the following classes are available:
       - DefaultReceiverDestinationIDFactory (The default)
       - UserSpecificReceiverDestinationIDFactory
-    -->   
-    <ReceiverDestinationIDFactoryClass>org.bitrepository.protocol.messagebus.destination.DefaultReceiverDestinationIDFactory</ReceiverDestinationIDFactoryClass>
+    -->
   </GeneralSettings>
 
   <ClientSettings>
@@ -46,14 +45,14 @@
       when writing the configuration, the values there should be taken into consideration. 
     -->
     <ConversationTimeout>3600000</ConversationTimeout>
-    
+
     <!--
       The maximum number of retries allowed before a file transfer is considered failed. The default is not to retry.
       If 0, only the initial file transfer will be attempted. 
       If 2, a total of 3 attempts will be made before it is considered a failure.  
      -->
     <OperationRetryCount>2</OperationRetryCount>
-    
+
     <!--
       The factory class for generating the ID of the commandline client.      
       Currently the following classes are available:
@@ -61,23 +60,23 @@
       org.bitrepository.client.componentid.UniqueCommandlineComponentID
      -->
     <ComponentIDFactoryClass>org.bitrepository.client.componentid.DefaultCommandlineComponentID</ComponentIDFactoryClass>
-    
+
     <!--
       The maximum number of results per page when clients are paging through large result sets. 
       If not set, the default is 10000 results per page.  
      -->
-     <MaxPageSize>10000</MaxPageSize>
+    <MaxPageSize>10000</MaxPageSize>
   </ClientSettings>
 
   <!-- 
     Settings for the Reference and Checksum pillars. 
   -->
-  <PillarSettings> 
+  <PillarSettings>
     <!-- 
       ID of the pillar
     -->
     <PillarID>TestPillar1</PillarID>
-    
+
     <!--
       The type of pillar. Must be either 'FILE' or 'CHECKSUM' for a FilePillar or ChecksumPillar respectively.
       The ChecksumPillar does not have any actual files, it only contains the checksum database, where the checksums
@@ -99,16 +98,16 @@
           does not have a specific set of directories defined.              
         -->
       <CollectionID>collection_id</CollectionID>
-      
+
       <!-- 
         Paths to the base directory for file storage and checksum files.
       -->
-      <FileDirs>test-archive</FileDirs>
+      <FileDirs>target/test/fileArchive</FileDirs>
     </CollectionDirs>
 
     <!--
       The minimum amounts of bytes available on storage prior to accepting a PutFileRequest. 
-    -->    
+    -->
     <MinimumSizeLeft>1000000000</MinimumSizeLeft>
 
     <!-- 
@@ -117,14 +116,14 @@
       Time in milliseconds. 
     -->
     <TimeToStartDeliver>1000</TimeToStartDeliver>
-    
+
     <!--
       The number of milliseconds for a checksum to become outdated in the ChecksumStore.
       This is not used by the ChecksumPillar, since it anyway would not be able to 
       recalculate the checksum. 
      -->
     <MaxAgeForChecksums>3600000</MaxAgeForChecksums>
-    
+
     <!-- 
       The time between running the workflow for ensuring that the checksum are valid, 
       regarding checksum age and the age of the last modified timestamp of the file.
@@ -135,12 +134,12 @@
       Database specification object for the data about the AuditTrailContributer database.
     -->
     <AuditTrailContributerDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
@@ -151,18 +150,18 @@
       Database specification object for the data about the ChecksumDatabase.
     -->
     <ChecksumDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
       <DatabaseURL>jdbc:derby:checksumdb</DatabaseURL>
     </ChecksumDatabase>
-    
+
     <!-- 
       Setting of how severe alarms needs to be before they are sent. 
       Available levels:
@@ -174,7 +173,7 @@
         file already exist, etc.)
     -->
     <AlarmLevel>ERROR</AlarmLevel>
-    
+
     <!--
       Settings for whether the ChecksumPillar should download the file regarding the PutFile operation,
       or it should only use the checksum given for validation.
@@ -188,13 +187,13 @@
       then file must be downloaded for calculating the checksum.
      -->
     <ChecksumPillarFileDownload>DOWNLOAD_WHEN_MISSING_FROM_MESSAGE</ChecksumPillarFileDownload>
-    
+
     <!--
       Classpath for the FileStore backend of the ReferencePillar.
               Default value, when undefined is: 
               'org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager'.
      -->
-    <FileStoreClass></FileStoreClass>
+    <FileStoreClass>org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager</FileStoreClass>
   </PillarSettings>
 
   <!-- 
@@ -242,7 +241,7 @@
     are available. Note this will break integrity, but will make the storage of files possible when pillars
     are unavailable for puts.
     -->
-    <PartialPutsAllow>true</PartialPutsAllow  >
+    <PartialPutsAllow>true</PartialPutsAllow>
   </PutFileSettings>
 
   <!-- 
@@ -260,25 +259,25 @@
       Configuration for sending mails upon reception an alarm. 
       The element is optional, if missing alarm notifications won't be sent by mail. 
     -->
-    <MailingConfiguration> 
+    <MailingConfiguration>
       <!-- Recepient of the alarm notification mails -->
-      <MailReceiver>foo@example.com</MailReceiver> 
+      <MailReceiver>foo@example.com</MailReceiver>
       <!-- The sender of the alarm notification mails -->
-      <MailSender>foo@example.com</MailSender> 
+      <MailSender>foo@example.com</MailSender>
       <!-- Address for the (smtp) mailserver for sending mails -->
-      <MailServer>mail.server.com</MailServer> 
+      <MailServer>mail.server.com</MailServer>
     </MailingConfiguration>
 
     <!-- 
       Database specification object for the AlarmService database for persisting alarms .
     -->
     <AlarmServiceDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
@@ -297,12 +296,12 @@
       Database specification object for the AuditTrailService for persisting AuditTrails.
     -->
     <AuditTrailServiceDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
@@ -312,8 +311,8 @@
     <!-- 
       Defines the interval at which AuditTrails should be collected.
       Timeunit in milliseconds. 
-    --> 
-    <CollectAuditInterval>3600000</CollectAuditInterval> 
+    -->
+    <CollectAuditInterval>3600000</CollectAuditInterval>
 
     <!-- 
       Interval at which to check if its time to collect audit trails
@@ -346,52 +345,54 @@
   <IntegrityServiceSettings>
     <!-- ID of the service -->
     <ID>integrity-service</ID>
+    <!--
+    The listing of workflow schedules.
+    -->
+    <Workflows>
       <!--
-      The listing of workflow schedules.
+      The definition for the CompleteIntegrityCheck workflow.
       -->
-      <Workflows>
+      <Workflow>
         <!--
-        The definition for the CompleteIntegrityCheck workflow.
+        The class containing the CompleteIntegrityCheck implementation.
         -->
-        <Workflow>
+        <WorkflowClass>org.bitrepository.integrityservice.workflow.CompleteIntegrityCheck</WorkflowClass>
+        <!--
+        When should the workflow be run.
+        -->
+        <Schedules>
           <!--
-          The class containing the CompleteIntegrityCheck implementation.
+          Run every day on the TwoPillarCollection collection.
           -->
-          <WorkflowClass>org.bitrepository.integrityservice.workflow.CompleteIntegrityCheck</WorkflowClass>
-          <!--
-          When should the workflow be run.
-          -->
-          <Schedules>
-            <!--
-            Run every day on the TwoPillarCollection collection.
-            -->
-            <Schedule>
-              <WorkflowInterval>86400000</WorkflowInterval>  <Collections>
+          <Schedule>
+            <WorkflowInterval>86400000</WorkflowInterval>
+            <Collections>
               <CollectionID>TwoPillarCollection</CollectionID>
             </Collections>
-            </Schedule>
-            <!--
-            Run every hour on the SinglePillarCollection collection.
-            -->
-            <Schedule>
-              <WorkflowInterval>360000</WorkflowInterval>  <Collections>
+          </Schedule>
+          <!--
+          Run every hour on the SinglePillarCollection collection.
+          -->
+          <Schedule>
+            <WorkflowInterval>360000</WorkflowInterval>
+            <Collections>
               <CollectionID>SinglePillarCollection</CollectionID>
             </Collections>
-            </Schedule>
-          </Schedules>
-        </Workflow>
-      </Workflows>
+          </Schedule>
+        </Schedules>
+      </Workflow>
+    </Workflows>
 
     <!-- 
       Database specification object for the cache of integrity service database.
     -->
     <IntegrityDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
@@ -403,18 +404,18 @@
         This is to avoid false negatives for a reporting a file missing on a pillar,
         when it is just not finished with the PutFile operation. (1 hour)
     -->
-    <TimeBeforeMissingFileCheck>3600000</TimeBeforeMissingFileCheck> 
-    
+    <TimeBeforeMissingFileCheck>3600000</TimeBeforeMissingFileCheck>
+
     <!-- 
       Database specification object for the Integrity service's audit trail information.
     -->
     <AuditTrailContributerDatabase>
-    
+
       <!-- 
         The classpath for the driver for the database.  
         -->
       <DriverClass>org.apache.derby.jdbc.EmbeddedDriver</DriverClass>
-      
+
       <!--
         The URL for the database. 
         -->
@@ -439,10 +440,10 @@
     <!-- 
       The maximum number of times a component may fail to respond before 
       it being marked as unresponsive 
-    -->    
+    -->
     <MaxRetries>3</MaxRetries>
   </MonitoringServiceSettings>
-  
+
   <!-- Settings for the file exchange. -->
   <FileExchangeSettings>
     <!-- The type of protocol -->

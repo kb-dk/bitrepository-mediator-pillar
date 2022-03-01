@@ -42,7 +42,7 @@ public class TestingDAO {
     }
 
     private static void setup(boolean setupDatabase) throws IOException {
-        configurations = MediatorComponentFactory.loadMediatorConfigurations("conf");
+        configurations = MediatorPillarComponentFactory.loadMediatorConfigurations("conf");
         cryptoConfigurations = configurations.getCryptoConfig();
         encryptionPassword = cryptoConfigurations.getPassword();
         crypto = new AESCryptoStrategy(encryptionPassword); // Can change the encryption strategy here for testing
@@ -52,7 +52,7 @@ public class TestingDAO {
 
         if (setupDatabase) {
             databaseConfigurations = configurations.getDatabaseConfig();
-            dao = MediatorComponentFactory.getDAO(databaseConfigurations);
+            dao = MediatorPillarComponentFactory.getDAO(databaseConfigurations);
         }
     }
 }

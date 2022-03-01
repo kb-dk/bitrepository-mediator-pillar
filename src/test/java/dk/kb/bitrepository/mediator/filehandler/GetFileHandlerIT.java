@@ -4,6 +4,7 @@ import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.access.getfile.conversation.GetFileConversationContext;
 import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +41,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         assertDoesNotThrow(getFileHandler::performGetFile);
     }
 
+    @Disabled
     @Test
     @DisplayName("Test #GetFileHandler using file on pillar")
     public void testGetFileHandlerUsingPillarFile() throws IOException {

@@ -17,18 +17,18 @@ import org.bitrepository.protocol.security.*;
 
 import java.io.IOException;
 
-public class MediatorComponentFactory {
-    private static MediatorComponentFactory instance;
+public class MediatorPillarComponentFactory {
+    private static MediatorPillarComponentFactory instance;
     private static SecurityManager securityManager = null;
     private static PillarConfigurations pillarConfigurations;
 
-    private MediatorComponentFactory() {}
+    private MediatorPillarComponentFactory() {}
 
-    public static MediatorComponentFactory getInstance() {
+    public static MediatorPillarComponentFactory getInstance() {
         if (instance == null) {
-            synchronized (MediatorComponentFactory.class) {
+            synchronized (MediatorPillarComponentFactory.class) {
                 if (instance == null) {
-                    instance = new MediatorComponentFactory();
+                    instance = new MediatorPillarComponentFactory();
                 }
             }
         }
@@ -40,8 +40,7 @@ public class MediatorComponentFactory {
         Settings refPillarSettings = configs.getRefPillarSettings();
         securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
-        ResponseDispatcher responseDispatcher = new ResponseDispatcher(refPillarSettings,
-                configs.getPillarConfig().getPrivateMessageDestination(), messageBus);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(refPillarSettings, messageBus);
         DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
         PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
 
@@ -91,10 +90,10 @@ public class MediatorComponentFactory {
     }
 
     public static void setPillarConfigurations(PillarConfigurations pillarConfigurations) {
-        MediatorComponentFactory.pillarConfigurations = pillarConfigurations;
+        MediatorPillarComponentFactory.pillarConfigurations = pillarConfigurations;
     }
 
     public static void setSecurityManager(SecurityManager securityManager) {
-        MediatorComponentFactory.securityManager = securityManager;
+        MediatorPillarComponentFactory.securityManager = securityManager;
     }
 }

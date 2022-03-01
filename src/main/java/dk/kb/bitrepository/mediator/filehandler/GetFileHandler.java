@@ -21,7 +21,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 
-import static dk.kb.bitrepository.mediator.MediatorComponentFactory.getSecurityManager;
+import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;

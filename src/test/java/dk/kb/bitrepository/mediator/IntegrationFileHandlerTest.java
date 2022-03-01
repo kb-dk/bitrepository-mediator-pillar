@@ -1,16 +1,19 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.pillaraccess.EmbeddedPillar;
 import dk.kb.bitrepository.mediator.pillaraccess.communication.*;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.client.conversation.mediator.CollectionBasedConversationMediator;
 import org.bitrepository.client.conversation.mediator.ConversationMediatorManager;
 import org.bitrepository.common.settings.Settings;
+import org.bitrepository.common.utils.SettingsUtils;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.ProtocolComponentFactory;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageBusManager;
 import org.bitrepository.protocol.security.SecurityManager;
+import org.bitrepository.settings.referencesettings.PillarType;
 import org.bitrepository.settings.referencesettings.ProtocolType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -32,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class IntegrationFileHandlerTest extends TestingDAO {
     protected static LocalActiveMQBroker broker;
-    protected static MessageBus messageBus;
+    protected static MessageBus messageBus = null;
     protected static Settings settings;
     protected static String collectionID;
     protected static String BASE_FILE_EXCHANGE_DIR;
@@ -48,6 +51,9 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
     protected static String ENCRYPTED_FILES_PATH;
     protected static String UNENCRYPTED_FILES_PATH;
+    protected static String componentID;
+    protected static EmbeddedPillar embeddedPillar;
+    protected static boolean useEmbeddedMessageBus = true;
 
     @BeforeAll
     protected static void initSuite() throws IOException {
@@ -59,6 +65,8 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
         ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
         UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
+        componentID = settings.getComponentID() + "-test-client";
+        startEmbeddedPillar();
     }
 
     @AfterEach
@@ -70,6 +78,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
 
     @AfterAll
     protected static void cleanUpSuite() {
+        stopEmbeddedPillar();
         teardownMessageBus();
     }
 
@@ -80,13 +89,17 @@ public class IntegrationFileHandlerTest extends TestingDAO {
                 .setMessageBusConfiguration(MessageBusConfigurationFactory.createEmbeddedMessageBusConfiguration());
         settings.getRepositorySettings().getCollections().getCollection().get(0).getPillarIDs().getPillarID().clear();
         settings.getRepositorySettings().getCollections().getCollection().get(0).getPillarIDs().getPillarID().add(encryptedPillarID);
+        settings.getReferenceSettings().getGeneralSettings().setReceiverDestinationIDFactoryClass(null);
+        //settings.getReferenceSettings().getPillarSettings().setFileStoreClass("org.bitrepository.pillar.store.filearchive" +
+        //".CollectionArchiveManager");
 
         collectionID = settings.getCollections().get(0).getID();
         pillarDestinationId = settings.getContributorDestinationID();
-        BASE_FILE_EXCHANGE_DIR = "target/fileExchange/" + collectionID + "/";
+        BASE_FILE_EXCHANGE_DIR = "target/test/fileExchange/" + collectionID + "/";
 
         settings.getReferenceSettings().getFileExchangeSettings().setPath(BASE_FILE_EXCHANGE_DIR);
         settings.getReferenceSettings().getFileExchangeSettings().setProtocolType(ProtocolType.FILE);
+        settings.getReferenceSettings().getPillarSettings().setPillarType(PillarType.FILE);
         Path dir = Paths.get(BASE_FILE_EXCHANGE_DIR);
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
@@ -94,7 +107,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         fileExchange = ProtocolComponentFactory.getInstance().getFileExchange(settings);
         fileURL = fileExchange.getURL(FILE_ID);
         securityManager = createSecurityManager();
-        MediatorComponentFactory.setSecurityManager(securityManager);
+        MediatorPillarComponentFactory.setSecurityManager(securityManager);
     }
 
     protected static void setupMessageBus(Settings settings, SecurityManager securityManager) {
@@ -102,9 +115,20 @@ public class IntegrationFileHandlerTest extends TestingDAO {
             broker = new LocalActiveMQBroker(settings.getMessageBusConfiguration());
             broker.start();
         }
-        messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager));
+        if (!useEmbeddedMessageBus) {
+            MessageBusManager.clear();
+            messageBus = MessageBusManager.getMessageBus(settings, securityManager);
+        } else {
+            //MessageBusManager.injectCustomMessageBus(MessageBusManager.DEFAULT_MESSAGE_BUS, messageBus);
+            messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager));
+        }
         CollectionBasedConversationMediator conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
         ConversationMediatorManager.injectCustomConversationMediator(conversationMediator);
+    }
+
+    protected static void startEmbeddedPillar() {
+        SettingsUtils.initialize(settings); // TODO: What does it do?
+        embeddedPillar = EmbeddedPillar.createReferencePillar(settings);
     }
 
     private static void setupMessageReceiverManager() {
@@ -115,7 +139,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         collectionReceiver = new MessageReceiver(settings.getCollectionDestination());
         receiverManager.addReceiver(collectionReceiver);
 
-        pillarReceiver = new MessageReceiver(pillarDestinationId);
+        pillarReceiver = new MessageReceiver(pillarDestinationId + "-" + componentID);
         receiverManager.addReceiver(pillarReceiver);
 
         clientReceiver = new MessageReceiver(settings.getReceiverDestinationID());
@@ -125,13 +149,15 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     }
 
     private static void teardownMessageBus() {
-        MessageBusManager.clear();
-        if (messageBus != null) {
-            try {
-                messageBus.close();
+        if (!useEmbeddedMessageBus) {
+            MessageBusManager.clear();
+            if (messageBus != null) {
+                try {
+                    messageBus.close();
+                } catch (JMSException e) {
+                    throw new RuntimeException(e);
+                }
                 messageBus = null;
-            } catch (JMSException e) {
-                throw new RuntimeException(e);
             }
         }
 
@@ -142,6 +168,12 @@ public class IntegrationFileHandlerTest extends TestingDAO {
             } catch (Exception e) {
                 // No reason to pollute the test output with this
             }
+        }
+    }
+
+    private static void stopEmbeddedPillar() {
+        if (embeddedPillar != null) {
+            embeddedPillar.shutdown();
         }
     }
 
@@ -164,4 +196,20 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         f.deleteOnExit();
         return f;
     }
+
+    /**
+     * May be used by by concrete tests for general verification when the test method has finished. Will only be run
+     * if the test has passed (so far).
+     */
+    protected void afterMethodVerification() {
+        receiverManager.checkNoMessagesRemainInReceivers();
+    }
+
+    /**
+     * Purges all messages from the receivers.
+     */
+    protected void clearReceivers() {
+        receiverManager.clearMessagesInReceivers();
+    }
+
 }

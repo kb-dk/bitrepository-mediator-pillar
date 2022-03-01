@@ -34,12 +34,6 @@
         <PillarID>TestPillar1</PillarID>
       </PillarIDs>
     </Collection>
-    <Collection>
-      <ID>collection_id_2</ID>
-      <PillarIDs>
-        <PillarID>TestPillar1</PillarID>
-      </PillarIDs>
-    </Collection>
   </Collections>
   <ProtocolSettings>
     <!-- 
@@ -91,6 +85,7 @@
         the messagebus, use ssl:// as protocol. For unencrypted, use tcp://
       -->
       <URL>failover:(tcp://localhost:61616?keepAlive=true)</URL>
+      <!--<URL>tcp://localhost:9999</URL>-->
     </MessageBusConfiguration>
   </ProtocolSettings>
 

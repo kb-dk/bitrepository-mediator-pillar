@@ -20,7 +20,7 @@ public class PillarMain implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            MediatorPillar pillar = MediatorComponentFactory.getInstance().createPillar(configPath, keyfilePath);
+            MediatorPillar pillar = MediatorPillarComponentFactory.getInstance().createPillar(configPath, keyfilePath);
             log.info("Pillar started");
             synchronized (pillar) {
                 pillar.wait(); // wait indefinitely to keep thread alive

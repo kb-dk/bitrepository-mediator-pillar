@@ -1,6 +1,6 @@
 package dk.kb.bitrepository.mediator.communication;
 
-import dk.kb.bitrepository.mediator.MediatorComponentFactory;
+import dk.kb.bitrepository.mediator.MediatorPillarComponentFactory;
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
@@ -43,7 +43,7 @@ public class MessageReceivedHandlerIT { // TODO consider removing/mocking databa
     static void setup() throws IOException {
         ConfigurationsLoader configProvider = new ConfigurationsLoader(CONFIG_PATH_TEST);
         Configurations config = configProvider.getConfigurations();
-        dao = MediatorComponentFactory.getDAO(config.getDatabaseConfig());
+        dao = MediatorPillarComponentFactory.getDAO(config.getDatabaseConfig());
         // TODO add messageBus and responseDispatcher when necessary
         PillarContext pillarContext = new PillarContext(config, null, null, dao);
         handler = new MessageReceivedHandler(pillarContext);
