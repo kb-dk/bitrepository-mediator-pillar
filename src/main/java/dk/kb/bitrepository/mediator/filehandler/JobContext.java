@@ -26,6 +26,8 @@ public class JobContext {
                       ChecksumDataForFileTYPE checksumDataForFileTYPE, Settings settings, URL urlForResult, Collection<String> contributors,
                       CryptoStrategy crypto, FileExchange fileExchange) {
         ArgumentValidator.checkNotNull(collectionID, "Collection ID");
+        ArgumentValidator.checkNotNull(settings, "Settings");
+        ArgumentValidator.checkNotNull(crypto, "Crypto Strategy");
         ArgumentValidator.checkNotNullOrEmpty(contributors, "Contributors");
         this.collectionID = collectionID;
         this.fileID = fileID;
@@ -35,6 +37,8 @@ public class JobContext {
         this.settings = settings;
         this.urlForResult = urlForResult;
         this.contributors = contributors;
+        // Crypto needs to be initialized with the IV and Salt that was used to encrypt the file (Get this from DAO) when a file is
+        // queued that comes from either the local storage or a pillar.
         this.crypto = crypto;
         this.fileExchange = fileExchange;
     }

@@ -26,7 +26,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
-                Collections.singleton(encryptedPillarID), crypto, null);
+                Collections.singleton(encryptedPillarID), crypto, fileExchange);
         PutFileHandler putFileHandler = new PutFileHandler(context, receivedTimestamp, dao);
 
         putFileHandler.performPutFile();

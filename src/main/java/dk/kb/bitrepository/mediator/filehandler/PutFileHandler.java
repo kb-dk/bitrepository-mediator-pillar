@@ -4,6 +4,7 @@ import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
+import org.bitrepository.common.ArgumentValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,10 @@ public class PutFileHandler {
     private final CryptoStrategy crypto;
 
     public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp, DatabaseDAO dao) {
+        ArgumentValidator.checkNotNull(context.getFileID(), "File ID");
+        ArgumentValidator.checkNotNull(context.getFileBytes(), "File Bytes");
+        ArgumentValidator.checkNotNull(context.getChecksumDataForFileTYPE(), "Checksum Data for FileType");
+        ArgumentValidator.checkNotNull(context.getFileExchange(), "FileExchange");
         this.collectionID = context.getCollectionID();
         this.fileID = context.getFileID();
         this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);

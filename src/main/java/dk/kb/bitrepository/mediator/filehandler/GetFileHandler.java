@@ -9,6 +9,7 @@ import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
+import org.bitrepository.common.ArgumentValidator;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.security.SecurityManager;
@@ -37,14 +38,13 @@ public class GetFileHandler {
     private CompleteEventAwaiter eventHandler;
 
     public GetFileHandler(JobContext context) {
+        ArgumentValidator.checkNotNull(context.getFileID(), "File ID");
+        ArgumentValidator.checkNotNull(context.getChecksumDataForFileTYPE(), "Checksum Data for FileType");
+        ArgumentValidator.checkNotNull(context.getFileExchange(), "FileExchange");
         this.context = context;
-
-        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(),
-                context.getFileID());
-        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(),
-                context.getFileID());
+        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.checksumData = context.getChecksumDataForFileTYPE();
-        // Crypto needs to be initialized with the IV and Salt that was used to decrypt the file
         this.crypto = context.getCrypto();
         this.fileExchange = context.getFileExchange();
     }
