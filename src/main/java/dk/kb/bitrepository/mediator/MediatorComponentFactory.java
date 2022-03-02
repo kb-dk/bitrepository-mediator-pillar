@@ -71,7 +71,8 @@ public class MediatorComponentFactory {
                 configs.getPillarConfig().getPrivateMessageDestination()
         );
         DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
-        PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
+        JobScheduler jobScheduler = new JobScheduler(configs.getPillarConfig().getJobSchedulerThreadCount());
+        PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, jobScheduler, dao);
 
         return new MediatorPillar(refPillarSettings, pillarContext, messageBus);
     }

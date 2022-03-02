@@ -27,7 +27,7 @@ public class PutFileRequestHandler extends OperationRequestHandler<GetFileReques
     }
 
     @Override
-    protected void scheduleOperation(GetFileRequest request, MessageContext context) { // TODO
+    protected void queueJob(GetFileRequest request, MessageContext context) { // TODO
         System.out.println("Performing action!");
         // Check DAO
         // If file does not exist send failed response

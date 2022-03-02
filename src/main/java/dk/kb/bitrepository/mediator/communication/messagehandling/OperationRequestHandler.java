@@ -34,7 +34,7 @@ public abstract class OperationRequestHandler<T extends MessageRequest> implemen
     public void processRequest(T request, MessageContext messageContext) throws RequestHandlerException {
         validateRequest(request);
         sendProgressResponse(request);
-        scheduleOperation(request, messageContext);
+        queueJob(request, messageContext);
     }
 
     @Override
@@ -54,7 +54,7 @@ public abstract class OperationRequestHandler<T extends MessageRequest> implemen
      * @param request The request being handled
      * @param context Context containing information about the request (message)
      */
-    protected abstract void scheduleOperation(T request, MessageContext context);
+    protected abstract void queueJob(T request, MessageContext context);
 
     /**
      * Send a progress response matching the request being handled.
