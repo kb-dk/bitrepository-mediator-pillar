@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.communication.messagehandling;
 
 import dk.kb.bitrepository.mediator.GetFileJob;
+import dk.kb.bitrepository.mediator.JobScheduler;
 import dk.kb.bitrepository.mediator.PillarContext;
 import dk.kb.bitrepository.mediator.communication.exception.RequestHandlerException;
 import org.bitrepository.bitrepositoryelements.ResponseCode;
@@ -38,7 +39,7 @@ public class GetFileRequestHandler extends OperationRequestHandler<GetFileReques
     protected void queueJob(GetFileRequest request, MessageContext messageContext) {
         // TODO insert jobscheduler.queue(actionThingy) here or something along those lines
         GetFileJob job = new GetFileJob(request);
-        context.getJobScheduler().submitJob(job);
+        JobScheduler.getInstance().submitJob(job);
     }
 
     @Override

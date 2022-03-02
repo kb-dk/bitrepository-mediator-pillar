@@ -13,26 +13,32 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class JobScheduler {
     private static final Logger log = LoggerFactory.getLogger(JobScheduler.class);
-    private final ExecutorService threadPool;
+    private ExecutorService threadPool;
     private final BlockingQueue<PillarJob> jobQueue;
     private int jobCount;
 
+    private static final class InstanceHolder {
+        private static final JobScheduler instance = new JobScheduler();
+    }
+
+    public static JobScheduler getInstance() {
+        return InstanceHolder.instance;
+    }
+
     /**
      * Constructor.
-     * @param threadPoolSize Size of the thread pool, i.e. how many threads to keep running for carrying out jobs.
      */
-    public JobScheduler(int threadPoolSize) {
-        threadPool = Executors.newFixedThreadPool(threadPoolSize);
+    private JobScheduler() {
         jobQueue = new LinkedBlockingQueue<>();
         jobCount = 0;
-        startThreads(threadPoolSize);
     }
 
     /**
      * Start the threads in the thread pool.
-     * @param threadPoolSize How many threads to start.
+     * @param threadPoolSize Size of the thread pool, i.e. how many threads to keep running for carrying out jobs.
      */
-    private void startThreads(int threadPoolSize) {
+    public void startThreads(int threadPoolSize) {
+        threadPool = Executors.newFixedThreadPool(threadPoolSize);
         for (int i = 0; i < threadPoolSize; i++) {
             threadPool.execute(new JobProcessor());
         }
