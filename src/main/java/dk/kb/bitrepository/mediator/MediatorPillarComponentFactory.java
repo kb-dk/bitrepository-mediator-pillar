@@ -18,21 +18,17 @@ import org.bitrepository.protocol.security.*;
 import java.io.IOException;
 
 public class MediatorPillarComponentFactory {
-    private static MediatorPillarComponentFactory instance;
     private static SecurityManager securityManager = null;
     private static PillarConfigurations pillarConfigurations;
 
     private MediatorPillarComponentFactory() {}
 
+    private static final class InstanceHolder {
+        private static final MediatorPillarComponentFactory instance = new MediatorPillarComponentFactory();
+    }
+
     public static MediatorPillarComponentFactory getInstance() {
-        if (instance == null) {
-            synchronized (MediatorPillarComponentFactory.class) {
-                if (instance == null) {
-                    instance = new MediatorPillarComponentFactory();
-                }
-            }
-        }
-        return instance;
+        return InstanceHolder.instance;
     }
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {

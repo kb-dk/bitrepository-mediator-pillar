@@ -2,7 +2,6 @@ package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.bitrepository.access.getfile.conversation.GetFileConversationContext;
 import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -31,9 +30,9 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         putFileHandler.performPutFile();
 
         //Test with both files (will use unencrypted file)
-        GetFileConversationContext context = new GetFileConversationContext(COLLECTION_ID, FILE_ID, null, null, null, settings, null,
-                settings.getComponentID(), null, "GetFileHandler Test");
-        GetFileHandler getFileHandler = new GetFileHandler(context, checksumDataForFileTYPE, crypto, null);
+        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
+                Collections.singleton(encryptedPillarID), crypto, null);
+        GetFileHandler getFileHandler = new GetFileHandler(context);
         assertDoesNotThrow(getFileHandler::performGetFile);
 
         //Test with only encrypted file
@@ -47,9 +46,10 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     public void testGetFileHandlerUsingPillarFile() throws IOException {
         putFileLocally(fileExchange);
 
-        GetFileConversationContext context = new GetFileConversationContext(COLLECTION_ID, FILE_ID, fileURL, null,
-                Collections.singleton(encryptedPillarID), settings, null, settings.getComponentID(), null, "");
-        GetFileHandler handler = new GetFileHandler(context, checksumDataForFileTYPE, crypto, fileExchange);
+        // TODO: JobSchedulerContext.class
+        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
+                Collections.singleton(encryptedPillarID), crypto, fileExchange);
+        GetFileHandler handler = new GetFileHandler(context);
         handler.performGetFile();
 
         IdentifyPillarsForGetFileRequest receivedIdentifyRequestMessage = collectionReceiver.waitForMessage(

@@ -3,7 +3,6 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
-import org.bitrepository.access.getfile.conversation.GetFileConversationContext;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.FilePart;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
@@ -29,7 +28,7 @@ import static org.bitrepository.client.eventhandler.OperationEvent.OperationEven
 
 public class GetFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final GetFileConversationContext context;
+    private final JobContext context;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
     private final ChecksumDataForFileTYPE checksumData;
@@ -37,22 +36,20 @@ public class GetFileHandler {
     private final FileExchange fileExchange;
     private CompleteEventAwaiter eventHandler;
 
-    public GetFileHandler(GetFileConversationContext context, ChecksumDataForFileTYPE checksumData, CryptoStrategy crypto,
-                          FileExchange fileExchange) {
+    public GetFileHandler(JobContext context) {
         this.context = context;
 
         this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(),
                 context.getFileID());
         this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(),
                 context.getFileID());
-        this.checksumData = checksumData;
+        this.checksumData = context.getChecksumDataForFileTYPE();
         // Crypto needs to be initialized with the IV and Salt that was used to decrypt the file
-        this.crypto = crypto;
-        this.fileExchange = fileExchange;
+        this.crypto = context.getCrypto();
+        this.fileExchange = context.getFileExchange();
     }
 
     public void performGetFile() {
-
         FilePart filePart = context.getFilePart();
 
         log.debug("Attempting to find file locally.");
@@ -83,8 +80,6 @@ public class GetFileHandler {
     private boolean waitForPillarToHandleRequest() {
         OperationEventType eventType = eventHandler.getFinish().getEventType();
 
-        if (eventType.equals(OperationEventType.FAILED)) return false;
-
         return eventType.equals(OperationEventType.COMPLETE);
     }
 
@@ -95,6 +90,7 @@ public class GetFileHandler {
             localBytes = readBytesFromFile(unencryptedFilePath);
 
         } else if (fileExists(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
+            //TODO: What if encrypted file is locally, but DAO doesn't have salt and IV yet => can't decrypt
             log.debug("Using local encrypted file.");
             byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
             localBytes = crypto.decrypt(encryptedBytes);
@@ -111,7 +107,7 @@ public class GetFileHandler {
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = getSecurityManager();
         OutputHandler output = new DefaultOutputHandler(getClass());
-        CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);
+        eventHandler = new GetFileEventHandler(settings, output);
         GetFileClient client = AccessComponentFactory.getInstance()
                 .createGetFileClient(settings, securityManager, settings.getComponentID());
 
@@ -122,7 +118,6 @@ public class GetFileHandler {
             client.getFileFromSpecificPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
                     context.getUrlForResult(), context.getContributors().iterator().next(), eventHandler, auditTrailInformation);
         }
-        // TODO: Get response from the URL AND decrypt it before returning the bytes? (If locally written then run decrypt file)
     }
 
     private byte[] getFilePart(byte[] fileBytes) {
