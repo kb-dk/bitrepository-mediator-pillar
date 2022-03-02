@@ -24,14 +24,14 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     @DisplayName("Test #GetFileHandler using existing file")
     public void testGetFileUsingExistingFile() throws MismatchingChecksumsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        PutFileHandler putFileHandler = new PutFileHandler(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE, receivedTimestamp,
-                dao, crypto);
+
+        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
+                Collections.singleton(encryptedPillarID), crypto, null);
+        PutFileHandler putFileHandler = new PutFileHandler(context, receivedTimestamp, dao);
 
         putFileHandler.performPutFile();
 
         //Test with both files (will use unencrypted file)
-        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
-                Collections.singleton(encryptedPillarID), crypto, null);
         GetFileHandler getFileHandler = new GetFileHandler(context);
         assertDoesNotThrow(getFileHandler::performGetFile);
 
@@ -46,8 +46,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     public void testGetFileHandlerUsingPillarFile() throws IOException {
         putFileLocally(fileExchange);
 
-        // TODO: JobSchedulerContext.class
-        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
+        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
         GetFileHandler handler = new GetFileHandler(context);
         handler.performGetFile();

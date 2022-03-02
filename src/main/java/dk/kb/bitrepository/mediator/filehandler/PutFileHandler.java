@@ -3,7 +3,6 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,25 +28,24 @@ public class PutFileHandler {
     private final String fileID;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
-    private final byte[] unencryptedBytes;
+    private final byte[] fileBytes;
     private final ChecksumSpecTYPE checksumSpec;
     private final String expectedChecksum;
     private final OffsetDateTime receivedTimestamp;
     private final DatabaseDAO dao;
     private final CryptoStrategy crypto;
 
-    public PutFileHandler(String collectionID, String fileID, byte[] unencryptedBytes, ChecksumDataForFileTYPE checksumData,
-                          OffsetDateTime receivedTimestamp, DatabaseDAO dao, CryptoStrategy crypto) {
-        this.collectionID = collectionID;
-        this.fileID = fileID;
+    public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp, DatabaseDAO dao) {
+        this.collectionID = context.getCollectionID();
+        this.fileID = context.getFileID();
         this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
         this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
-        this.unencryptedBytes = unencryptedBytes;
-        this.checksumSpec = checksumData.getChecksumSpec();
-        this.expectedChecksum = new String(checksumData.getChecksumValue(), Charset.defaultCharset());
+        this.fileBytes = context.getFileBytes();
+        this.checksumSpec = context.getChecksumDataForFileTYPE().getChecksumSpec();
+        this.expectedChecksum = new String(context.getChecksumDataForFileTYPE().getChecksumValue(), Charset.defaultCharset());
         this.receivedTimestamp = receivedTimestamp;
+        this.crypto = context.getCrypto();
         this.dao = dao;
-        this.crypto = crypto;
     }
 
     /**
@@ -68,7 +66,7 @@ public class PutFileHandler {
             log.debug("Using existing unencrypted file");
             handleUnencryptedFile();
         } else {
-            if (writeBytesToFile(unencryptedBytes, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            if (writeBytesToFile(fileBytes, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
                 handleUnencryptedFile();
             }
         }

@@ -3,6 +3,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.FilePart;
+import org.bitrepository.common.ArgumentValidator;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.FileExchange;
 
@@ -19,12 +20,16 @@ public class JobContext {
     private final Collection<String> contributors;
     private final FileExchange fileExchange;
     private final CryptoStrategy crypto;
+    private final byte[] fileBytes;
 
-    public JobContext(String collectionID, String fileID, FilePart filePart, ChecksumDataForFileTYPE checksumDataForFileTYPE,
-                      Settings settings, URL urlForResult, Collection<String> contributors,
+    public JobContext(String collectionID, String fileID, byte[] fileBytes, FilePart filePart,
+                      ChecksumDataForFileTYPE checksumDataForFileTYPE, Settings settings, URL urlForResult, Collection<String> contributors,
                       CryptoStrategy crypto, FileExchange fileExchange) {
+        ArgumentValidator.checkNotNull(collectionID, "Collection ID");
+        ArgumentValidator.checkNotNullOrEmpty(contributors, "Contributors");
         this.collectionID = collectionID;
         this.fileID = fileID;
+        this.fileBytes = fileBytes;
         this.filePart = filePart;
         this.checksumDataForFileTYPE = checksumDataForFileTYPE;
         this.settings = settings;
@@ -40,6 +45,10 @@ public class JobContext {
 
     public String getFileID() {
         return fileID;
+    }
+
+    public byte[] getFileBytes() {
+        return fileBytes;
     }
 
     public FilePart getFilePart() {
