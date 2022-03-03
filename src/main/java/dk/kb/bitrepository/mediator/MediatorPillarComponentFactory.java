@@ -20,6 +20,7 @@ import java.io.IOException;
 public class MediatorPillarComponentFactory {
     private static SecurityManager securityManager = null;
     private static PillarConfigurations pillarConfigurations;
+    private static Configurations configs;
 
     private MediatorPillarComponentFactory() {}
 
@@ -32,7 +33,7 @@ public class MediatorPillarComponentFactory {
     }
 
     public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
-        Configurations configs = loadMediatorConfigurations(pathToConfiguration);
+        configs = loadMediatorConfigurations(pathToConfiguration);
         Settings refPillarSettings = configs.getRefPillarSettings();
         securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
@@ -45,7 +46,7 @@ public class MediatorPillarComponentFactory {
 
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
         ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
-        Configurations configs = configLoader.getConfigurations();
+        configs = configLoader.getConfigurations();
         pillarConfigurations = configs.getPillarConfig();
 
         String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
@@ -75,6 +76,10 @@ public class MediatorPillarComponentFactory {
     public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
         DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
         return new DatabaseDAO(connectionManager);
+    }
+
+    public static DatabaseDAO getDAO() {
+        return getDAO(configs.getDatabaseConfig());
     }
 
     public static SecurityManager getSecurityManager() {

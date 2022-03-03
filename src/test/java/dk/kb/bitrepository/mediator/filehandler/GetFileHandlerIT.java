@@ -36,7 +36,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
 
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler putFileHandler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler putFileHandler = new PutFileHandler(context, receivedTimestamp);
 
         putFileHandler.performPutFile();
 

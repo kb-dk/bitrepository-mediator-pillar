@@ -24,7 +24,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
 
         handler.performPutFile();
 
@@ -40,7 +40,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
         handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -70,7 +70,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataWithWrongChecksum, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
 
         Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -84,7 +84,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
         handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -96,7 +96,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         // Tests using the unencrypted existing file
         context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataWithWrongChecksum, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        handler = new PutFileHandler(context, receivedTimestamp, dao);
+        handler = new PutFileHandler(context, receivedTimestamp);
         Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -109,7 +109,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
         JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp, dao);
+        PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
         handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -121,7 +121,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         // Tests using the encrypted existing file
         context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataWithWrongChecksum, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        handler = new PutFileHandler(context, receivedTimestamp, dao);
+        handler = new PutFileHandler(context, receivedTimestamp);
         Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));

@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
+import dk.kb.bitrepository.mediator.MediatorPillarComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
@@ -36,7 +37,7 @@ public class PutFileHandler {
     private final DatabaseDAO dao;
     private final CryptoStrategy crypto;
 
-    public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp, DatabaseDAO dao) {
+    public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp) {
         ArgumentValidator.checkNotNull(context.getFileID(), "File ID");
         ArgumentValidator.checkNotNull(context.getFileBytes(), "File Bytes");
         ArgumentValidator.checkNotNull(context.getChecksumDataForFileTYPE(), "Checksum Data for FileType");
@@ -50,7 +51,7 @@ public class PutFileHandler {
         this.expectedChecksum = new String(context.getChecksumDataForFileTYPE().getChecksumValue(), Charset.defaultCharset());
         this.receivedTimestamp = receivedTimestamp;
         this.crypto = context.getCrypto();
-        this.dao = dao;
+        this.dao = MediatorPillarComponentFactory.getDAO();
     }
 
     /**
@@ -75,6 +76,7 @@ public class PutFileHandler {
                 handleUnencryptedFile();
             }
         }
+        putFileOnPillar();
     }
 
     /**
@@ -150,6 +152,10 @@ public class PutFileHandler {
         }
     }
 
+    private void putFileOnPillar() {
+
+    }
+
     /**
      * Updates the local database to include the information about the file, for easy access and decrypting at a later state by storing
      * the encryption parameters.
@@ -159,7 +165,7 @@ public class PutFileHandler {
      * @param checksumTimestamp  The timestamp of when the encrypted checksum was successfully compared.
      */
     private void updateLocalDatabase(OffsetDateTime encryptedTimestamp, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
-        //FIXME: Only do this after we know the data is added to the pillar (?)
+        //FIXME: Only do this after we know the data is added to the pillar (?) - so move to e.g. JobScheduler
         dao.insertIntoEncParams(collectionID, fileID, crypto.getSalt(), crypto.getIV().getIV(), crypto.getIterations());
         dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum,
                 checksumTimestamp);
