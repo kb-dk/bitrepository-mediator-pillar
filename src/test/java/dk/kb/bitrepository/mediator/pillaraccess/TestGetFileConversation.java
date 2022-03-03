@@ -58,7 +58,6 @@ public class TestGetFileConversation extends IntegrationFileHandlerTest {
     public void testIdentifyPillarGetFileRequest() throws IOException {
         putFileLocally(fileExchange);
 
-        CollectionBasedConversationMediator conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
         GetFileClient client = createGetFileClient(conversationMediator);
         OutputHandler output = new DefaultOutputHandler(getClass());
         CompleteEventAwaiter eventHandler = new GetFileEventHandler(settings, output);

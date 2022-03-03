@@ -53,7 +53,8 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static String UNENCRYPTED_FILES_PATH;
     protected static String componentID;
     protected static EmbeddedPillar embeddedPillar;
-    protected static boolean useEmbeddedMessageBus = true;
+    protected static boolean useEmbeddedMessageBus = false;
+    protected static CollectionBasedConversationMediator conversationMediator;
 
     @BeforeAll
     protected static void initSuite() throws IOException {
@@ -66,7 +67,6 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
         UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
         componentID = settings.getComponentID() + "-test-client";
-        startEmbeddedPillar();
     }
 
     @AfterEach
@@ -122,7 +122,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
             //MessageBusManager.injectCustomMessageBus(MessageBusManager.DEFAULT_MESSAGE_BUS, messageBus);
             messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager));
         }
-        CollectionBasedConversationMediator conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
+        conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
         ConversationMediatorManager.injectCustomConversationMediator(conversationMediator);
     }
 
@@ -139,7 +139,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         collectionReceiver = new MessageReceiver(settings.getCollectionDestination());
         receiverManager.addReceiver(collectionReceiver);
 
-        pillarReceiver = new MessageReceiver(pillarDestinationId + "-" + componentID);
+        pillarReceiver = new MessageReceiver(pillarDestinationId);
         receiverManager.addReceiver(pillarReceiver);
 
         clientReceiver = new MessageReceiver(settings.getReceiverDestinationID());
