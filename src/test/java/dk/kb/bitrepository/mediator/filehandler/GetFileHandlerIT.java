@@ -3,9 +3,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -20,6 +18,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisplayName("Test #GetFileHandler")
 public class GetFileHandlerIT extends IntegrationFileHandlerTest {
+    @BeforeAll
+    protected static void setup() {
+        startRealMessageBus();
+        startEmbeddedPillar();
+    }
+
+    @AfterAll
+    protected static void cleanup() {
+        stopEmbeddedPillar();
+    }
+
     @Test
     @DisplayName("Test #GetFileHandler using existing file")
     public void testGetFileUsingExistingFile() throws MismatchingChecksumsException {

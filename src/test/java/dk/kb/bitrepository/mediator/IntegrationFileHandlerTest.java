@@ -53,20 +53,23 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static String UNENCRYPTED_FILES_PATH;
     protected static String componentID;
     protected static EmbeddedPillar embeddedPillar;
-    protected static boolean useEmbeddedMessageBus = false;
     protected static CollectionBasedConversationMediator conversationMediator;
 
     @BeforeAll
     protected static void initSuite() throws IOException {
         initTestingDAO();
         setupSettingsEtc();
-        setupMessageBus(settings, securityManager);
-        setupMessageReceiverManager();
         crypto = new AESCryptoStrategy(cryptoConfigurations.getPassword());
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
         ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
         UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
         componentID = settings.getComponentID() + "-test-client";
+        initImportantServices(false);
+    }
+
+    private static void initImportantServices(boolean useRealMessageBus) {
+        setupMessageBus(settings, securityManager, useRealMessageBus);
+        setupMessageReceiverManager();
     }
 
     @AfterEach
@@ -78,7 +81,6 @@ public class IntegrationFileHandlerTest extends TestingDAO {
 
     @AfterAll
     protected static void cleanUpSuite() {
-        stopEmbeddedPillar();
         teardownMessageBus();
     }
 
@@ -110,20 +112,29 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         MediatorPillarComponentFactory.setSecurityManager(securityManager);
     }
 
-    protected static void setupMessageBus(Settings settings, SecurityManager securityManager) {
+    private static void setupMessageBus(Settings settings, SecurityManager securityManager, boolean useRealMessageBus) {
         if (broker == null) {
             broker = new LocalActiveMQBroker(settings.getMessageBusConfiguration());
             broker.start();
         }
-        if (!useEmbeddedMessageBus) {
-            MessageBusManager.clear();
-            messageBus = MessageBusManager.getMessageBus(settings, securityManager);
-        } else {
-            //MessageBusManager.injectCustomMessageBus(MessageBusManager.DEFAULT_MESSAGE_BUS, messageBus);
-            messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager));
+
+        if (messageBus == null) {
+            if (useRealMessageBus) {
+                MessageBusManager.clear();
+                messageBus = MessageBusManager.getMessageBus(settings, securityManager);
+            } else {
+                //messageBus = new SimpleMessageBus();
+                //MessageBusManager.injectCustomMessageBus(MessageBusManager.DEFAULT_MESSAGE_BUS, messageBus);
+                messageBus = new MessageBusWrapper(ProtocolComponentFactory.getInstance().getMessageBus(settings, securityManager));
+            }
         }
         conversationMediator = new CollectionBasedConversationMediator(settings, securityManager);
         ConversationMediatorManager.injectCustomConversationMediator(conversationMediator);
+    }
+
+    protected static void startRealMessageBus() {
+        teardownMessageBus();
+        initImportantServices(true);
     }
 
     protected static void startEmbeddedPillar() {
@@ -149,17 +160,16 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     }
 
     private static void teardownMessageBus() {
-        if (!useEmbeddedMessageBus) {
-            MessageBusManager.clear();
-            if (messageBus != null) {
-                try {
-                    messageBus.close();
-                } catch (JMSException e) {
-                    throw new RuntimeException(e);
-                }
-                messageBus = null;
+        MessageBusManager.clear();
+        if (messageBus != null) {
+            try {
+                messageBus.close();
+            } catch (JMSException e) {
+                throw new RuntimeException(e);
             }
+            messageBus = null;
         }
+
 
         if (broker != null) {
             try {
@@ -171,7 +181,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         }
     }
 
-    private static void stopEmbeddedPillar() {
+    protected static void stopEmbeddedPillar() {
         if (embeddedPillar != null) {
             embeddedPillar.shutdown();
         }
