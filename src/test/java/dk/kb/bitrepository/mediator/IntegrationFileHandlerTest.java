@@ -51,6 +51,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static ChecksumDataForFileTYPE checksumDataWithWrongChecksum;
     protected static String ENCRYPTED_FILES_PATH;
     protected static String UNENCRYPTED_FILES_PATH;
+    protected static String PILLAR_FILE_DIR = "target/test/fileArchive/collection_id/fileDir/";
     protected static String componentID;
     protected static EmbeddedPillar embeddedPillar;
     protected static CollectionBasedConversationMediator conversationMediator;
@@ -79,6 +80,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         cleanupFiles(UNENCRYPTED_FILES_PATH);
         cleanupFiles(ENCRYPTED_FILES_PATH);
         cleanupFiles(BASE_FILE_EXCHANGE_DIR);
+        cleanupFiles(PILLAR_FILE_DIR);
     }
 
     @AfterAll

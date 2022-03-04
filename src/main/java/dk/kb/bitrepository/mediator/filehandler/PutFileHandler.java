@@ -7,7 +7,6 @@ import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsEx
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.client.eventhandler.OperationEvent;
-import org.bitrepository.commandline.Constants;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.PutFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
@@ -57,6 +56,8 @@ public class PutFileHandler {
     private final CryptoStrategy crypto;
     private final ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private CompleteEventAwaiter eventHandler;
+    private String encryptedChecksum;
+    private OffsetDateTime encryptedTimestamp;
 
     public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp) {
         this.context = context;
@@ -83,9 +84,9 @@ public class PutFileHandler {
 
             try {
                 BasicFileAttributes attributes = Files.readAttributes(encryptedFilePath, BasicFileAttributes.class);
-                OffsetDateTime encryptedTimestamp = OffsetDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
-                setCalculationTimestamp(encryptedTimestamp);
-                assertEncryptedChecksumMatch(encryptedTimestamp);
+                encryptedTimestamp = OffsetDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
+                setCalculationTimestamp();
+                assertEncryptedChecksumMatch();
             } catch (IOException e) {
                 log.error("An error occurred when trying to read attributes from path {}", unencryptedFilePath);
             }
@@ -123,7 +124,7 @@ public class PutFileHandler {
 
     /**
      * Encrypts the given byte[] data using the given CryptoStrategy, then proceeds to write the encrypted bytes to a local file.
-     * Once the file has been written, the method {@link #assertEncryptedChecksumMatch(OffsetDateTime)} is called.
+     * Once the file has been written, the method {@link #assertEncryptedChecksumMatch()} is called.
      *
      * @param unencryptedFileData The unencrypted data, read from a file, as a byte[].
      */
@@ -132,29 +133,22 @@ public class PutFileHandler {
         boolean encryptedFileCreated = writeBytesToFile(encryptedBytes, ENCRYPTED_FILES_PATH, collectionID, fileID);
 
         if (encryptedFileCreated) {
-            OffsetDateTime encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-            setCalculationTimestamp(encryptedTimestamp);
-            assertEncryptedChecksumMatch(encryptedTimestamp);
+            encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+            setCalculationTimestamp();
+            assertEncryptedChecksumMatch();
         }
     }
 
     /**
      * Compares the checksums of the decrypted bytes with the expected checksum to ensure correct encryption.
      * If the checksums match, then a checksum of the encrypted data will be generated, together with a timestamp.
-     * <p/>
-     * Afterwards the local database will be updated to include information about the file and the encryption parameters.
-     *
-     * @param encryptedTimestamp The timestamp for when the file was encrypted.
      */
-    private void assertEncryptedChecksumMatch(OffsetDateTime encryptedTimestamp) throws MismatchingChecksumsException {
+    private void assertEncryptedChecksumMatch() throws MismatchingChecksumsException {
         byte[] encryptedFileData = readBytesFromFile(encryptedFilePath);
 
         if (compareChecksums(crypto.decrypt(encryptedFileData), checksumSpec, expectedChecksum)) {
-            String encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData), checksumSpec);
-            OffsetDateTime checksumTimestamp = OffsetDateTime.now(Clock.systemUTC());
+            encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData), checksumSpec);
             checksumDataForFileTYPE.setChecksumValue(Base16Utils.encodeBase16(encryptedChecksum));
-
-            updateLocalDatabase(encryptedTimestamp, encryptedChecksum, checksumTimestamp);
         } else {
             log.error("Checksum of encrypted file did not match. Try PutFile again.");
             deleteFileLocally(encryptedFilePath);
@@ -170,7 +164,7 @@ public class PutFileHandler {
         boolean printChecksums = false;
         eventHandler = new PutFileEventHandler(settings, output, printChecksums);
 
-        log.info("Attempting to put file on FileExchange.");
+        log.debug("Attempting to put file on FileExchange.");
         URL fileURL = context.getFileExchange().putFile(new File(encryptedFilePath.toString()));
 
         PutFileClient client = ModifyComponentFactory.getInstance().retrievePutClient(settings, securityManager, settings.getComponentID());
@@ -180,7 +174,10 @@ public class PutFileHandler {
         if (waitForPillarToHandleRequest()) {
             //TODO: Let JobScheduler know status
             log.info("File Put Successfully");
+            updateLocalDatabase();
+            handleStateAndJobDoneHandler();
         } else {
+            //TODO: AuditTrail + Alarm
             log.error("File was not put");
         }
     }
@@ -192,20 +189,17 @@ public class PutFileHandler {
     }
 
     /**
-     * Sets the Calculation Timestamp property of the checksumDataForFileTYPE object.
-     *
-     * @param timestamp The timestamp in OffsetDateTime format.
+     * Sets the Calculation Timestamp property of the checksumDataForFileTYPE object as type XMLGregorianCalendar.
      */
-    private void setCalculationTimestamp(OffsetDateTime timestamp) {
+    private void setCalculationTimestamp() {
         checksumDataForFileTYPE.setCalculationTimestamp(
-                CalendarUtils.getXmlGregorianCalendar(new Date(timestamp.toInstant().toEpochMilli())));
+                CalendarUtils.getXmlGregorianCalendar(new Date(encryptedTimestamp.toInstant().toEpochMilli())));
     }
 
     /**
      * Updates the encryption parameters, so that they match the ones used to encrypt the file that is currently being worked on.
      */
     private void updateCryptoParameters() {
-        //TODO: Move this method to JobHandler (?)
         EncryptedParametersData paramData = (EncryptedParametersData) dao.select(collectionID, fileID, ENC_PARAMS_TABLE);
         crypto.setSalt(paramData.getSalt());
         crypto.setIV(new IvParameterSpec(paramData.getIv()));
@@ -214,16 +208,11 @@ public class PutFileHandler {
     /**
      * Updates the local database to include the information about the file, for easy access and decrypting at a later state by storing
      * the encryption parameters.
-     *
-     * @param encryptedTimestamp The timestamp of when the file was encrypted.
-     * @param encryptedChecksum  The checksum of the encrypted file.
-     * @param checksumTimestamp  The timestamp of when the encrypted checksum was successfully compared.
      */
-    private void updateLocalDatabase(OffsetDateTime encryptedTimestamp, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
-        //FIXME: Only do this after we know the data is added to the pillar (?) - so move to e.g. JobScheduler
+    private void updateLocalDatabase() {
         dao.insertIntoEncParams(collectionID, fileID, crypto.getSalt(), crypto.getIV().getIV(), crypto.getIterations());
         dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum,
-                checksumTimestamp);
+                OffsetDateTime.now(Clock.systemUTC()));
         log.debug("Local database updated to include: {}/{}", collectionID, fileID);
     }
 

@@ -31,7 +31,7 @@ public class DatabaseDAO {
      * @param iterations   The number of iterations.
      */
     public void insertIntoEncParams(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
-        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?)", ENC_PARAMS_TABLE);
+        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?) ON CONFLICT DO NOTHING", ENC_PARAMS_TABLE);
         executeQuery(query, collectionID, fileID, salt, iv, iterations);
     }
 
@@ -46,8 +46,10 @@ public class DatabaseDAO {
      * @param encChecksum        The checksum of the encrypted file.
      * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
-    public void insertIntoFiles(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encChecksum, OffsetDateTime checksumTimestamp) {
-        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?)", FILES_TABLE);
+    public void insertIntoFiles(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp,
+                                String checksum, String encChecksum, OffsetDateTime checksumTimestamp) {
+        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                FILES_TABLE);
         executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
     }
 
@@ -135,7 +137,8 @@ public class DatabaseDAO {
      * @param newTimestamp    The new timestamp that will replace the old one.
      */
     public void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime newTimestamp) {
-        String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE, timestampColumn);
+        String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
+                timestampColumn);
         executeQuery(query, newTimestamp, collectionID, fileID);
     }
 
@@ -151,8 +154,11 @@ public class DatabaseDAO {
      * @param encryptedChecksum  The encrypted checksum of the new encrypted file.
      * @param checksumTimestamp  The timestamp for when the checksum was computed.
      */
-    public void updateFilesTable(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp, String checksum, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
-        String query = String.format(Locale.getDefault(), "UPDATE %s SET " + "received_timestamp = ?, " + "encrypted_timestamp = ?, " + "checksum = ?, " + "encrypted_checksum = ?, " + "checksum_timestamp = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE);
+    public void updateFilesTable(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp,
+                                 String checksum, String encryptedChecksum, OffsetDateTime checksumTimestamp) {
+        String query = String.format(Locale.getDefault(),
+                "UPDATE %s SET " + "received_timestamp = ?, " + "encrypted_timestamp = ?, " + "checksum = ?, " +
+                        "encrypted_checksum = ?, " + "checksum_timestamp = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE);
         executeQuery(query, receivedTimestamp, encryptedTimestamp, checksum, encryptedChecksum, checksumTimestamp, collectionID, fileID);
 
     }
@@ -168,7 +174,8 @@ public class DatabaseDAO {
      * @param iterations   The number of iterations used in the encryption of the new file.
      */
     public void updateEncryptionParametersTable(String collectionID, String fileID, String salt, byte[] iv, int iterations) {
-        String query = String.format(Locale.getDefault(), "UPDATE %s SET " + "salt = ?, " + "iv = ?, " + "iterations = ? WHERE collection_id = ? AND file_id = ?", ENC_PARAMS_TABLE);
+        String query = String.format(Locale.getDefault(),
+                "UPDATE %s SET " + "salt = ?, " + "iv = ?, " + "iterations = ? WHERE collection_id = ? AND file_id = ?", ENC_PARAMS_TABLE);
         executeQuery(query, salt, iv, iterations, collectionID, fileID);
 
     }
