@@ -24,9 +24,9 @@ public class AESCryptoStrategy implements CryptoStrategy {
     private final String CIPHER_ALGO = "AES/CBC/PKCS5Padding";
     private final int KEY_LENGTH = 256;
     private int HASHING_ITERATIONS = 100_000;
-    private final String salt;
+    private String salt;
     private final SecretKey secretKey; // TODO consider base64-encoding to string
-    private final IvParameterSpec iv;
+    private IvParameterSpec iv;
     private final Cipher cipher;
 
     public AESCryptoStrategy(String password) {
@@ -101,7 +101,8 @@ public class AESCryptoStrategy implements CryptoStrategy {
 
 
     private void doTranscipher(Path inputFile, Path encryptedOutputFile) {
-        try (InputStream inputStream = Files.newInputStream(inputFile); OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
+        try (InputStream inputStream = Files.newInputStream(inputFile);
+             OutputStream outputStream = Files.newOutputStream(encryptedOutputFile)) {
 
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -192,5 +193,15 @@ public class AESCryptoStrategy implements CryptoStrategy {
     @Override
     public int getIterations() {
         return HASHING_ITERATIONS;
+    }
+
+    @Override
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
+
+    @Override
+    public void setIV(IvParameterSpec iv) {
+        this.iv = iv;
     }
 }

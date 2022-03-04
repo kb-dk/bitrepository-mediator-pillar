@@ -30,6 +30,10 @@
   <logger name="org.bitrepository.common" level="ERROR"/>
   <logger name="org.apache.activemq.transport" level="ERROR"/>
   <logger name="org.apache.activemq.broker.jmx.ManagementContext" level="ERROR"/>
+  <logger name="org.apache.activemq.broker.TransportConnection" level="ERROR"/>
+  <logger name="org.apache.activemq.broker.TransportConnector" level="ERROR"/>
+  <logger name="org.apache.activemq.broker.BrokerService" level="ERROR"/>
+  <logger name="org.apache.activemq.broker.region.AbstractRegion" level="ERROR"/>
   <logger name="org.apache.activemq.util.ThreadPoolUtils" level="ERROR"/>
   <logger name="org.apache.activemq.thread.TaskRunnerFactory" level="ERROR"/>
 

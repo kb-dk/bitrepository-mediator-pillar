@@ -59,11 +59,13 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     protected static void initSuite() throws IOException {
         initTestingDAO();
         setupSettingsEtc();
+        //TODO: Class<?> crypto = Class.forName("dk.kb.bitrepository.mediator.crypto.SpecificCrypto.class");
         crypto = new AESCryptoStrategy(cryptoConfigurations.getPassword());
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
         ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
         UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
         componentID = settings.getComponentID() + "-test-client";
+
         initImportantServices(false);
     }
 

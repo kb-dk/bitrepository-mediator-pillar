@@ -7,6 +7,7 @@ import org.bitrepository.bitrepositoryelements.ChecksumType;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
+import org.bitrepository.common.utils.Base16Utils;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 import static org.apache.commons.io.FileUtils.cleanDirectory;
 import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
@@ -39,7 +39,7 @@ public class TestingUtilities {
         String checksum = generateChecksum(new ByteArrayInputStream(bytes), checksumSpecTYPE);
         ChecksumDataForFileTYPE checksumDataForFileTYPE = new ChecksumDataForFileTYPE();
         checksumDataForFileTYPE.setChecksumSpec(checksumSpecTYPE);
-        checksumDataForFileTYPE.setChecksumValue(checksum.getBytes(Charset.defaultCharset()));
+        checksumDataForFileTYPE.setChecksumValue(Base16Utils.encodeBase16(checksum));
 
         return checksumDataForFileTYPE;
     }

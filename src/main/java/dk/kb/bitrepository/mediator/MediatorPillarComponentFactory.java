@@ -68,7 +68,7 @@ public class MediatorPillarComponentFactory {
         PermissionStore permissionStore = new PermissionStore();
         MessageAuthenticator authenticator = new BasicMessageAuthenticator(permissionStore);
         MessageSigner signer = new BasicMessageSigner();
-        OperationAuthorizor authorizer = new BasicOperationAuthorizor(permissionStore);
+        OperationAuthorizer authorizer = new BasicOperationAuthorizer(permissionStore);
         return new BasicSecurityManager(refPillarSettings.getRepositorySettings(), pathToPrivateKeyFile, authenticator, signer, authorizer,
                 permissionStore, refPillarSettings.getComponentID());
     }
@@ -88,10 +88,6 @@ public class MediatorPillarComponentFactory {
 
     public static PillarConfigurations getPillarConfigurations() {
         return pillarConfigurations;
-    }
-
-    public static void setPillarConfigurations(PillarConfigurations pillarConfigurations) {
-        MediatorPillarComponentFactory.pillarConfigurations = pillarConfigurations;
     }
 
     public static void setSecurityManager(SecurityManager securityManager) {

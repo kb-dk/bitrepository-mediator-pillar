@@ -193,7 +193,7 @@
               Default value, when undefined is: 
               'org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager'.
      -->
-    <FileStoreClass>org.bitrepository.pillar.referencepillar.archive.CollectionArchiveManager</FileStoreClass>
+    <FileStoreClass>org.bitrepository.pillar.store.filearchive.CollectionArchiveManager</FileStoreClass>
   </PillarSettings>
 
   <!-- 

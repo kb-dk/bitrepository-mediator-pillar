@@ -2,9 +2,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +16,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
 public class PutFileHandlerIT extends IntegrationFileHandlerTest {
+    @BeforeAll
+    protected static void setup() {
+        startRealMessageBus();
+        startEmbeddedPillar();
+    }
+
+    @BeforeEach
+    protected void cleanupBefore() {
+        cleanUpDatabase();
+        cleanUpAfterEach();
+    }
+
+    @AfterAll
+    protected static void cleanup() {
+        stopEmbeddedPillar();
+    }
+
     @Test
     @DisplayName("Test PutFile method")
     public void testPutFile() throws MismatchingChecksumsException {

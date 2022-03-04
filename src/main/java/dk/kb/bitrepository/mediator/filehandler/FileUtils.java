@@ -1,12 +1,18 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
+import org.bitrepository.commandline.Constants;
+import org.bitrepository.protocol.FileExchange;
+import org.bitrepository.protocol.ProtocolComponentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -133,5 +139,31 @@ public class FileUtils {
         String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
 
         return newChecksum.equals(expectedChecksum);
+    }
+
+    /**
+     * Computes the size in long of the file to be put on the pillar.
+     *
+     * @param filePath The Path to the file as String.
+     * @return The size of the file in Long.
+     */
+    public static long getFileSize(String filePath) {
+        File file = new File(filePath);
+        if (!file.isFile()) {
+            throw new IllegalArgumentException("The file '" + filePath + "' is invalid. It does not exists or it "
+                    + "is a directory.");
+        }
+
+        return file.length();
+    }
+
+    /**
+     * Computes the size in long of the file to be put on the pillar.
+     *
+     * @param filePath The Path to the file as Path type.
+     * @return The size of the file in Long.
+     */
+    public static long getFileSize(Path filePath) {
+        return getFileSize(filePath.toString());
     }
 }

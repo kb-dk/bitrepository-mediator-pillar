@@ -26,7 +26,7 @@ import dk.kb.bitrepository.mediator.pillaraccess.database.ReferencePillarDerbyDB
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.utils.FileUtils;
 import org.bitrepository.pillar.Pillar;
-import org.bitrepository.pillar.referencepillar.ReferencePillar;
+import org.bitrepository.pillar.PillarComponentFactory;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageBusManager;
 import org.bitrepository.service.LifeCycledService;
@@ -54,7 +54,7 @@ public class EmbeddedPillar implements LifeCycledService {
         MessageBus messageBus = initialize(pillarSettings);
         pillarSettings.getReferenceSettings().getPillarSettings().setPillarType(PillarType.FILE);
 
-        return new EmbeddedPillar(new ReferencePillar(messageBus, pillarSettings));
+        return new EmbeddedPillar(PillarComponentFactory.getInstance().createPillar(pillarSettings, messageBus));
     }
 
     private static MessageBus initialize(Settings pillarSettings) {

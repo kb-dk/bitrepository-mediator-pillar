@@ -3,7 +3,6 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
 import org.bitrepository.bitrepositoryelements.FilePart;
-import org.bitrepository.common.ArgumentValidator;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.protocol.FileExchange;
 
@@ -25,10 +24,6 @@ public class JobContext {
     public JobContext(String collectionID, String fileID, byte[] fileBytes, FilePart filePart,
                       ChecksumDataForFileTYPE checksumDataForFileTYPE, Settings settings, URL urlForResult, Collection<String> contributors,
                       CryptoStrategy crypto, FileExchange fileExchange) {
-        ArgumentValidator.checkNotNull(collectionID, "Collection ID");
-        ArgumentValidator.checkNotNull(settings, "Settings");
-        ArgumentValidator.checkNotNull(crypto, "Crypto Strategy");
-        ArgumentValidator.checkNotNullOrEmpty(contributors, "Contributors");
         this.collectionID = collectionID;
         this.fileID = fileID;
         this.fileBytes = fileBytes;
@@ -40,6 +35,7 @@ public class JobContext {
         // Crypto needs to be initialized with the IV and Salt that was used to encrypt the file (Get this from DAO) when a file is
         // queued that comes from either the local storage or a pillar.
         this.crypto = crypto;
+        //TODO: Remove fileExchange from this object - can get it through MediatorPillarComponentFactory
         this.fileExchange = fileExchange;
     }
 

@@ -9,8 +9,8 @@ import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
-import org.bitrepository.common.ArgumentValidator;
 import org.bitrepository.common.settings.Settings;
+import org.bitrepository.common.utils.Base16Utils;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.Logger;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
@@ -38,9 +37,6 @@ public class GetFileHandler {
     private CompleteEventAwaiter eventHandler;
 
     public GetFileHandler(JobContext context) {
-        ArgumentValidator.checkNotNull(context.getFileID(), "File ID");
-        ArgumentValidator.checkNotNull(context.getChecksumDataForFileTYPE(), "Checksum Data for FileType");
-        ArgumentValidator.checkNotNull(context.getFileExchange(), "FileExchange");
         this.context = context;
         this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
@@ -96,10 +92,10 @@ public class GetFileHandler {
             localBytes = crypto.decrypt(encryptedBytes);
         }
         if (localBytes != null) {
-            if (compareChecksums(localBytes, checksumData.getChecksumSpec(),
-                    new String(checksumData.getChecksumValue(), Charset.defaultCharset()))) return localBytes;
+            String expectedChecksum = Base16Utils.decodeBase16(checksumData.getChecksumValue());
+            compareChecksums(localBytes, checksumData.getChecksumSpec(), expectedChecksum);
         }
-        return null;
+        return localBytes;
     }
 
     private void getFileFromPillar() {
