@@ -8,11 +8,14 @@ import org.bitrepository.client.conversation.mediator.CollectionBasedConversatio
 import org.bitrepository.client.conversation.mediator.ConversationMediatorManager;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.utils.SettingsUtils;
+import org.bitrepository.pillar.store.checksumdatabase.ChecksumDAO;
+import org.bitrepository.pillar.store.checksumdatabase.ChecksumDatabaseManager;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.ProtocolComponentFactory;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.messagebus.MessageBusManager;
 import org.bitrepository.protocol.security.SecurityManager;
+import org.bitrepository.service.database.DatabaseManager;
 import org.bitrepository.settings.referencesettings.PillarType;
 import org.bitrepository.settings.referencesettings.ProtocolType;
 import org.junit.jupiter.api.AfterAll;
@@ -30,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -224,6 +228,14 @@ public class IntegrationFileHandlerTest extends TestingDAO {
      */
     protected void clearReceivers() {
         receiverManager.clearMessagesInReceivers();
+    }
+
+    protected static void resetPillarData(Path filePath, String parentDir) {
+        if (Files.exists(filePath)) {
+            DatabaseManager checksumDatabaseManager = new ChecksumDatabaseManager(settings);
+            new ChecksumDAO(checksumDatabaseManager).deleteEntry(FILE_ID, COLLECTION_ID);
+            cleanupFiles(parentDir);
+        }
     }
 
 }

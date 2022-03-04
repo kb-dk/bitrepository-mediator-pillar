@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
 public class PutFileHandlerIT extends IntegrationFileHandlerTest {
+    private static final String pillarFilesDir = "target/test/fileArchive/collection_id/fileDir/";
+    private static final Path pillarFilePath = Path.of("target/test/fileArchive/collection_id/fileDir/file_id");
+
     @BeforeAll
     protected static void setup() {
         startRealMessageBus();
@@ -33,6 +36,11 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     protected void cleanupBefore() {
         cleanUpDatabase();
         cleanUpAfterEach();
+    }
+
+    @AfterEach
+    protected void afterEach() {
+        resetPillarData(pillarFilePath, pillarFilesDir);
     }
 
     @AfterAll
@@ -55,7 +63,6 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
 
-        Path pillarFilePath = Path.of("target/test/fileArchive/collection_id/fileDir/file_id");
         assertTrue(Files.exists(pillarFilePath));
         assertTrue(compareChecksums(readBytesFromFile(pillarFilePath), checksumDataForFileTYPE.getChecksumSpec(),
                 Base16Utils.decodeBase16(checksumDataForFileTYPE.getChecksumValue())));
@@ -75,20 +82,37 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         handler.performPutFile();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
+        assertTrue(Files.exists(pillarFilePath));
 
         cleanupFiles(ENCRYPTED_FILES_PATH);
+        resetPillarData(pillarFilePath, pillarFilesDir);
 
         // Tests using the unencrypted existing file
         handler.performPutFile();
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
 
+        assertTrue(Files.exists(pillarFilePath));
+        assertTrue(compareChecksums(readBytesFromFile(pillarFilePath), checksumDataForFileTYPE.getChecksumSpec(),
+                Base16Utils.decodeBase16(checksumDataForFileTYPE.getChecksumValue())));
+        assertNotEquals(fileContent, new String(readBytesFromFile(pillarFilePath), StandardCharsets.UTF_8));
+        EncryptedParametersData params = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        CryptoStrategy aes = new AESCryptoStrategy(encryptionPassword, params.getSalt(), params.getIv());
+        assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(pillarFilePath)), StandardCharsets.UTF_8));
+
         cleanupFiles(UNENCRYPTED_FILES_PATH);
+        resetPillarData(pillarFilePath, pillarFilesDir);
 
         // Test using the encrypted existing file
         handler.performPutFile();
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE));
+
+        assertTrue(Files.exists(pillarFilePath));
+        assertTrue(compareChecksums(readBytesFromFile(pillarFilePath), checksumDataForFileTYPE.getChecksumSpec(),
+                Base16Utils.decodeBase16(checksumDataForFileTYPE.getChecksumValue())));
+        assertNotEquals(fileContent, new String(readBytesFromFile(pillarFilePath), StandardCharsets.UTF_8));
+        assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(pillarFilePath)), StandardCharsets.UTF_8));
     }
 
     @Test
