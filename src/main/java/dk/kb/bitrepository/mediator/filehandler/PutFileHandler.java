@@ -58,7 +58,7 @@ public class PutFileHandler {
     }
 
     /**
-     * The main method that is called to handle the PutFile operation.
+     * Performs the PutFile operation.
      */
     public void performPutFile() throws MismatchingChecksumsException {
         DatabaseDAO dao = getDAO();
@@ -78,7 +78,7 @@ public class PutFileHandler {
             log.debug("Using existing unencrypted file");
             handleUnencryptedFile();
         } else {
-            log.debug("No local files found so creating it");
+            log.debug("Creating file locally");
             if (writeBytesToFile(context.getFileBytes(), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
                 handleUnencryptedFile();
             }
@@ -151,6 +151,11 @@ public class PutFileHandler {
         }
     }
 
+    /**
+     * Puts the file on the File Exchange and contacts the pillar to have it pull the file from File Exchange to its own storage.
+     *
+     * @return The finishing event of the EventHandler. That is whether the operation is COMPLETE or FAILED.
+     */
     private OperationEvent putFileOnPillar() {
         Settings settings = context.getSettings();
         String auditTrailInformation = "AuditTrailInfo for PutFileHandler.";
