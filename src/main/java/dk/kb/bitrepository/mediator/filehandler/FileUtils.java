@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Locale;
 
 import static java.lang.String.format;
@@ -65,6 +66,16 @@ public class FileUtils {
     }
 
     /**
+     * Used to check if the file at the given path exists.
+     *
+     * @param path The path to check for the file.
+     * @return Whether there exists a file at the given path.
+     */
+    public static boolean fileExists(Path path) {
+        return Files.exists(path);
+    }
+
+    /**
      * Returns a complete file path given the directory, collectionID and fileID of a file.
      *
      * @param directory    The directory, files or encrypted-files.
@@ -84,17 +95,24 @@ public class FileUtils {
      * Performs a check to see if the given file directories exists.
      * If this is not the case, then the directories will be created.
      */
-    protected static void ensureDirectoryExists(String... directories) {
-        for (String dir : directories) {
-            if (!Files.exists(Path.of(dir))) {
+    protected static void ensureDirectoryExists(Path... directories) {
+        for (Path dir : directories) {
+            if (!Files.exists(dir)) {
                 try {
-                    Files.createDirectories(Path.of(dir));
+                    Files.createDirectories(dir);
                     log.debug("Created directory {}", dir);
                 } catch (IOException e) {
                     log.error("Could not create directory {}", dir, e);
                 }
             }
         }
+    }
+
+    /**
+     * See {@link #ensureDirectoryExists(Path...)} for more information.
+     */
+    protected static void ensureDirectoryExists(String... directories) {
+        Arrays.stream(directories).forEach((dir) -> ensureDirectoryExists(Path.of(dir)));
     }
 
     /**
@@ -113,6 +131,16 @@ public class FileUtils {
     }
 
     /**
+     * Reads bytes from a local file.
+     *
+     * @param path The string value of the path to the local file.
+     * @return Returns the file data as a byte array.
+     */
+    protected static byte[] readBytesFromFile(String path) {
+        return readBytesFromFile(Path.of(path));
+    }
+
+    /**
      * Deletes a local file.
      *
      * @param path The path to the file to delete.
@@ -120,6 +148,7 @@ public class FileUtils {
     protected static void deleteFileLocally(Path path) {
         try {
             Files.delete(path);
+            log.info("File {} deleted", path);
         } catch (IOException e) {
             log.error("Could no delete file {}.", path);
         }
@@ -149,8 +178,7 @@ public class FileUtils {
     public static long getFileSize(String filePath) {
         File file = new File(filePath);
         if (!file.isFile()) {
-            throw new IllegalArgumentException("The file '" + filePath + "' is invalid. It does not exists or it "
-                    + "is a directory.");
+            throw new IllegalArgumentException("The file '" + filePath + "' is invalid. It does not exists or it " + "is a directory.");
         }
 
         return file.length();

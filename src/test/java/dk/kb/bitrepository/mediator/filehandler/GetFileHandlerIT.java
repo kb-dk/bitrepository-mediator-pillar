@@ -70,7 +70,6 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         assertDoesNotThrow(getFileHandler::performGetFile);
     }
 
-    @Disabled
     @Test
     @DisplayName("Test #GetFileHandler using file on pillar")
     public void testGetFileHandlerUsingPillarFile() throws MismatchingChecksumsException, MalformedURLException {

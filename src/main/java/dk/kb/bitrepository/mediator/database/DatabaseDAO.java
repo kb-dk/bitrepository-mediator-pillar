@@ -1,6 +1,5 @@
 package dk.kb.bitrepository.mediator.database;
 
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +47,7 @@ public class DatabaseDAO {
      */
     public void insertIntoFiles(String collectionID, String fileID, OffsetDateTime receivedTimestamp, OffsetDateTime encryptedTimestamp,
                                 String checksum, String encChecksum, OffsetDateTime checksumTimestamp) {
-        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                FILES_TABLE);
+        String query = String.format(Locale.getDefault(), "INSERT INTO %s VALUES(?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING", FILES_TABLE);
         executeQuery(query, collectionID, fileID, receivedTimestamp, encryptedTimestamp, checksum, encChecksum, checksumTimestamp);
     }
 
@@ -86,8 +84,8 @@ public class DatabaseDAO {
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
                 if (table.equals(ENC_PARAMS_TABLE)) {
-                    out = new EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3),
-                            result.getBytes(4), result.getInt(5));
+                    out = new EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3), result.getBytes(4),
+                            result.getInt(5));
                 } else if (table.equals(FILES_TABLE)) {
                     out = new FilesData(result.getString(1), result.getString(2), result.getObject(3, OffsetDateTime.class),
                             result.getObject(4, OffsetDateTime.class), result.getString(5), result.getString(6),
@@ -186,13 +184,12 @@ public class DatabaseDAO {
      * @param query The query to execute.
      * @param args  The arguments to put in the given query.
      */
-    private void executeQuery(String query, @NotNull Object... args) {
+    private void executeQuery(String query, Object... args) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = DatabaseUtils.createPreparedStatement(connection, query, args)) {
 
             String finalQuery = statement.toString();
-            log.debug("Executing >>" +
-                    finalQuery.substring(finalQuery.indexOf("wrapping")).replace("wrapping ", ""));
+            log.debug("Executing >>" + finalQuery.substring(finalQuery.indexOf("wrapping")).replace("wrapping ", ""));
             statement.executeUpdate();
         } catch (SQLException e) {
             log.error("Error in executing SQL query:\n", e);

@@ -4,7 +4,6 @@ import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.bitrepository.bitrepositoryelements.FilePart;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
@@ -46,30 +45,27 @@ public class GetFileHandler {
     }
 
     public void performGetFile() {
-        FilePart filePart = context.getFilePart();
-
         log.debug("Attempting to find file locally.");
-        byte[] fileBytes = checkLocalStorageForFile();
-        if (fileBytes == null) {
+        File file = checkLocalStorageForFile();
+        if (file == null) {
             log.debug("Attempting to get file from pillar.");
             getFileFromPillar();
             if (waitForPillarToHandleRequest()) {
-                Path filePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
                 try {
-                    ensureDirectoryExists(createFileDir(ENCRYPTED_FILES_PATH, context.getCollectionID()).toString());
-                    fileExchange.getFile(new File(filePath.toString()), fileExchange.getURL(context.getFileID()).toString());
+                    ensureDirectoryExists(createFileDir(ENCRYPTED_FILES_PATH, context.getCollectionID()));
+                    fileExchange.getFile(new File(encryptedFilePath.toString()), fileExchange.getURL(context.getFileID()).toString());
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }
-                fileBytes = readBytesFromFile(filePath);
+                file = decryptAndCreateFile();
             } else {
                 log.error("Error occurred on pillar.");
                 return;
             }
         }
-        if (filePart != null) {
+        if (context.getFilePart() != null) {
             log.debug("Getting file part");
-            fileBytes = getFilePart(fileBytes);
+            file = getFilePart(file);
         }
         //TODO: handle the bytes either as a Response or delegate to JobHandler?
     }
@@ -80,23 +76,36 @@ public class GetFileHandler {
         return eventType.equals(OperationEventType.COMPLETE);
     }
 
-    private byte[] checkLocalStorageForFile() {
-        byte[] localBytes = null;
-        if (fileExists(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
+    private File checkLocalStorageForFile() {
+        File localFile = null;
+        if (fileExists(unencryptedFilePath)) {
             log.debug("Using local unencrypted file.");
-            localBytes = readBytesFromFile(unencryptedFilePath);
+            localFile = new File(unencryptedFilePath.toString());
 
-        } else if (fileExists(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
-            //TODO: What if encrypted file is locally, but DAO doesn't have salt and IV yet => can't decrypt
+        } else if (fileExists(encryptedFilePath)) {
             log.debug("Using local encrypted file.");
-            byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
-            localBytes = crypto.decrypt(encryptedBytes);
+            localFile = decryptAndCreateFile();
         }
-        if (localBytes != null) {
+        if (localFile != null) {
             String expectedChecksum = Base16Utils.decodeBase16(checksumData.getChecksumValue());
-            compareChecksums(localBytes, checksumData.getChecksumSpec(), expectedChecksum);
+            compareChecksums(readBytesFromFile(unencryptedFilePath), checksumData.getChecksumSpec(), expectedChecksum);
         }
-        return localBytes;
+        return localFile;
+    }
+
+    /**
+     * Decrypts the bytes of file found at the encrypted file path.
+     * An unencrypted file is created in the unencrypted file path. This is done by writing the bytes of the file at the encrypted file
+     * path to a temp folder, and only moving the file to the unencrypted path once all the bytes has been successfully written to the file.
+     *
+     * @return A File object from the unencrypted file path. If the file is not written successfully returns null.
+     */
+    private File decryptAndCreateFile() {
+        byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
+        if (writeBytesToFile(crypto.decrypt(encryptedBytes), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
+            return new File(unencryptedFilePath.toString());
+        }
+        return null;
     }
 
     private void getFileFromPillar() {
@@ -117,7 +126,7 @@ public class GetFileHandler {
         }
     }
 
-    private byte[] getFilePart(byte[] fileBytes) {
+    private File getFilePart(File fileBytes) {
         return null;
     }
 
