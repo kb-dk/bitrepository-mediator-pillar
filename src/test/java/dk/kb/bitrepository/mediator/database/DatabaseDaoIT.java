@@ -29,13 +29,11 @@ public class DatabaseDaoIT extends TestingDAO {
     @Test
     @DisplayName("Test Insert, Select, and Delete for 'encrypted_parameters' table")
     public void TestInsertSelectAndDeleteForEncParametersTable() {
-        String table = ENC_PARAMS_TABLE;
-
         // Insert some information
         dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
 
         // Get the information from the table with a SELECT query
-        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, table);
+        EncryptedParametersData result = dao.getEncParams(COLLECTION_ID, FILE_ID);
 
         // Assert that there is now a result
         assertNotNull(result);
@@ -48,10 +46,10 @@ public class DatabaseDaoIT extends TestingDAO {
         assertEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
 
         // Delete the information using the composite key (collection_id, file_id)
-        dao.delete(COLLECTION_ID, FILE_ID, table);
+        dao.delete(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
 
         // Perform a SELECT query again
-        result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, table);
+        result = dao.getEncParams(COLLECTION_ID, FILE_ID);
 
         // Assert that the query returned null since it should have been deleted
         assertNull(result);
@@ -63,7 +61,7 @@ public class DatabaseDaoIT extends TestingDAO {
         dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         assertNotNull(result, "Result should be of 'FilesData' type.");
 
@@ -79,18 +77,16 @@ public class DatabaseDaoIT extends TestingDAO {
     @Test
     @DisplayName("Test Update of Encrypted Timestamp in 'files' table")
     public void TestUpdateEncryptedTimestampInFilesTable() {
-        String table = FILES_TABLE;
-
         dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         OffsetDateTime oldTimestamp = result.getEncryptedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_ENCRYPTED_TIMESTAMP, newTimestamp);
-        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        dao.updateEncryptedTimestamp(COLLECTION_ID, FILE_ID, newTimestamp);
+        result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         assertEquals(result.getEncryptedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getEncryptedTimestamp());
@@ -99,18 +95,16 @@ public class DatabaseDaoIT extends TestingDAO {
     @Test
     @DisplayName("Test Update of Checksum Timestamp in 'files' table")
     public void TestUpdateChecksumTimestampInFilesTable() {
-        String table = FILES_TABLE;
-
         dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         OffsetDateTime oldTimestamp = result.getChecksumTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_CHECKSUM_TIMESTAMP, newTimestamp);
-        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        dao.updateChecksumTimestamp(COLLECTION_ID, FILE_ID, newTimestamp);
+        result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         assertEquals(result.getChecksumTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getChecksumTimestamp());
@@ -119,18 +113,16 @@ public class DatabaseDaoIT extends TestingDAO {
     @Test
     @DisplayName("Test Update of Received Timestamp in 'files' table")
     public void TestUpdateReceivedTimestampInFilesTable() {
-        String table = FILES_TABLE;
-
         dao.insertIntoFiles(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP_MOCKUP, FILES_ENCRYPTED_TIMESTAMP_MOCKUP,
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
 
-        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        FilesData result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         OffsetDateTime oldTimestamp = result.getReceivedTimestamp();
         OffsetDateTime newTimestamp = OffsetDateTime.now(ZoneOffset.UTC);
 
-        dao.updateTimestamp(COLLECTION_ID, FILE_ID, FILES_RECEIVED_TIMESTAMP, newTimestamp);
-        result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, table);
+        dao.updateReceivedTimestamp(COLLECTION_ID, FILE_ID, newTimestamp);
+        result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         assertEquals(result.getReceivedTimestamp(), newTimestamp);
         assertNotEquals(oldTimestamp, result.getReceivedTimestamp());
@@ -143,7 +135,7 @@ public class DatabaseDaoIT extends TestingDAO {
                 FILES_CHECKSUM, FILES_ENC_CHECKSUM, FILES_CHECKSUM_TIMESTAMP_MOCKUP);
         dao.updateFilesTable(COLLECTION_ID, FILE_ID, OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
                 FILES_CHECKSUM + "_new", FILES_ENC_CHECKSUM + "_new", OffsetDateTime.now(ZoneOffset.UTC));
-        FilesData result = (FilesData) dao.select(COLLECTION_ID, FILE_ID, FILES_TABLE);
+        FilesData result = dao.getFileData(COLLECTION_ID, FILE_ID);
 
         assertNotEquals(FILES_RECEIVED_TIMESTAMP_MOCKUP, result.getReceivedTimestamp());
         assertNotEquals(FILES_ENCRYPTED_TIMESTAMP_MOCKUP, result.getEncryptedTimestamp());
@@ -159,7 +151,7 @@ public class DatabaseDaoIT extends TestingDAO {
     public void testUpdatingEncryptionParametersTable() {
         dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
         dao.updateEncryptionParametersTable(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
-        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData result = dao.getEncParams(COLLECTION_ID, FILE_ID);
 
         assertNotEquals(ENC_PARAMS_SALT, result.getSalt());
         assertNotEquals(ENC_PARAMS_ITERATIONS, result.getIterations());
@@ -174,7 +166,7 @@ public class DatabaseDaoIT extends TestingDAO {
         dao.insertIntoEncParams(COLLECTION_ID, FILE_ID, ENC_PARAMS_SALT, ENC_PARAMS_IV, ENC_PARAMS_ITERATIONS);
         dao.updateEncryptionParametersTable(COLLECTION_ID + "test", FILE_ID + "test",
                 ENC_PARAMS_SALT + "_new", ENC_PARAMS_IV, 1234);
-        EncryptedParametersData result = (EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID, ENC_PARAMS_TABLE);
+        EncryptedParametersData result = dao.getEncParams(COLLECTION_ID, FILE_ID);
 
         assertEquals(COLLECTION_ID, result.getCollectionID());
         assertEquals(FILE_ID, result.getFileID());

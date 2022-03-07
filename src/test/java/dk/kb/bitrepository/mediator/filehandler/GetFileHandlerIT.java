@@ -3,7 +3,8 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
-import dk.kb.bitrepository.mediator.database.DatabaseData;
+import dk.kb.bitrepository.mediator.filehandler.context.GetFileContext;
+import dk.kb.bitrepository.mediator.filehandler.context.PutFileContext;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.common.utils.Base16Utils;
 import org.junit.jupiter.api.*;
@@ -20,6 +21,7 @@ import java.util.Collections;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.database.DatabaseData.*;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,14 +57,14 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     public void testGetFileUsingExistingFile() throws MismatchingChecksumsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-        PutFileJobContext context = new PutFileJobContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
+        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
                 settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
         PutFileHandler putFileHandler = new PutFileHandler(context);
 
         putFileHandler.performPutFile();
 
         //Test with both files (will use unencrypted file)
-        GetFileJobContext getFileContext = getJobContext(GetFileJobContext.class);
+        GetFileContext getFileContext = getJobContext(GetFileContext.class);
         GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
         assertDoesNotThrow(getFileHandler::performGetFile);
 
@@ -74,7 +76,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test #GetFileHandler using file on pillar")
     public void testGetFileHandlerUsingPillarFile() throws MismatchingChecksumsException, MalformedURLException {
-        PutFileJobContext putFileContext = getJobContext(PutFileJobContext.class);
+        PutFileContext putFileContext = getJobContext(PutFileContext.class);
         PutFileHandler putFileHandler = new PutFileHandler(putFileContext);
         putFileHandler.performPutFile();
 
@@ -84,15 +86,14 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         cleanupFiles(ENCRYPTED_FILES_PATH);
         cleanupFiles(UNENCRYPTED_FILES_PATH);
 
-        GetFileJobContext getFileContext = getJobContext(GetFileJobContext.class);
+        GetFileContext getFileContext = getJobContext(GetFileContext.class);
         GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
         getFileHandler.performGetFile();
 
         // Assert that the file could be created locally using the file given to FileExchange by the EmbeddedPillar
         Path encryptedPath = createFilePath(ENCRYPTED_FILES_PATH, COLLECTION_ID, FILE_ID);
         assertTrue(Files.exists(encryptedPath));
-        DatabaseData.EncryptedParametersData params = (DatabaseData.EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID,
-                ENC_PARAMS_TABLE);
+        EncryptedParametersData params = dao.getEncParams(COLLECTION_ID, FILE_ID);
         CryptoStrategy aes = new AESCryptoStrategy(encryptionPassword, params.getSalt(), params.getIv());
         assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(encryptedPath)), StandardCharsets.UTF_8));
         assertTrue(compareChecksums(readBytesFromFile(encryptedPath), checksumDataForFileTYPE.getChecksumSpec(),

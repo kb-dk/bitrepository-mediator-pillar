@@ -1,9 +1,9 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
-import dk.kb.bitrepository.mediator.filehandler.GetFileJobContext;
-import dk.kb.bitrepository.mediator.filehandler.JobContext;
-import dk.kb.bitrepository.mediator.filehandler.PutFileJobContext;
+import dk.kb.bitrepository.mediator.filehandler.context.GetFileContext;
+import dk.kb.bitrepository.mediator.filehandler.context.JobContext;
+import dk.kb.bitrepository.mediator.filehandler.context.PutFileContext;
 import dk.kb.bitrepository.mediator.pillaraccess.EmbeddedPillar;
 import dk.kb.bitrepository.mediator.pillaraccess.communication.*;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -230,14 +230,14 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     }
 
     protected <T extends JobContext> T getJobContext(Class<T> c) {
-        if (c.equals(GetFileJobContext.class)) {
+        if (c.equals(GetFileContext.class)) {
 
-            return c.cast(new GetFileJobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
+            return c.cast(new GetFileContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
                     Collections.singleton(encryptedPillarID), crypto));
         }
-        if (c.equals(PutFileJobContext.class)) {
+        if (c.equals(PutFileContext.class)) {
             OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-            return c.cast(new PutFileJobContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE, settings,
+            return c.cast(new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE, settings,
                     fileURL, Collections.singleton(encryptedPillarID), crypto));
         } else {
             return null;

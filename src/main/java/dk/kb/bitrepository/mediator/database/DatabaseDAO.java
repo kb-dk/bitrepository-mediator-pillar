@@ -1,5 +1,6 @@
 package dk.kb.bitrepository.mediator.database;
 
+import dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,6 @@ import java.util.Locale;
 
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILES_TABLE;
-import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.FilesData;
 
 public class DatabaseDAO {
@@ -66,31 +66,25 @@ public class DatabaseDAO {
     }
 
     /**
-     * Performs a SELECT query, and creates the appropriate object containing the resulting data.
+     * Performs a SELECT query, and creates a {@link FilesData} object with the query result.
      *
      * @param collectionID The collection ID which is part of the primary key.
      * @param fileID       The file ID which is part of the primary key.
-     * @param table        Should be either DatabaseConstants.ENC_PARAMS_TABLE or DatabaseConstants.FILES_TABLE.
      * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
      */
-    public DatabaseData select(String collectionID, String fileID, String table) {
-        String query = String.format(Locale.getDefault(), "SELECT * FROM %s WHERE collection_id = '?' AND file_id = '@'", table);
-        query = query.replace("?", collectionID);
-        query = query.replace("@", fileID);
+    public FilesData getFileData(String collectionID, String fileID) {
+        String query = String.format(Locale.getDefault(), "SELECT * FROM files WHERE collection_id = '%s' AND file_id = '%s'", collectionID,
+                fileID);
 
-        DatabaseData out = null;
+        FilesData out = null;
         try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
             log.info("Executing >>" + query);
             ResultSet result = statement.executeQuery(query);
             while (result.next()) {
-                if (table.equals(ENC_PARAMS_TABLE)) {
-                    out = new EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3), result.getBytes(4),
-                            result.getInt(5));
-                } else if (table.equals(FILES_TABLE)) {
-                    out = new FilesData(result.getString(1), result.getString(2), result.getObject(3, OffsetDateTime.class),
-                            result.getObject(4, OffsetDateTime.class), result.getString(5), result.getString(6),
-                            result.getObject(7, OffsetDateTime.class));
-                }
+                out = new FilesData(result.getString(1), result.getString(2), result.getObject(3, OffsetDateTime.class),
+                        result.getObject(4, OffsetDateTime.class), result.getString(5), result.getString(6),
+                        result.getObject(7, OffsetDateTime.class));
+
             }
             result.close();
 
@@ -105,7 +99,36 @@ public class DatabaseDAO {
     }
 
     /**
-     * Performs the DELETE query in the chosen table where collection_id and file_id fits the chosen parameters.
+     * Performs a SELECT query, and creates an {@link EncryptedParametersData} object with the query result.
+     *
+     * @param collectionID The collection ID which is part of the primary key.
+     * @param fileID       The file ID which is part of the primary key.
+     * @return Returns a DatabaseData object containing the data found in the ResultSet that is received from the query.
+     */
+    public EncryptedParametersData getEncParams(String collectionID, String fileID) {
+        String query = String.format(Locale.getDefault(), "SELECT * FROM enc_parameters WHERE collection_id = '%s' AND file_id = '%s'",
+                collectionID, fileID);
+        EncryptedParametersData out = null;
+        try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
+            log.info("Executing >>" + query);
+            ResultSet result = statement.executeQuery(query);
+            while (result.next()) {
+                out = new EncryptedParametersData(result.getString(1), result.getString(2), result.getString(3), result.getBytes(4),
+                        result.getInt(5));
+            }
+            result.close();
+
+            if (out == null) {
+                log.warn("No results were found.");
+            }
+        } catch (SQLException e) {
+            log.error("Error occurred when trying to connect to the database.", e);
+        }
+        return out;
+    }
+
+    /**
+     * Performs the DELETE query in the chosen table using the given parameters as the primary key.
      *
      * @param collectionID The CollectionID of the index to be deleted.
      * @param fileID       The FileID of the index to be deleted.
@@ -127,17 +150,45 @@ public class DatabaseDAO {
     }
 
     /**
-     * Updates the any timestamp column in the 'files' table in the Database.
-     *
-     * @param collectionID    The collection id, part of the primary key.
-     * @param fileID          The file id, part of the primary key.
-     * @param timestampColumn The timestamp column to update, use e.g. 'FILES_ENCRYPTED_TIMESTAMP_NAME' etc.
-     * @param newTimestamp    The new timestamp that will replace the old one.
+     * Used internally to update timestamp fields in the local database.
      */
-    public void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime newTimestamp) {
+    private void updateTimestamp(String collectionID, String fileID, String timestampColumn, OffsetDateTime newTimestamp) {
         String query = String.format(Locale.getDefault(), "UPDATE %s SET %s = ? WHERE collection_id = ? AND file_id = ?", FILES_TABLE,
                 timestampColumn);
         executeQuery(query, newTimestamp, collectionID, fileID);
+    }
+
+    /**
+     * Updates the received timestamp column in the 'files' table in the Database.
+     *
+     * @param collectionID    The collection id, part of the primary key.
+     * @param fileID          The file id, part of the primary key.
+     * @param newTimestamp    The new timestamp that will replace the old one.
+     */
+    public void updateReceivedTimestamp(String collectionID, String fileID, OffsetDateTime newTimestamp) {
+        updateTimestamp(collectionID, fileID, "received_timestamp", newTimestamp);
+    }
+
+    /**
+     * Updates the encrypted timestamp column in the 'files' table in the Database.
+     *
+     * @param collectionID    The collection id, part of the primary key.
+     * @param fileID          The file id, part of the primary key.
+     * @param newTimestamp    The new timestamp that will replace the old one.
+     */
+    public void updateEncryptedTimestamp(String collectionID, String fileID, OffsetDateTime newTimestamp) {
+        updateTimestamp(collectionID, fileID, "encrypted_timestamp", newTimestamp);
+    }
+
+    /**
+     * Updates the checksum timestamp column in the 'files' table in the Database.
+     *
+     * @param collectionID    The collection id, part of the primary key.
+     * @param fileID          The file id, part of the primary key.
+     * @param newTimestamp    The new timestamp that will replace the old one.
+     */
+    public void updateChecksumTimestamp(String collectionID, String fileID, OffsetDateTime newTimestamp) {
+        updateTimestamp(collectionID, fileID, "checksum_timestamp", newTimestamp);
     }
 
     /**

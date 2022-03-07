@@ -1,4 +1,4 @@
-package dk.kb.bitrepository.mediator.filehandler;
+package dk.kb.bitrepository.mediator.filehandler.context;
 
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;

@@ -1,6 +1,7 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.filehandler.context.GetFileContext;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -28,14 +29,14 @@ import static org.bitrepository.client.eventhandler.OperationEvent.OperationEven
 
 public class GetFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final GetFileJobContext context;
+    private final GetFileContext context;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
     private final ChecksumDataForFileTYPE checksumData;
     private final CryptoStrategy crypto;
     private CompleteEventAwaiter eventHandler;
 
-    public GetFileHandler(GetFileJobContext context) {
+    public GetFileHandler(GetFileContext context) {
         this.context = context;
         this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());

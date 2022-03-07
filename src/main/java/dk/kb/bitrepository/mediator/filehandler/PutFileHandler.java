@@ -2,6 +2,7 @@ package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
+import dk.kb.bitrepository.mediator.filehandler.context.PutFileContext;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
 import org.bitrepository.client.eventhandler.OperationEvent;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
@@ -32,7 +33,6 @@ import java.time.ZoneId;
 import java.util.Date;
 
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.*;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
@@ -41,7 +41,7 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class PutFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final PutFileJobContext context;
+    private final PutFileContext context;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
     private final String expectedChecksum;
@@ -49,7 +49,7 @@ public class PutFileHandler {
     private String encryptedChecksum;
     private OffsetDateTime encryptedTimestamp;
 
-    public PutFileHandler(PutFileJobContext context) {
+    public PutFileHandler(PutFileContext context) {
         this.context = context;
         this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
@@ -183,8 +183,7 @@ public class PutFileHandler {
      * Updates the encryption parameters, so that they match the ones used to encrypt the file that is currently being worked on.
      */
     private void updateCryptoParameters(DatabaseDAO dao) {
-        EncryptedParametersData paramData = (EncryptedParametersData) dao.select(context.getCollectionID(), context.getFileID(),
-                ENC_PARAMS_TABLE);
+        EncryptedParametersData paramData = dao.getEncParams(context.getCollectionID(), context.getFileID());
         crypto.setSalt(paramData.getSalt());
         crypto.setIV(new IvParameterSpec(paramData.getIv()));
     }
