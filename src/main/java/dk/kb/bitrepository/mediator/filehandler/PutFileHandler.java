@@ -55,7 +55,6 @@ public class PutFileHandler {
     private final DatabaseDAO dao;
     private final CryptoStrategy crypto;
     private final ChecksumDataForFileTYPE checksumDataForFileTYPE;
-    private CompleteEventAwaiter eventHandler;
     private String encryptedChecksum;
     private OffsetDateTime encryptedTimestamp;
 
@@ -63,8 +62,8 @@ public class PutFileHandler {
         this.context = context;
         this.collectionID = context.getCollectionID();
         this.fileID = context.getFileID();
-        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
-        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
+        this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
+        this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
         this.fileBytes = context.getFileBytes();
         this.checksumDataForFileTYPE = context.getChecksumDataForFileTYPE();
         this.checksumSpec = context.getChecksumDataForFileTYPE().getChecksumSpec();
@@ -99,7 +98,16 @@ public class PutFileHandler {
                 handleUnencryptedFile();
             }
         }
-        putFileOnPillar();
+
+        if (putFileOnPillar().getEventType() == OperationEvent.OperationEventType.COMPLETE) {
+            //TODO: Let JobScheduler know status
+            log.info("File Put Successfully");
+            updateLocalDatabase();
+            handleStateAndJobDoneHandler();
+        } else {
+            //TODO: AuditTrail + Alarm
+            log.error("File was not put");
+        }
     }
 
     /**
@@ -156,13 +164,13 @@ public class PutFileHandler {
         }
     }
 
-    private void putFileOnPillar() {
+    private OperationEvent putFileOnPillar() {
         Settings settings = context.getSettings();
         String auditTrailInformation = "AuditTrailInfo for PutFileHandler.";
         SecurityManager securityManager = getSecurityManager();
         OutputHandler output = new DefaultOutputHandler(getClass());
         boolean printChecksums = false;
-        eventHandler = new PutFileEventHandler(settings, output, printChecksums);
+        CompleteEventAwaiter eventHandler = new PutFileEventHandler(settings, output, printChecksums);
 
         log.debug("Attempting to put file on FileExchange.");
         URL fileURL = context.getFileExchange().putFile(new File(encryptedFilePath.toString()));
@@ -171,21 +179,7 @@ public class PutFileHandler {
         client.putFile(collectionID, fileURL, fileID, getFileSize(encryptedFilePath), checksumDataForFileTYPE, checksumSpec, eventHandler,
                 auditTrailInformation);
 
-        if (waitForPillarToHandleRequest()) {
-            //TODO: Let JobScheduler know status
-            log.info("File Put Successfully");
-            updateLocalDatabase();
-            handleStateAndJobDoneHandler();
-        } else {
-            //TODO: AuditTrail + Alarm
-            log.error("File was not put");
-        }
-    }
-
-    private boolean waitForPillarToHandleRequest() {
-        OperationEvent.OperationEventType eventType = eventHandler.getFinish().getEventType();
-
-        return eventType.equals(OperationEvent.OperationEventType.COMPLETE);
+        return eventHandler.getFinish();
     }
 
     /**

@@ -1,27 +1,48 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
+import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
+import dk.kb.bitrepository.mediator.database.DatabaseData;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
+import org.bitrepository.common.utils.Base16Utils;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.COLLECTION_ID;
-import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
+import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #GetFileHandler")
 public class GetFileHandlerIT extends IntegrationFileHandlerTest {
+    private static final String pillarFilesDir = "target/test/fileArchive/collection_id/fileDir/";
+    private static final Path pillarFilePath = Path.of("target/test/fileArchive/collection_id/fileDir/file_id");
+
     @BeforeAll
     protected static void setup() {
         startRealMessageBus();
         startEmbeddedPillar();
+    }
+
+    @BeforeEach
+    protected void cleanupBefore() {
+        cleanUpDatabase();
+        cleanUpAfterEach();
+    }
+
+    @AfterEach
+    protected void afterEach() {
+        resetPillarData(pillarFilePath, pillarFilesDir);
     }
 
     @AfterAll
@@ -52,34 +73,32 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     @Disabled
     @Test
     @DisplayName("Test #GetFileHandler using file on pillar")
-    public void testGetFileHandlerUsingPillarFile() throws IOException {
-        putFileLocally(fileExchange);
-
-        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, null, null, checksumDataForFileTYPE, settings, fileURL,
+    public void testGetFileHandlerUsingPillarFile() throws MismatchingChecksumsException, MalformedURLException {
+        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+        JobContext putFileContext = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
                 Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        GetFileHandler handler = new GetFileHandler(context);
-        handler.performGetFile();
+        PutFileHandler putFileHandler = new PutFileHandler(putFileContext, receivedTimestamp);
+        putFileHandler.performPutFile();
 
-        IdentifyPillarsForGetFileRequest receivedIdentifyRequestMessage = collectionReceiver.waitForMessage(
-                IdentifyPillarsForGetFileRequest.class);
-        assertEquals(collectionID, receivedIdentifyRequestMessage.getCollectionID());
-        assertEquals(FILE_ID, receivedIdentifyRequestMessage.getFileID());
-//
-//        TestGetFileMessageFactory messageFactory = new TestGetFileMessageFactory(settings.getComponentID());
-//        IdentifyPillarsForGetFileResponse receivedIdentifyResponse = messageFactory.createIdentifyPillarsForGetFileResponse(
-//                receivedIdentifyRequestMessage, encryptedPillarID, pillarDestinationId);
-//        messageBus.sendMessage(receivedIdentifyResponse);
-//
-//        GetFileRequest receivedGetFileRequest = pillarReceiver.waitForMessage(GetFileRequest.class);
-//        GetFileProgressResponse getFileProgressResponse = messageFactory.createGetFileProgressResponse(receivedGetFileRequest,
-//                encryptedPillarID, pillarDestinationId);
-//        messageBus.sendMessage(getFileProgressResponse);
-//
-//        GetFileFinalResponse completeMsg = messageFactory.createGetFileFinalResponse(receivedGetFileRequest, encryptedPillarID,
-//                pillarDestinationId);
-//        messageBus.sendMessage(completeMsg);
+        assertEquals(new URL("file:" + new File(BASE_FILE_EXCHANGE_DIR).getAbsolutePath() + "/" + FILE_ID), fileURL);
 
-//        fileExchange.getFile(new File(ENCRYPTED_FILES_PATH + "/" + FILE_ID), fileURL.toExternalForm());
-//        assertEquals("lorem ipsum", Files.readString(Path.of(ENCRYPTED_FILES_PATH + "/" + FILE_ID), Charset.defaultCharset()));
+        //Remove the local files created by PutFile
+        cleanupFiles(ENCRYPTED_FILES_PATH);
+        cleanupFiles(UNENCRYPTED_FILES_PATH);
+
+        JobContext getFileContext = new JobContext(COLLECTION_ID, FILE_ID, null, null, checksumDataForFileTYPE, settings, fileURL,
+                Collections.singleton(encryptedPillarID), crypto, fileExchange);
+        GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
+        getFileHandler.performGetFile();
+
+        Path encryptedPath = createFilePath(ENCRYPTED_FILES_PATH, COLLECTION_ID, FILE_ID);
+        assertTrue(Files.exists(encryptedPath));
+        DatabaseData.EncryptedParametersData params = (DatabaseData.EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID,
+                ENC_PARAMS_TABLE);
+        CryptoStrategy aes = new AESCryptoStrategy(encryptionPassword, params.getSalt(), params.getIv());
+        assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(encryptedPath)),
+                StandardCharsets.UTF_8));
+        assertTrue(compareChecksums(readBytesFromFile(encryptedPath), checksumDataForFileTYPE.getChecksumSpec(),
+                Base16Utils.decodeBase16(checksumDataForFileTYPE.getChecksumValue())));
     }
 }

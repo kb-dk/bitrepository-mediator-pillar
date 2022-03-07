@@ -38,8 +38,8 @@ public class GetFileHandler {
 
     public GetFileHandler(JobContext context) {
         this.context = context;
-        this.unencryptedFilePath = getFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
-        this.encryptedFilePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+        this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+        this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.checksumData = context.getChecksumDataForFileTYPE();
         this.crypto = context.getCrypto();
         this.fileExchange = context.getFileExchange();
@@ -54,9 +54,10 @@ public class GetFileHandler {
             log.debug("Attempting to get file from pillar.");
             getFileFromPillar();
             if (waitForPillarToHandleRequest()) {
-                Path filePath = getFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+                Path filePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
                 try {
-                    fileExchange.getFile(new File(filePath.toString()), fileExchange.getURL(context.getFileID()).toExternalForm());
+                    ensureDirectoryExists(createFileDir(ENCRYPTED_FILES_PATH, context.getCollectionID()).toString());
+                    fileExchange.getFile(new File(filePath.toString()), fileExchange.getURL(context.getFileID()).toString());
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }

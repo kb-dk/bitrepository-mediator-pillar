@@ -69,7 +69,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         checksumDataWithWrongChecksum = loadIncorrectChecksumData();
         ENCRYPTED_FILES_PATH = configurations.getPillarConfig().getEncryptedFilesPath();
         UNENCRYPTED_FILES_PATH = configurations.getPillarConfig().getUnencryptedFilesPath();
-        componentID = settings.getComponentID() + "-test-client";
+        componentID = settings.getComponentID();
 
         initImportantServices(false);
     }

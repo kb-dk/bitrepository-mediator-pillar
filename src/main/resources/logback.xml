@@ -27,15 +27,14 @@
 
   <!-- Change log level of these specific loggers. -->
   <logger name="com.zaxxer.hikari" level="ERROR"/>
-  <logger name="org.bitrepository.common" level="ERROR"/>
-  <logger name="org.apache.activemq.transport" level="ERROR"/>
-  <logger name="org.apache.activemq.broker.jmx.ManagementContext" level="ERROR"/>
-  <logger name="org.apache.activemq.broker.TransportConnection" level="ERROR"/>
-  <logger name="org.apache.activemq.broker.TransportConnector" level="ERROR"/>
-  <logger name="org.apache.activemq.broker.BrokerService" level="ERROR"/>
-  <logger name="org.apache.activemq.broker.region.AbstractRegion" level="ERROR"/>
-  <logger name="org.apache.activemq.util.ThreadPoolUtils" level="ERROR"/>
-  <logger name="org.apache.activemq.thread.TaskRunnerFactory" level="ERROR"/>
+  <!--<logger name="org.apache.activemq" level="ERROR"/>
+
+  <logger name="org.bitrepository" level="ERROR"/>
+
+  <logger name="dk.kb.bitrepository.mediator.pillaraccess.communication.LocalActiveMQBroker" level="ERROR"/>
+  <logger name="dk.kb.bitrepository.mediator.pillaraccess.database.DerbyDatabaseDestroyer" level="ERROR"/>
+  <logger name="dk.kb.bitrepository.mediator.database.DatabaseConnectionManager" level="ERROR"/>-->
+
 
   <root level="DEBUG">
     <appender-ref ref="FILE"/>

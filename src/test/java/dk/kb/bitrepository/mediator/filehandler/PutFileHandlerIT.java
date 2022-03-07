@@ -4,6 +4,8 @@ import dk.kb.bitrepository.mediator.IntegrationFileHandlerTest;
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
+import org.bitrepository.bitrepositorymessages.IdentifyPillarsForGetFileRequest;
+import org.bitrepository.bitrepositorymessages.IdentifyPillarsForPutFileRequest;
 import org.bitrepository.common.utils.Base16Utils;
 import org.junit.jupiter.api.*;
 
@@ -57,6 +59,11 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         PutFileHandler handler = new PutFileHandler(context, receivedTimestamp);
 
         handler.performPutFile();
+
+        IdentifyPillarsForPutFileRequest receivedIdentifyRequestMessage = collectionReceiver.waitForMessage(
+                IdentifyPillarsForPutFileRequest.class);
+        assertEquals(FILE_ID, receivedIdentifyRequestMessage.getFileID());
+        assertEquals(COLLECTION_ID, receivedIdentifyRequestMessage.getCollectionID());
 
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));

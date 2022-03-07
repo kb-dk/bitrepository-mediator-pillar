@@ -1,9 +1,6 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
 import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
-import org.bitrepository.commandline.Constants;
-import org.bitrepository.protocol.FileExchange;
-import org.bitrepository.protocol.ProtocolComponentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -37,7 +32,7 @@ public class FileUtils {
         Locale locale = Locale.getDefault();
         String fileDirectory = format(locale, "%s/%s", directory, collectionID);
         String tempFileDirectory = format(locale, "%s/temp/%s", directory, collectionID);
-        Path filePath = getFilePath(directory, collectionID, fileID);
+        Path filePath = createFilePath(directory, collectionID, fileID);
         Path tempFilePath = Path.of(format(locale, "%s/%s/", tempFileDirectory, fileID));
 
         ensureDirectoryExists(fileDirectory, tempFileDirectory);
@@ -66,7 +61,7 @@ public class FileUtils {
      * @return Whether there exists a file at the path directory/collectionID/fileID/ .
      */
     public static boolean fileExists(String directory, String collectionID, String fileID) {
-        return Files.exists(getFilePath(directory, collectionID, fileID));
+        return Files.exists(createFilePath(directory, collectionID, fileID));
     }
 
     /**
@@ -77,15 +72,19 @@ public class FileUtils {
      * @param fileID       The fileID of the file.
      * @return Returns the complete path created from the above information.
      */
-    protected static Path getFilePath(String directory, String collectionID, String fileID) {
+    protected static Path createFilePath(String directory, String collectionID, String fileID) {
         return Path.of(format(Locale.getDefault(), "%s/%s/%s", directory, collectionID, fileID));
+    }
+
+    protected static Path createFileDir(String directory, String collectionID) {
+        return Path.of(format(Locale.getDefault(), "%s/%s", directory, collectionID));
     }
 
     /**
      * Performs a check to see if the given file directories exists.
      * If this is not the case, then the directories will be created.
      */
-    private static void ensureDirectoryExists(String... directories) {
+    protected static void ensureDirectoryExists(String... directories) {
         for (String dir : directories) {
             if (!Files.exists(Path.of(dir))) {
                 try {
