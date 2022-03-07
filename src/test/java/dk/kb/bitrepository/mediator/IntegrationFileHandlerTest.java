@@ -1,6 +1,9 @@
 package dk.kb.bitrepository.mediator;
 
 import dk.kb.bitrepository.mediator.crypto.AESCryptoStrategy;
+import dk.kb.bitrepository.mediator.filehandler.GetFileJobContext;
+import dk.kb.bitrepository.mediator.filehandler.JobContext;
+import dk.kb.bitrepository.mediator.filehandler.PutFileJobContext;
 import dk.kb.bitrepository.mediator.pillaraccess.EmbeddedPillar;
 import dk.kb.bitrepository.mediator.pillaraccess.communication.*;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
@@ -30,6 +33,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.*;
@@ -77,14 +83,6 @@ public class IntegrationFileHandlerTest extends TestingDAO {
     private static void initImportantServices(boolean useRealMessageBus) {
         setupMessageBus(settings, securityManager, useRealMessageBus);
         setupMessageReceiverManager();
-    }
-
-    @AfterEach
-    protected void cleanUpAfterEach() {
-        cleanupFiles(UNENCRYPTED_FILES_PATH);
-        cleanupFiles(ENCRYPTED_FILES_PATH);
-        cleanupFiles(BASE_FILE_EXCHANGE_DIR);
-        cleanupFiles(PILLAR_FILE_DIR);
     }
 
     @AfterAll
@@ -195,6 +193,22 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         }
     }
 
+    protected static void resetPillarData(Path filePath, String parentDir) {
+        if (Files.exists(filePath)) {
+            DatabaseManager checksumDatabaseManager = new ChecksumDatabaseManager(settings);
+            new ChecksumDAO(checksumDatabaseManager).deleteEntry(FILE_ID, COLLECTION_ID);
+            cleanupFiles(parentDir);
+        }
+    }
+
+    @AfterEach
+    protected void cleanUpAfterEach() {
+        cleanupFiles(UNENCRYPTED_FILES_PATH);
+        cleanupFiles(ENCRYPTED_FILES_PATH);
+        cleanupFiles(BASE_FILE_EXCHANGE_DIR);
+        cleanupFiles(PILLAR_FILE_DIR);
+    }
+
     protected void putFileLocally(FileExchange fileExchange) throws IOException {
         String testFileName = FILE_ID;
         String testFileLocation = "target/" + testFileName;
@@ -215,6 +229,21 @@ public class IntegrationFileHandlerTest extends TestingDAO {
         return f;
     }
 
+    protected <T extends JobContext> T getJobContext(Class<T> c) {
+        if (c.equals(GetFileJobContext.class)) {
+
+            return c.cast(new GetFileJobContext(COLLECTION_ID, FILE_ID, null, checksumDataForFileTYPE, settings, fileURL,
+                    Collections.singleton(encryptedPillarID), crypto));
+        }
+        if (c.equals(PutFileJobContext.class)) {
+            OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
+            return c.cast(new PutFileJobContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE, settings,
+                    fileURL, Collections.singleton(encryptedPillarID), crypto));
+        } else {
+            return null;
+        }
+    }
+
     /**
      * May be used by by concrete tests for general verification when the test method has finished. Will only be run
      * if the test has passed (so far).
@@ -228,14 +257,6 @@ public class IntegrationFileHandlerTest extends TestingDAO {
      */
     protected void clearReceivers() {
         receiverManager.clearMessagesInReceivers();
-    }
-
-    protected static void resetPillarData(Path filePath, String parentDir) {
-        if (Files.exists(filePath)) {
-            DatabaseManager checksumDatabaseManager = new ChecksumDatabaseManager(settings);
-            new ChecksumDAO(checksumDatabaseManager).deleteEntry(FILE_ID, COLLECTION_ID);
-            cleanupFiles(parentDir);
-        }
     }
 
 }

@@ -10,38 +10,28 @@ import dk.kb.bitrepository.mediator.utils.configurations.PillarConfigurations;
 import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.settings.SettingsProvider;
 import org.bitrepository.common.settings.XMLFileSettingsLoader;
+import org.bitrepository.protocol.FileExchange;
+import org.bitrepository.protocol.LocalFileExchange;
 import org.bitrepository.protocol.activemq.ActiveMQMessageBus;
+import org.bitrepository.protocol.http.HttpFileExchange;
+import org.bitrepository.protocol.http.HttpsFileExchange;
 import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.bitrepository.protocol.security.*;
+import org.bitrepository.settings.referencesettings.ProtocolType;
 
 import java.io.IOException;
 
 public class MediatorPillarComponentFactory {
     private static SecurityManager securityManager = null;
+    private static FileExchange fileExchange = null;
     private static PillarConfigurations pillarConfigurations;
     private static Configurations configs;
 
     private MediatorPillarComponentFactory() {}
 
-    private static final class InstanceHolder {
-        private static final MediatorPillarComponentFactory instance = new MediatorPillarComponentFactory();
-    }
-
     public static MediatorPillarComponentFactory getInstance() {
         return InstanceHolder.instance;
-    }
-
-    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
-        configs = loadMediatorConfigurations(pathToConfiguration);
-        Settings refPillarSettings = configs.getRefPillarSettings();
-        securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
-        MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
-        ResponseDispatcher responseDispatcher = new ResponseDispatcher(refPillarSettings, messageBus);
-        DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
-        PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
-
-        return new MediatorPillar(refPillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
     }
 
     public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
@@ -55,6 +45,39 @@ public class MediatorPillarComponentFactory {
         configs.setRefPillarSettings(refPillarSettings);
 
         return configs;
+    }
+
+    public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
+        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
+        return new DatabaseDAO(connectionManager);
+    }
+
+    public static DatabaseDAO getDAO() {
+        return getDAO(configs.getDatabaseConfig());
+    }
+
+    public static SecurityManager getSecurityManager() {
+        return securityManager;
+    }
+
+    public static void setSecurityManager(SecurityManager securityManager) {
+        MediatorPillarComponentFactory.securityManager = securityManager;
+    }
+
+    public static PillarConfigurations getPillarConfigurations() {
+        return pillarConfigurations;
+    }
+
+    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
+        configs = loadMediatorConfigurations(pathToConfiguration);
+        Settings refPillarSettings = configs.getRefPillarSettings();
+        securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
+        MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
+        ResponseDispatcher responseDispatcher = new ResponseDispatcher(refPillarSettings, messageBus);
+        DatabaseDAO dao = getDAO(configs.getDatabaseConfig());
+        PillarContext pillarContext = new PillarContext(configs, messageBus, responseDispatcher, dao);
+
+        return new MediatorPillar(refPillarSettings, pillarContext, configs.getPillarConfig(), messageBus);
     }
 
     /**
@@ -73,24 +96,26 @@ public class MediatorPillarComponentFactory {
                 permissionStore, refPillarSettings.getComponentID());
     }
 
-    public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
-        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
-        return new DatabaseDAO(connectionManager);
+    public FileExchange getFileExchange(Settings settings) {
+        if (fileExchange == null) {
+            if ((settings.getReferenceSettings().getFileExchangeSettings() != null)) {
+                ProtocolType protocolType = settings.getReferenceSettings().getFileExchangeSettings().getProtocolType();
+                if (protocolType == ProtocolType.HTTP) {
+                    fileExchange = new HttpFileExchange(settings);
+                } else if (protocolType == ProtocolType.HTTPS) {
+                    fileExchange = new HttpsFileExchange(settings);
+                } else if (protocolType == ProtocolType.FILE) {
+                    fileExchange = new LocalFileExchange(
+                            settings.getReferenceSettings().getFileExchangeSettings().getPath());
+                }
+            } else {
+                fileExchange = new HttpFileExchange(settings);
+            }
+        }
+        return fileExchange;
     }
 
-    public static DatabaseDAO getDAO() {
-        return getDAO(configs.getDatabaseConfig());
-    }
-
-    public static SecurityManager getSecurityManager() {
-        return securityManager;
-    }
-
-    public static PillarConfigurations getPillarConfigurations() {
-        return pillarConfigurations;
-    }
-
-    public static void setSecurityManager(SecurityManager securityManager) {
-        MediatorPillarComponentFactory.securityManager = securityManager;
+    private static final class InstanceHolder {
+        private static final MediatorPillarComponentFactory instance = new MediatorPillarComponentFactory();
     }
 }

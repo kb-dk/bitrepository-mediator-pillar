@@ -19,6 +19,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 
+import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getInstance;
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
@@ -27,21 +28,19 @@ import static org.bitrepository.client.eventhandler.OperationEvent.OperationEven
 
 public class GetFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final JobContext context;
+    private final GetFileJobContext context;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
     private final ChecksumDataForFileTYPE checksumData;
     private final CryptoStrategy crypto;
-    private final FileExchange fileExchange;
     private CompleteEventAwaiter eventHandler;
 
-    public GetFileHandler(JobContext context) {
+    public GetFileHandler(GetFileJobContext context) {
         this.context = context;
         this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.checksumData = context.getChecksumDataForFileTYPE();
         this.crypto = context.getCrypto();
-        this.fileExchange = context.getFileExchange();
     }
 
     public void performGetFile() {
@@ -53,6 +52,7 @@ public class GetFileHandler {
             if (waitForPillarToHandleRequest()) {
                 try {
                     ensureDirectoryExists(createFileDir(ENCRYPTED_FILES_PATH, context.getCollectionID()));
+                    FileExchange fileExchange = getInstance().getFileExchange(context.getSettings());
                     fileExchange.getFile(new File(encryptedFilePath.toString()), fileExchange.getURL(context.getFileID()).toString());
                 } catch (MalformedURLException e) {
                     e.printStackTrace();

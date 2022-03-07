@@ -1,11 +1,8 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.MediatorPillarComponentFactory;
 import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.database.DatabaseDAO;
 import dk.kb.bitrepository.mediator.filehandler.exception.MismatchingChecksumsException;
-import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.bitrepository.bitrepositoryelements.ChecksumSpecTYPE;
 import org.bitrepository.client.eventhandler.OperationEvent;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.PutFileEventHandler;
@@ -16,6 +13,7 @@ import org.bitrepository.common.utils.Base16Utils;
 import org.bitrepository.common.utils.CalendarUtils;
 import org.bitrepository.modify.ModifyComponentFactory;
 import org.bitrepository.modify.putfile.PutFileClient;
+import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +31,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
+import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.ENC_PARAMS_TABLE;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
@@ -43,42 +41,29 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 
 public class PutFileHandler {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final JobContext context;
-    private final String collectionID;
-    private final String fileID;
+    private final PutFileJobContext context;
     private final Path unencryptedFilePath;
     private final Path encryptedFilePath;
-    private final byte[] fileBytes;
-    private final ChecksumSpecTYPE checksumSpec;
     private final String expectedChecksum;
-    private final OffsetDateTime receivedTimestamp;
-    private final DatabaseDAO dao;
     private final CryptoStrategy crypto;
-    private final ChecksumDataForFileTYPE checksumDataForFileTYPE;
     private String encryptedChecksum;
     private OffsetDateTime encryptedTimestamp;
 
-    public PutFileHandler(JobContext context, OffsetDateTime receivedTimestamp) {
+    public PutFileHandler(PutFileJobContext context) {
         this.context = context;
-        this.collectionID = context.getCollectionID();
-        this.fileID = context.getFileID();
-        this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, collectionID, fileID);
-        this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, collectionID, fileID);
-        this.fileBytes = context.getFileBytes();
-        this.checksumDataForFileTYPE = context.getChecksumDataForFileTYPE();
-        this.checksumSpec = context.getChecksumDataForFileTYPE().getChecksumSpec();
+        this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
+        this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
         this.expectedChecksum = Base16Utils.decodeBase16(context.getChecksumDataForFileTYPE().getChecksumValue());
-        this.receivedTimestamp = receivedTimestamp;
         this.crypto = context.getCrypto();
-        this.dao = MediatorPillarComponentFactory.getDAO();
     }
 
     /**
      * The main method that is called to handle the PutFile operation.
      */
     public void performPutFile() throws MismatchingChecksumsException {
-        if (fileExists(ENCRYPTED_FILES_PATH, collectionID, fileID)) {
-            updateCryptoParameters();
+        DatabaseDAO dao = getDAO();
+        if (fileExists(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
+            updateCryptoParameters(dao);
             log.debug("Using existing encrypted file");
 
             try {
@@ -89,12 +74,12 @@ public class PutFileHandler {
             } catch (IOException e) {
                 log.error("An error occurred when trying to read attributes from path {}", unencryptedFilePath);
             }
-        } else if (fileExists(UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+        } else if (fileExists(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
             log.debug("Using existing unencrypted file");
             handleUnencryptedFile();
         } else {
             log.debug("No local files found so creating it");
-            if (writeBytesToFile(fileBytes, UNENCRYPTED_FILES_PATH, collectionID, fileID)) {
+            if (writeBytesToFile(context.getFileBytes(), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
                 handleUnencryptedFile();
             }
         }
@@ -102,7 +87,7 @@ public class PutFileHandler {
         if (putFileOnPillar().getEventType() == OperationEvent.OperationEventType.COMPLETE) {
             //TODO: Let JobScheduler know status
             log.info("File Put Successfully");
-            updateLocalDatabase();
+            updateLocalDatabase(dao);
             handleStateAndJobDoneHandler();
         } else {
             //TODO: AuditTrail + Alarm
@@ -121,7 +106,7 @@ public class PutFileHandler {
     private void handleUnencryptedFile() throws MismatchingChecksumsException {
         byte[] unencryptedFileData = readBytesFromFile(unencryptedFilePath);
 
-        if (!compareChecksums(unencryptedFileData, checksumSpec, expectedChecksum)) {
+        if (!compareChecksums(unencryptedFileData, context.getChecksumDataForFileTYPE().getChecksumSpec(), expectedChecksum)) {
             log.error("Checksums of unencrypted file did not match. Try 'PutFile' operation again.");
             deleteFileLocally(unencryptedFilePath);
             throw new MismatchingChecksumsException();
@@ -138,7 +123,8 @@ public class PutFileHandler {
      */
     private void encryptAndCompareChecksums(byte[] unencryptedFileData) throws MismatchingChecksumsException {
         byte[] encryptedBytes = crypto.encrypt(unencryptedFileData);
-        boolean encryptedFileCreated = writeBytesToFile(encryptedBytes, ENCRYPTED_FILES_PATH, collectionID, fileID);
+        boolean encryptedFileCreated = writeBytesToFile(encryptedBytes, ENCRYPTED_FILES_PATH, context.getCollectionID(),
+                context.getFileID());
 
         if (encryptedFileCreated) {
             encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
@@ -154,9 +140,10 @@ public class PutFileHandler {
     private void assertEncryptedChecksumMatch() throws MismatchingChecksumsException {
         byte[] encryptedFileData = readBytesFromFile(encryptedFilePath);
 
-        if (compareChecksums(crypto.decrypt(encryptedFileData), checksumSpec, expectedChecksum)) {
-            encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData), checksumSpec);
-            checksumDataForFileTYPE.setChecksumValue(Base16Utils.encodeBase16(encryptedChecksum));
+        if (compareChecksums(crypto.decrypt(encryptedFileData), context.getChecksumDataForFileTYPE().getChecksumSpec(), expectedChecksum)) {
+            encryptedChecksum = generateChecksum(new ByteArrayInputStream(encryptedFileData),
+                    context.getChecksumDataForFileTYPE().getChecksumSpec());
+            context.getChecksumDataForFileTYPE().setChecksumValue(Base16Utils.encodeBase16(encryptedChecksum));
         } else {
             log.error("Checksum of encrypted file did not match. Try PutFile again.");
             deleteFileLocally(encryptedFilePath);
@@ -173,10 +160,12 @@ public class PutFileHandler {
         CompleteEventAwaiter eventHandler = new PutFileEventHandler(settings, output, printChecksums);
 
         log.debug("Attempting to put file on FileExchange.");
-        URL fileURL = context.getFileExchange().putFile(new File(encryptedFilePath.toString()));
+        FileExchange fileExchange = getInstance().getFileExchange(settings);
+        URL fileURL = fileExchange.putFile(new File(encryptedFilePath.toString()));
 
         PutFileClient client = ModifyComponentFactory.getInstance().retrievePutClient(settings, securityManager, settings.getComponentID());
-        client.putFile(collectionID, fileURL, fileID, getFileSize(encryptedFilePath), checksumDataForFileTYPE, checksumSpec, eventHandler,
+        client.putFile(context.getCollectionID(), fileURL, context.getFileID(), getFileSize(encryptedFilePath),
+                context.getChecksumDataForFileTYPE(), context.getChecksumDataForFileTYPE().getChecksumSpec(), eventHandler,
                 auditTrailInformation);
 
         return eventHandler.getFinish();
@@ -186,15 +175,16 @@ public class PutFileHandler {
      * Sets the Calculation Timestamp property of the checksumDataForFileTYPE object as type XMLGregorianCalendar.
      */
     private void setCalculationTimestamp() {
-        checksumDataForFileTYPE.setCalculationTimestamp(
-                CalendarUtils.getXmlGregorianCalendar(new Date(encryptedTimestamp.toInstant().toEpochMilli())));
+        context.getChecksumDataForFileTYPE()
+                .setCalculationTimestamp(CalendarUtils.getXmlGregorianCalendar(new Date(encryptedTimestamp.toInstant().toEpochMilli())));
     }
 
     /**
      * Updates the encryption parameters, so that they match the ones used to encrypt the file that is currently being worked on.
      */
-    private void updateCryptoParameters() {
-        EncryptedParametersData paramData = (EncryptedParametersData) dao.select(collectionID, fileID, ENC_PARAMS_TABLE);
+    private void updateCryptoParameters(DatabaseDAO dao) {
+        EncryptedParametersData paramData = (EncryptedParametersData) dao.select(context.getCollectionID(), context.getFileID(),
+                ENC_PARAMS_TABLE);
         crypto.setSalt(paramData.getSalt());
         crypto.setIV(new IvParameterSpec(paramData.getIv()));
     }
@@ -203,11 +193,11 @@ public class PutFileHandler {
      * Updates the local database to include the information about the file, for easy access and decrypting at a later state by storing
      * the encryption parameters.
      */
-    private void updateLocalDatabase() {
-        dao.insertIntoEncParams(collectionID, fileID, crypto.getSalt(), crypto.getIV().getIV(), crypto.getIterations());
-        dao.insertIntoFiles(collectionID, fileID, receivedTimestamp, encryptedTimestamp, expectedChecksum, encryptedChecksum,
-                OffsetDateTime.now(Clock.systemUTC()));
-        log.debug("Local database updated to include: {}/{}", collectionID, fileID);
+    private void updateLocalDatabase(DatabaseDAO dao) {
+        dao.insertIntoEncParams(context.getCollectionID(), context.getFileID(), crypto.getSalt(), crypto.getIV().getIV(),
+                crypto.getIterations());
+        dao.insertIntoFiles(context.getCollectionID(), context.getFileID(), context.getReceivedTimestamp(), encryptedTimestamp,
+                expectedChecksum, encryptedChecksum, OffsetDateTime.now(Clock.systemUTC()));
     }
 
     private void handleStateAndJobDoneHandler() {

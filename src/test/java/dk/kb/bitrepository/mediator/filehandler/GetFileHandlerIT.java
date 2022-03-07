@@ -34,6 +34,11 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         startEmbeddedPillar();
     }
 
+    @AfterAll
+    protected static void cleanup() {
+        stopEmbeddedPillar();
+    }
+
     @BeforeEach
     protected void cleanupBefore() {
         cleanUpDatabase();
@@ -45,24 +50,20 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         resetPillarData(pillarFilePath, pillarFilesDir);
     }
 
-    @AfterAll
-    protected static void cleanup() {
-        stopEmbeddedPillar();
-    }
-
     @Test
     @DisplayName("Test #GetFileHandler using existing file")
     public void testGetFileUsingExistingFile() throws MismatchingChecksumsException {
         OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
 
-        JobContext context = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
-                Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler putFileHandler = new PutFileHandler(context, receivedTimestamp);
+        PutFileJobContext context = new PutFileJobContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
+                settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
+        PutFileHandler putFileHandler = new PutFileHandler(context);
 
         putFileHandler.performPutFile();
 
         //Test with both files (will use unencrypted file)
-        GetFileHandler getFileHandler = new GetFileHandler(context);
+        GetFileJobContext getFileContext = getJobContext(GetFileJobContext.class);
+        GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
         assertDoesNotThrow(getFileHandler::performGetFile);
 
         //Test with only encrypted file
@@ -73,10 +74,8 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test #GetFileHandler using file on pillar")
     public void testGetFileHandlerUsingPillarFile() throws MismatchingChecksumsException, MalformedURLException {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        JobContext putFileContext = new JobContext(COLLECTION_ID, FILE_ID, fileBytes, null, checksumDataForFileTYPE, settings, fileURL,
-                Collections.singleton(encryptedPillarID), crypto, fileExchange);
-        PutFileHandler putFileHandler = new PutFileHandler(putFileContext, receivedTimestamp);
+        PutFileJobContext putFileContext = getJobContext(PutFileJobContext.class);
+        PutFileHandler putFileHandler = new PutFileHandler(putFileContext);
         putFileHandler.performPutFile();
 
         assertEquals(new URL("file:" + new File(BASE_FILE_EXCHANGE_DIR).getAbsolutePath() + "/" + FILE_ID), fileURL);
@@ -85,18 +84,17 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
         cleanupFiles(ENCRYPTED_FILES_PATH);
         cleanupFiles(UNENCRYPTED_FILES_PATH);
 
-        JobContext getFileContext = new JobContext(COLLECTION_ID, FILE_ID, null, null, checksumDataForFileTYPE, settings, fileURL,
-                Collections.singleton(encryptedPillarID), crypto, fileExchange);
+        GetFileJobContext getFileContext = getJobContext(GetFileJobContext.class);
         GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
         getFileHandler.performGetFile();
 
+        // Assert that the file could be created locally using the file given to FileExchange by the EmbeddedPillar
         Path encryptedPath = createFilePath(ENCRYPTED_FILES_PATH, COLLECTION_ID, FILE_ID);
         assertTrue(Files.exists(encryptedPath));
         DatabaseData.EncryptedParametersData params = (DatabaseData.EncryptedParametersData) dao.select(COLLECTION_ID, FILE_ID,
                 ENC_PARAMS_TABLE);
         CryptoStrategy aes = new AESCryptoStrategy(encryptionPassword, params.getSalt(), params.getIv());
-        assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(encryptedPath)),
-                StandardCharsets.UTF_8));
+        assertEquals(fileContent, new String(aes.decrypt(readBytesFromFile(encryptedPath)), StandardCharsets.UTF_8));
         assertTrue(compareChecksums(readBytesFromFile(encryptedPath), checksumDataForFileTYPE.getChecksumSpec(),
                 Base16Utils.decodeBase16(checksumDataForFileTYPE.getChecksumValue())));
     }
