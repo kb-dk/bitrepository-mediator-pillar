@@ -12,7 +12,7 @@ public class DatabaseSetup {
             System.out.println("Error: Expected 1-2 arguments:\n\tpathToConfigurationDir pathToCreationScript (optional)");
             System.exit(0);
         }
-        Configurations configs = MediatorPillarComponentFactory.loadMediatorConfigurations(args[0]);
+        Configurations configs = MediatorPillarComponentFactory.getMediatorConfigurations(args[0]);
         if (args.length == 1) {
             DatabaseUtils.runSqlFromFile(configs.getDatabaseConfig(), DatabaseConstants.DEFAULT_DATABASE_CREATION_SCRIPT);
         }

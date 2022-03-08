@@ -7,7 +7,6 @@ import dk.kb.bitrepository.mediator.utils.configurations.Configurations;
 import dk.kb.bitrepository.mediator.utils.configurations.CryptoConfigurations;
 import dk.kb.bitrepository.mediator.utils.configurations.DatabaseConfigurations;
 import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -28,11 +27,11 @@ public class TestingDAO {
     protected static DatabaseConfigurations databaseConfigurations = null;
     protected static Configurations configurations;
 
-    protected static void initTestingDAO() throws IOException {
+    protected static void initTestingDAO() {
         setup(true);
     }
 
-    protected static void initTestingDAO(boolean setupDatabase) throws IOException {
+    protected static void initTestingDAO(boolean setupDatabase) {
         setup(setupDatabase);
     }
 
@@ -49,8 +48,8 @@ public class TestingDAO {
         }
     }
 
-    private static void setup(boolean setupDatabase) throws IOException {
-        configurations = MediatorPillarComponentFactory.loadMediatorConfigurations("conf");
+    private static void setup(boolean setupDatabase) {
+        configurations = MediatorPillarComponentFactory.getMediatorConfigurations("conf");
         cryptoConfigurations = configurations.getCryptoConfig();
         encryptionPassword = cryptoConfigurations.getPassword();
         crypto = new AESCryptoStrategy(encryptionPassword); // Can change the encryption strategy here for testing

@@ -19,14 +19,17 @@ import org.bitrepository.protocol.messagebus.MessageBus;
 import org.bitrepository.protocol.security.SecurityManager;
 import org.bitrepository.protocol.security.*;
 import org.bitrepository.settings.referencesettings.ProtocolType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class MediatorPillarComponentFactory {
+    private static final Logger log = LoggerFactory.getLogger(MediatorPillarComponentFactory.class);
     private static SecurityManager securityManager = null;
     private static FileExchange fileExchange = null;
-    private static PillarConfigurations pillarConfigurations;
-    private static Configurations configs;
+    private static PillarConfigurations pillarConfigurations = null;
+    private static Configurations configs = null;
 
     private MediatorPillarComponentFactory() {}
 
@@ -34,42 +37,8 @@ public class MediatorPillarComponentFactory {
         return InstanceHolder.instance;
     }
 
-    public static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
-        ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
-        configs = configLoader.getConfigurations();
-        pillarConfigurations = configs.getPillarConfig();
-
-        String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
-        SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), mediatorPillarID);
-        Settings refPillarSettings = settingsProvider.getSettings();
-        configs.setRefPillarSettings(refPillarSettings);
-
-        return configs;
-    }
-
-    public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
-        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
-        return new DatabaseDAO(connectionManager);
-    }
-
-    public static DatabaseDAO getDAO() {
-        return getDAO(configs.getDatabaseConfig());
-    }
-
-    public static SecurityManager getSecurityManager() {
-        return securityManager;
-    }
-
-    public static void setSecurityManager(SecurityManager securityManager) {
-        MediatorPillarComponentFactory.securityManager = securityManager;
-    }
-
-    public static PillarConfigurations getPillarConfigurations() {
-        return pillarConfigurations;
-    }
-
-    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) throws IOException {
-        configs = loadMediatorConfigurations(pathToConfiguration);
+    public MediatorPillar createPillar(String pathToConfiguration, String pathToKeyFile) {
+        configs = getMediatorConfigurations(pathToConfiguration);
         Settings refPillarSettings = configs.getRefPillarSettings();
         securityManager = loadSecurityManager(pathToKeyFile, refPillarSettings);
         MessageBus messageBus = new ActiveMQMessageBus(refPillarSettings, securityManager);
@@ -96,6 +65,84 @@ public class MediatorPillarComponentFactory {
                 permissionStore, refPillarSettings.getComponentID());
     }
 
+    /**
+     * Instantiates the mediator configurations based on the path to the configurations.
+     *
+     * @param pathToConfiguration The path to the configurations.
+     * @return The configurations object.
+     * @throws IOException Throws an exception if the file could not be read or found.
+     */
+    private static Configurations loadMediatorConfigurations(String pathToConfiguration) throws IOException {
+        ConfigurationsLoader configLoader = new ConfigurationsLoader(pathToConfiguration + "/mediatorConfig.yaml");
+        configs = configLoader.getConfigurations();
+        pillarConfigurations = configs.getPillarConfig();
+
+        String mediatorPillarID = configs.getPillarConfig().getMediatorPillarID();
+        SettingsProvider settingsProvider = new SettingsProvider(new XMLFileSettingsLoader(pathToConfiguration), mediatorPillarID);
+        Settings refPillarSettings = settingsProvider.getSettings();
+        configs.setRefPillarSettings(refPillarSettings);
+
+        return configs;
+    }
+
+    public static Configurations getMediatorConfigurations(String pathToConfiguration) {
+        if (configs == null) {
+            try {
+                configs = loadMediatorConfigurations(pathToConfiguration);
+            } catch (IOException e) {
+                log.error("Not readable configurations found at the path {}", pathToConfiguration);
+            }
+        }
+        return getMediatorConfigurations();
+    }
+
+    public static Configurations getMediatorConfigurations() {
+        if (configs == null) {
+            log.error("Mediator configurations have not been setup yet.");
+        }
+        return configs;
+    }
+
+    public static DatabaseDAO getDAO(DatabaseConfigurations dbConfig) {
+        DatabaseConnectionManager connectionManager = new DatabaseConnectionManager(dbConfig);
+        return new DatabaseDAO(connectionManager);
+    }
+
+    public static DatabaseDAO getDAO() {
+        return getDAO(configs.getDatabaseConfig());
+    }
+
+    public static SecurityManager getSecurityManager() {
+        if (securityManager == null) {
+            log.error("Security manager has not been initialized yet.");
+        }
+        return securityManager;
+    }
+
+    public static void setSecurityManager(SecurityManager securityManager) {
+        MediatorPillarComponentFactory.securityManager = securityManager;
+    }
+
+    public static PillarConfigurations getPillarConfigurations(String pathToConfiguration) {
+        if (pillarConfigurations == null) {
+            getMediatorConfigurations(pathToConfiguration);
+        }
+        return getPillarConfigurations();
+    }
+
+    public static PillarConfigurations getPillarConfigurations() {
+        if (pillarConfigurations == null) {
+            log.error("Pillar configurations has not been initialized yet.");
+        }
+        return pillarConfigurations;
+    }
+
+    /**
+     * Either returns an existing file exchange instance, or creates one appropriate to the given settings.
+     *
+     * @param settings The settings which includes the file exchange settings.
+     * @return A file exchange object.
+     */
     public FileExchange getFileExchange(Settings settings) {
         if (fileExchange == null) {
             if ((settings.getReferenceSettings().getFileExchangeSettings() != null)) {
@@ -105,8 +152,7 @@ public class MediatorPillarComponentFactory {
                 } else if (protocolType == ProtocolType.HTTPS) {
                     fileExchange = new HttpsFileExchange(settings);
                 } else if (protocolType == ProtocolType.FILE) {
-                    fileExchange = new LocalFileExchange(
-                            settings.getReferenceSettings().getFileExchangeSettings().getPath());
+                    fileExchange = new LocalFileExchange(settings.getReferenceSettings().getFileExchangeSettings().getPath());
                 }
             } else {
                 fileExchange = new HttpFileExchange(settings);

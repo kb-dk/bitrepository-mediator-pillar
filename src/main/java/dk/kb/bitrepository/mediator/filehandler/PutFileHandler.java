@@ -47,7 +47,6 @@ public class PutFileHandler {
     private final String expectedChecksum;
     private final CryptoStrategy crypto;
     private String encryptedChecksum;
-    private OffsetDateTime encryptedTimestamp;
 
     public PutFileHandler(PutFileContext context) {
         this.context = context;
@@ -68,8 +67,7 @@ public class PutFileHandler {
 
             try {
                 BasicFileAttributes attributes = Files.readAttributes(encryptedFilePath, BasicFileAttributes.class);
-                encryptedTimestamp = OffsetDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
-                setCalculationTimestamp();
+                setCalculatedChecksumTimestamp(OffsetDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault()));
                 assertEncryptedChecksumMatch();
             } catch (IOException e) {
                 log.error("An error occurred when trying to read attributes from path {}", unencryptedFilePath);
@@ -127,8 +125,7 @@ public class PutFileHandler {
                 context.getFileID());
 
         if (encryptedFileCreated) {
-            encryptedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-            setCalculationTimestamp();
+            setCalculatedChecksumTimestamp(OffsetDateTime.now(Clock.systemUTC()));
             assertEncryptedChecksumMatch();
         }
     }
@@ -179,7 +176,7 @@ public class PutFileHandler {
     /**
      * Sets the Calculation Timestamp property of the checksumDataForFileTYPE object as type XMLGregorianCalendar.
      */
-    private void setCalculationTimestamp() {
+    private void setCalculatedChecksumTimestamp(OffsetDateTime encryptedTimestamp) {
         context.getChecksumDataForFileTYPE()
                 .setCalculationTimestamp(CalendarUtils.getXmlGregorianCalendar(new Date(encryptedTimestamp.toInstant().toEpochMilli())));
     }
@@ -200,6 +197,8 @@ public class PutFileHandler {
     private void updateLocalDatabase(DatabaseDAO dao) {
         dao.insertIntoEncParams(context.getCollectionID(), context.getFileID(), crypto.getSalt(), crypto.getIV().getIV(),
                 crypto.getIterations());
+        OffsetDateTime encryptedTimestamp = context.getChecksumDataForFileTYPE().getCalculationTimestamp().toGregorianCalendar()
+                .toZonedDateTime().toOffsetDateTime();
         dao.insertIntoFiles(context.getCollectionID(), context.getFileID(), context.getReceivedTimestamp(), encryptedTimestamp,
                 expectedChecksum, encryptedChecksum, OffsetDateTime.now(Clock.systemUTC()));
     }
