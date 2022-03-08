@@ -1,8 +1,8 @@
 pillarConfig:
   mediatorPillarID: "TestMediatorPillar"
   privateMessageDestination: "topic://mediator-test"
-  unencryptedFilesPath: "src/test/resources/files"
-  encryptedFilesPath: "src/test/resources/encrypted-files"
+  unencryptedFilesPath: "target/test/mediatorFiles/files"
+  encryptedFilesPath: "target/test/mediatorFiles/encrypted-files"
 
 cryptoConfig:
   algorithm: "AES"
