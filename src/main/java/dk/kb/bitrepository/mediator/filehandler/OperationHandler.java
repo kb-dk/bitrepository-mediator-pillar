@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.File;
 import java.nio.file.Path;
+
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getDAO;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
