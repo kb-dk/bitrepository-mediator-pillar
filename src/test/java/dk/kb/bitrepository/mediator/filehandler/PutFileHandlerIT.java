@@ -11,15 +11,12 @@ import org.junit.jupiter.api.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.*;
 import static dk.kb.bitrepository.mediator.database.DatabaseData.EncryptedParametersData;
-import static dk.kb.bitrepository.mediator.filehandler.FileUtils.compareChecksums;
-import static dk.kb.bitrepository.mediator.filehandler.FileUtils.readBytesFromFile;
+import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Test #PutFileHandler")
@@ -55,7 +52,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         PutFileContext context = getJobContext(PutFileContext.class);
         PutFileHandler handler = new PutFileHandler(context);
 
-        handler.performPutFile();
+        handler.performOperation();
 
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
@@ -76,7 +73,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     public void testPutFileUsingExistingFile() throws MismatchingChecksumsException {
         PutFileContext context = getJobContext(PutFileContext.class);
         PutFileHandler handler = new PutFileHandler(context);
-        handler.performPutFile();
+        handler.performOperation();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(pillarFilePath));
@@ -86,7 +83,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         resetPillarData(pillarFilePath, pillarFilesDir);
 
         // Tests using the unencrypted existing file
-        handler.performPutFile();
+        handler.performOperation();
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.getEncParams(COLLECTION_ID, FILE_ID));
 
@@ -103,7 +100,7 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         resetPillarData(pillarFilePath, pillarFilesDir);
 
         // Test using the encrypted existing file
-        handler.performPutFile();
+        handler.performOperation();
         assertTrue(dao.hasFile(COLLECTION_ID, FILE_ID));
         assertNotNull(dao.getEncParams(COLLECTION_ID, FILE_ID));
 
@@ -118,12 +115,11 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test PutFile throws MismatchingChecksumsException when checksums does not match")
     public void testPutFileChecksumsDoesntMatch() {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp,
+        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes,
                 checksumDataWithWrongChecksum, settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
         PutFileHandler handler = new PutFileHandler(context);
 
-        Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
+        assertThrows(MismatchingChecksumsException.class, handler::performOperation);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(dao.hasFile(COLLECTION_ID, FILE_ID));
@@ -132,11 +128,9 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test PutFile method using already existing unencrypted file with MismatchingChecksum")
     public void testPutFileUsingExistingUnencryptedFileMismatchingChecksums() throws MismatchingChecksumsException {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
-                settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
+        PutFileContext context = getJobContext(PutFileContext.class);
         PutFileHandler handler = new PutFileHandler(context);
-        handler.performPutFile();
+        handler.performOperation();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
 
@@ -144,10 +138,10 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         cleanupFiles(UNENCRYPTED_FILES_PATH);
 
         // Tests using the unencrypted existing file
-        context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataWithWrongChecksum, settings,
+        context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, checksumDataWithWrongChecksum, settings,
                 fileURL, Collections.singleton(encryptedPillarID), crypto);
         handler = new PutFileHandler(context);
-        Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
+        assertThrows(MismatchingChecksumsException.class, handler::performOperation);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(dao.hasFile(COLLECTION_ID, FILE_ID));
@@ -156,11 +150,9 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test PutFile method using already existing encrypted file with MismatchingChecksum")
     public void testPutFileUsingExistingEncryptedFileMismatchingChecksums() throws MismatchingChecksumsException {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
-                settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
+        PutFileContext context = getJobContext(PutFileContext.class);
         PutFileHandler handler = new PutFileHandler(context);
-        handler.performPutFile();
+        handler.performOperation();
         assertTrue(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertTrue(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
 
@@ -168,10 +160,10 @@ public class PutFileHandlerIT extends IntegrationFileHandlerTest {
         cleanupFiles(ENCRYPTED_FILES_PATH);
 
         // Tests using the encrypted existing file
-        context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataWithWrongChecksum, settings,
+        context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, checksumDataWithWrongChecksum, settings,
                 fileURL, Collections.singleton(encryptedPillarID), crypto);
         handler = new PutFileHandler(context);
-        Assertions.assertThrows(MismatchingChecksumsException.class, handler::performPutFile);
+        assertThrows(MismatchingChecksumsException.class, handler::performOperation);
         assertFalse(Files.exists(Path.of(ENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(Files.exists(Path.of(UNENCRYPTED_FILES_PATH + "/" + COLLECTION_ID + "/" + FILE_ID)));
         assertFalse(dao.hasFile(COLLECTION_ID, FILE_ID));

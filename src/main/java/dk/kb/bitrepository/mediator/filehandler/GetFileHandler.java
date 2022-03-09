@@ -1,11 +1,8 @@
 package dk.kb.bitrepository.mediator.filehandler;
 
-import dk.kb.bitrepository.mediator.crypto.CryptoStrategy;
 import dk.kb.bitrepository.mediator.filehandler.context.GetFileContext;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
-import org.bitrepository.bitrepositoryelements.ChecksumDataForFileTYPE;
-import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
@@ -13,38 +10,24 @@ import org.bitrepository.common.settings.Settings;
 import org.bitrepository.common.utils.Base16Utils;
 import org.bitrepository.protocol.FileExchange;
 import org.bitrepository.protocol.security.SecurityManager;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getInstance;
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
-import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.UNENCRYPTED_FILES_PATH;
 import static org.bitrepository.client.eventhandler.OperationEvent.OperationEventType;
 
-public class GetFileHandler {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final GetFileContext context;
-    private final Path unencryptedFilePath;
-    private final Path encryptedFilePath;
-    private final ChecksumDataForFileTYPE checksumData;
-    private final CryptoStrategy crypto;
-    private CompleteEventAwaiter eventHandler;
-
+public class GetFileHandler extends OperationHandler<GetFileContext> {
     public GetFileHandler(GetFileContext context) {
-        this.context = context;
-        this.unencryptedFilePath = createFilePath(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
-        this.encryptedFilePath = createFilePath(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID());
-        this.checksumData = context.getChecksumDataForFileTYPE();
-        this.crypto = context.getCrypto();
+        super(context, context.getCrypto(), Base16Utils.decodeBase16(context.getChecksumDataForFileTYPE().getChecksumValue()));
+        log = LoggerFactory.getLogger(this.getClass());
     }
 
-    public void performGetFile() {
+    public void performOperation() {
         log.debug("Attempting to find file locally.");
         File file = checkLocalStorageForFile();
         if (file == null) {
@@ -71,12 +54,6 @@ public class GetFileHandler {
         //TODO: handle the bytes either as a Response or delegate to JobHandler?
     }
 
-    private boolean waitForPillarToHandleRequest() {
-        OperationEventType eventType = eventHandler.getFinish().getEventType();
-
-        return eventType.equals(OperationEventType.COMPLETE);
-    }
-
     private File checkLocalStorageForFile() {
         File localFile = null;
         if (fileExists(unencryptedFilePath)) {
@@ -88,25 +65,10 @@ public class GetFileHandler {
             localFile = decryptAndCreateFile();
         }
         if (localFile != null) {
-            String expectedChecksum = Base16Utils.decodeBase16(checksumData.getChecksumValue());
-            compareChecksums(readBytesFromFile(unencryptedFilePath), checksumData.getChecksumSpec(), expectedChecksum);
+            compareChecksums(readBytesFromFile(unencryptedFilePath), context.getChecksumDataForFileTYPE().getChecksumSpec(),
+                    expectedChecksum);
         }
         return localFile;
-    }
-
-    /**
-     * Decrypts the bytes of file found at the encrypted file path.
-     * An unencrypted file is created in the unencrypted file path. This is done by writing the bytes of the file at the encrypted file
-     * path to a temp folder, and only moving the file to the unencrypted path once all the bytes has been successfully written to the file.
-     *
-     * @return A File object from the unencrypted file path. If the file is not written successfully returns null.
-     */
-    private File decryptAndCreateFile() {
-        byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
-        if (writeBytesToFile(crypto.decrypt(encryptedBytes), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
-            return new File(unencryptedFilePath.toString());
-        }
-        return null;
     }
 
     private void getFileFromPillar() {
@@ -127,11 +89,18 @@ public class GetFileHandler {
         }
     }
 
+    private boolean waitForPillarToHandleRequest() {
+        OperationEventType eventType = eventHandler.getFinish().getEventType();
+
+        return eventType.equals(OperationEventType.COMPLETE);
+    }
+
     private File getFilePart(File fileBytes) {
         return null;
     }
 
-    private void handleStateAndJobDoneHandler() {
+    @Override
+    protected void handleStateAndJobDoneHandler() {
         // TODO: Implement : update state, let JobHandler know the job is done (?)
     }
 }

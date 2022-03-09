@@ -236,8 +236,7 @@ public class IntegrationFileHandlerTest extends TestingDAO {
                     Collections.singleton(encryptedPillarID), crypto));
         }
         if (c.equals(PutFileContext.class)) {
-            OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-            return c.cast(new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE, settings,
+            return c.cast(new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE, settings,
                     fileURL, Collections.singleton(encryptedPillarID), crypto));
         } else {
             return null;

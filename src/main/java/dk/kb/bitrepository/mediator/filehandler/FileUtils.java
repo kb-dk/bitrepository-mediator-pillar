@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -162,11 +165,23 @@ public class FileUtils {
      * @param expectedChecksum The expected checksum.
      * @return Returns true if the two checksums match.
      */
-    public static boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
+    protected static boolean compareChecksums(byte[] bytesFromFile, ChecksumSpecTYPE checksumSpec, String expectedChecksum) {
         log.debug("Comparing checksums");
         String newChecksum = generateChecksum(new ByteArrayInputStream(bytesFromFile), checksumSpec);
 
         return newChecksum.equals(expectedChecksum);
+    }
+
+    /**
+     * Reads the attribute for when the file was created.
+     *
+     * @param path The path of the file.
+     * @return Returns an {@link OffsetDateTime} object for when the chosen file was created.
+     * @throws IOException Throws an exception if the file could not be read or wasn't found.
+     */
+    protected static OffsetDateTime readFileCreationDate(Path path) throws IOException {
+        BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
+        return OffsetDateTime.ofInstant(attributes.creationTime().toInstant(), ZoneId.systemDefault());
     }
 
     /**
@@ -175,7 +190,7 @@ public class FileUtils {
      * @param filePath The Path to the file as String.
      * @return The size of the file in Long.
      */
-    public static long getFileSize(String filePath) {
+    protected static long getFileSize(String filePath) {
         File file = new File(filePath);
         if (!file.isFile()) {
             throw new IllegalArgumentException("The file '" + filePath + "' is invalid. It does not exists or it " + "is a directory.");
@@ -190,7 +205,7 @@ public class FileUtils {
      * @param filePath The Path to the file as Path type.
      * @return The size of the file in Long.
      */
-    public static long getFileSize(Path filePath) {
+    protected static long getFileSize(Path filePath) {
         return getFileSize(filePath.toString());
     }
 }

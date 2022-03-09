@@ -15,8 +15,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Clock;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 
 import static dk.kb.bitrepository.mediator.TestingUtilities.cleanupFiles;
@@ -55,22 +53,20 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test #GetFileHandler using existing file")
     public void testGetFileUsingExistingFile() throws MismatchingChecksumsException {
-        OffsetDateTime receivedTimestamp = OffsetDateTime.now(Clock.systemUTC());
-
-        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, receivedTimestamp, checksumDataForFileTYPE,
+        PutFileContext context = new PutFileContext(COLLECTION_ID, FILE_ID, fileBytes, checksumDataForFileTYPE,
                 settings, fileURL, Collections.singleton(encryptedPillarID), crypto);
         PutFileHandler putFileHandler = new PutFileHandler(context);
 
-        putFileHandler.performPutFile();
+        putFileHandler.performOperation();
 
         //Test with both files (will use unencrypted file)
         GetFileContext getFileContext = getJobContext(GetFileContext.class);
         GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
-        assertDoesNotThrow(getFileHandler::performGetFile);
+        assertDoesNotThrow(getFileHandler::performOperation);
 
         //Test with only encrypted file
         cleanupFiles(UNENCRYPTED_FILES_PATH);
-        assertDoesNotThrow(getFileHandler::performGetFile);
+        assertDoesNotThrow(getFileHandler::performOperation);
     }
 
     @Test
@@ -78,7 +74,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
     public void testGetFileHandlerUsingPillarFile() throws MismatchingChecksumsException, MalformedURLException {
         PutFileContext putFileContext = getJobContext(PutFileContext.class);
         PutFileHandler putFileHandler = new PutFileHandler(putFileContext);
-        putFileHandler.performPutFile();
+        putFileHandler.performOperation();
 
         assertEquals(new URL("file:" + new File(BASE_FILE_EXCHANGE_DIR).getAbsolutePath() + "/" + FILE_ID), fileURL);
 
@@ -88,7 +84,7 @@ public class GetFileHandlerIT extends IntegrationFileHandlerTest {
 
         GetFileContext getFileContext = getJobContext(GetFileContext.class);
         GetFileHandler getFileHandler = new GetFileHandler(getFileContext);
-        getFileHandler.performGetFile();
+        getFileHandler.performOperation();
 
         // Assert that the file could be created locally using the file given to FileExchange by the EmbeddedPillar
         Path encryptedPath = createFilePath(ENCRYPTED_FILES_PATH, COLLECTION_ID, FILE_ID);
