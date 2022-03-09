@@ -90,8 +90,15 @@ public class FileUtils {
         return Path.of(format(Locale.getDefault(), "%s/%s/%s", directory, collectionID, fileID));
     }
 
-    protected static Path createFileDir(String directory, String collectionID) {
-        return Path.of(format(Locale.getDefault(), "%s/%s", directory, collectionID));
+    /**
+     * Used to create a path for the file directory of a given collection ID.
+     *
+     * @param path         The directory path to the local file storage.
+     * @param collectionID The collection ID to create the path for.
+     * @return The Path to the directory for the chosen collection ID:
+     */
+    protected static Path createFileDirPath(String path, String collectionID) {
+        return Path.of(format(Locale.getDefault(), "%s/%s", path, collectionID));
     }
 
     /**
@@ -146,7 +153,7 @@ public class FileUtils {
     /**
      * Deletes a local file.
      *
-     * @param path The path to the file to delete.
+     * @param path The path of the file to be delete.
      */
     protected static void deleteFileLocally(Path path) {
         try {
@@ -155,6 +162,17 @@ public class FileUtils {
         } catch (IOException e) {
             log.error("Could no delete file {}.", path);
         }
+    }
+
+    /**
+     * Deletes a local file.
+     *
+     * @param dir          The main local file directory.
+     * @param collectionID The collection ID.
+     * @param fileID       The file ID of the file to be deleted.
+     */
+    protected static void deleteFileLocally(String dir, String collectionID, String fileID) {
+        deleteFileLocally(createFilePath(dir, collectionID, fileID));
     }
 
     /**

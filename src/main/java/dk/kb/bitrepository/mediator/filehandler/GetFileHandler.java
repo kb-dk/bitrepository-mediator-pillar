@@ -35,7 +35,7 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
             getFileFromPillar();
             if (waitForPillarToHandleRequest()) {
                 try {
-                    ensureDirectoryExists(createFileDir(ENCRYPTED_FILES_PATH, context.getCollectionID()));
+                    ensureDirectoryExists(createFileDirPath(ENCRYPTED_FILES_PATH, context.getCollectionID()));
                     FileExchange fileExchange = getInstance().getFileExchange(context.getSettings());
                     fileExchange.getFile(new File(encryptedFilePath.toString()), fileExchange.getURL(context.getFileID()).toString());
                 } catch (MalformedURLException e) {
