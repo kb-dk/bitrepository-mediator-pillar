@@ -8,7 +8,6 @@ import org.bitrepository.access.getfile.ConversationBasedGetFileClient;
 import org.bitrepository.access.getfile.GetFileClient;
 import org.bitrepository.bitrepositoryelements.ResponseCode;
 import org.bitrepository.bitrepositorymessages.*;
-import org.bitrepository.client.conversation.mediator.CollectionBasedConversationMediator;
 import org.bitrepository.client.conversation.mediator.ConversationMediator;
 import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
@@ -29,7 +28,7 @@ import java.nio.file.Path;
 import static dk.kb.bitrepository.mediator.database.DatabaseConstants.FILE_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGetFileConversation extends IntegrationFileHandlerTest {
+public class GetFileConversationIT extends IntegrationFileHandlerTest {
     @Test
     @DisplayName("Test #AccessPillarFactory.createGetFileClient returns a GetFileConversation")
     public void verifyGetFileClientFromFactory() {
