@@ -45,6 +45,7 @@ public abstract class OperationHandler<T extends JobContext> {
         EncryptedParametersData paramData = dao.getEncParams(collectionID, fileID);
         crypto.setSalt(paramData.getSalt());
         crypto.setIV(new IvParameterSpec(paramData.getIv()));
+        
     }
 
     /**
