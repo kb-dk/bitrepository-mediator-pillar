@@ -40,21 +40,29 @@ public class PutFileHandler extends OperationHandler<PutFileContext> {
         log = LoggerFactory.getLogger(this.getClass());
     }
 
+    /**
+     * Perform the PutFile operation.
+     *
+     * @throws MismatchingChecksumsException Throws an exception if the checksum of the file to work on does not match.
+     */
     public void performOperation() throws MismatchingChecksumsException {
-        if (fileExists(ENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
-            log.debug("Using existing encrypted file");
-            try {
-                updateCryptoParameters(context.getCollectionID(), context.getFileID(), dao);
-                assertEncryptedChecksumMatch(readFileCreationDate(encryptedFilePath));
-            } catch (IOException e) {
-                log.error("An error occurred when trying to read attributes from path {}", unencryptedFilePath);
-            }
-        } else if (fileExists(UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
-            log.debug("Using existing unencrypted file");
-            handleUnencryptedFile();
-        } else if (writeBytesToFile(context.getFileBytes(), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
-            log.debug("Creating file locally");
-            handleUnencryptedFile();
+        switch (checkLocalStorageForFile(unencryptedFilePath, encryptedFilePath)) {
+            case ENCRYPTED:
+                try {
+                    updateCryptoParameters(context.getCollectionID(), context.getFileID(), dao);
+                    assertEncryptedChecksumMatch(readFileCreationDate(encryptedFilePath));
+                } catch (IOException e) {
+                    log.error("An error occurred when trying to read attributes from path {}", unencryptedFilePath);
+                }
+                break;
+            case UNENCRYPTED:
+                handleUnencryptedFile();
+                break;
+            case NONE:
+                if (writeBytesToFile(context.getFileBytes(), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
+                    log.debug("Using newly created local file");
+                    handleUnencryptedFile();
+                }
         }
     }
 
@@ -68,7 +76,6 @@ public class PutFileHandler extends OperationHandler<PutFileContext> {
      */
     private void handleUnencryptedFile() throws MismatchingChecksumsException {
         byte[] unencryptedFileData = readBytesFromFile(unencryptedFilePath);
-
         if (compareChecksums(unencryptedFileData, context.getChecksumDataForFileTYPE().getChecksumSpec(), expectedChecksum)) {
             encryptAndCompareChecksums(unencryptedFileData);
         } else {

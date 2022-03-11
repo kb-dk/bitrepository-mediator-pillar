@@ -36,6 +36,11 @@ public abstract class OperationHandler<T extends JobContext> {
         this.dao = getDAO();
     }
 
+    /**
+     * Override this method in the subclass to perform the correct corresponding operation.
+     *
+     * @throws MismatchingChecksumsException Throws an exception if the checksum of the file to work on does not match.
+     */
     public abstract void performOperation() throws MismatchingChecksumsException;
 
     /**
@@ -54,7 +59,7 @@ public abstract class OperationHandler<T extends JobContext> {
      *
      * @return A File object from the unencrypted file path. If the file is not written successfully returns null.
      */
-    protected File decryptAndCreateFile() {
+    protected File decryptAndGetFile() {
         byte[] encryptedBytes = readBytesFromFile(encryptedFilePath);
         if (writeBytesToFile(crypto.decrypt(encryptedBytes), UNENCRYPTED_FILES_PATH, context.getCollectionID(), context.getFileID())) {
             return new File(unencryptedFilePath.toString());

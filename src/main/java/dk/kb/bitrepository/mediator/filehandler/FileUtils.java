@@ -22,6 +22,10 @@ import static org.bitrepository.common.utils.ChecksumUtils.generateChecksum;
 public class FileUtils {
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
 
+    protected enum FileStatus {
+        NONE, UNENCRYPTED, ENCRYPTED
+    }
+
     public FileUtils() {
     }
 
@@ -57,6 +61,25 @@ public class FileUtils {
     }
 
     /**
+     * Returns an enum of type {@link FileStatus} which indicates the status of the local file.
+     *
+     * @param unencryptedFilePath The path to the unencrypted file to check for.
+     * @param encryptedFilePath   The path to the encrypted file to check for.
+     * @return Enum indicating status of the local file. NONE if it doesn't exist locally.
+     */
+    protected static FileStatus checkLocalStorageForFile(Path unencryptedFilePath, Path encryptedFilePath) {
+        log.debug("Attempting to find file locally.");
+        if (fileExists(unencryptedFilePath)) {
+            log.debug("Using local unencrypted file.");
+            return FileStatus.UNENCRYPTED;
+        } else if (fileExists(encryptedFilePath)) {
+            log.debug("Using local encrypted file.");
+            return FileStatus.ENCRYPTED;
+        }
+        return FileStatus.NONE;
+    }
+
+    /**
      * Used to check if the file at the given path exists.
      *
      * @param directory    The directory path.
@@ -64,7 +87,7 @@ public class FileUtils {
      * @param fileID       The files ID.
      * @return Whether there exists a file at the path directory/collectionID/fileID/ .
      */
-    public static boolean fileExists(String directory, String collectionID, String fileID) {
+    protected static boolean fileExists(String directory, String collectionID, String fileID) {
         return Files.exists(createFilePath(directory, collectionID, fileID));
     }
 
@@ -74,7 +97,7 @@ public class FileUtils {
      * @param path The path to check for the file.
      * @return Whether there exists a file at the given path.
      */
-    public static boolean fileExists(Path path) {
+    protected static boolean fileExists(Path path) {
         return Files.exists(path);
     }
 

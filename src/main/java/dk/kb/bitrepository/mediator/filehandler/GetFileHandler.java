@@ -3,6 +3,8 @@ package dk.kb.bitrepository.mediator.filehandler;
 import dk.kb.bitrepository.mediator.filehandler.context.GetFileContext;
 import org.bitrepository.access.AccessComponentFactory;
 import org.bitrepository.access.getfile.GetFileClient;
+import org.bitrepository.client.eventhandler.OperationEvent;
+import org.bitrepository.commandline.eventhandler.CompleteEventAwaiter;
 import org.bitrepository.commandline.eventhandler.GetFileEventHandler;
 import org.bitrepository.commandline.output.DefaultOutputHandler;
 import org.bitrepository.commandline.output.OutputHandler;
@@ -14,12 +16,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.nio.file.Path;
 
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getInstance;
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getSecurityManager;
 import static dk.kb.bitrepository.mediator.filehandler.FileUtils.*;
 import static dk.kb.bitrepository.mediator.utils.configurations.ConfigConstants.ENCRYPTED_FILES_PATH;
-import static org.bitrepository.client.eventhandler.OperationEvent.OperationEventType;
 
 public class GetFileHandler extends OperationHandler<GetFileContext> {
     public GetFileHandler(GetFileContext context) {
@@ -28,41 +30,34 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
     }
 
     public void performOperation() {
-        log.debug("Attempting to find file locally.");
-        File file = checkLocalStorageForFile();
-        if (file == null) {
-            log.debug("Attempting to get file from pillar.");
-            getFileFromPillar();
-            if (waitForPillarToHandleRequest()) {
-                try {
-                    ensureDirectoryExists(createFileDirPath(ENCRYPTED_FILES_PATH, context.getCollectionID()));
-                    FileExchange fileExchange = getInstance().getFileExchange(context.getSettings());
-                    fileExchange.getFile(new File(encryptedFilePath.toString()), fileExchange.getURL(context.getFileID()).toString());
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                file = decryptAndCreateFile();
-            } else {
-                log.error("Error occurred on pillar.");
-                return;
-            }
-        }
+        File file = getLocalFile();
         if (context.getFilePart() != null) {
             log.debug("Getting file part");
             file = getFilePart(file);
         }
+        handleStateAndJobDoneHandler();
         //TODO: handle the bytes either as a Response or delegate to JobHandler?
     }
 
-    private File checkLocalStorageForFile() {
+    /**
+     * Runs {@link FileUtils#checkLocalStorageForFile(Path, Path)} and handles the returned {@link FileUtils.FileStatus} appropriately.
+     * <p/>
+     * If the files does not exist locally, then {@link #requestFileFromPillar()} is called, to attempt to get the file from an
+     * encrypted pillar.
+     *
+     * @return Returns a {@link File} object that has been created from either the local files or from the received file from the pillar.
+     */
+    private File getLocalFile() {
         File localFile = null;
-        if (fileExists(unencryptedFilePath)) {
-            log.debug("Using local unencrypted file.");
-            localFile = new File(unencryptedFilePath.toString());
-
-        } else if (fileExists(encryptedFilePath)) {
-            log.debug("Using local encrypted file.");
-            localFile = decryptAndCreateFile();
+        switch (checkLocalStorageForFile(unencryptedFilePath, encryptedFilePath)) {
+            case UNENCRYPTED:
+                localFile = new File(unencryptedFilePath.toString());
+                break;
+            case ENCRYPTED:
+                localFile = decryptAndGetFile();
+                break;
+            case NONE:
+                localFile = requestFileFromPillar();
         }
         if (localFile != null) {
             compareChecksums(readBytesFromFile(unencryptedFilePath), context.getChecksumDataForFileTYPE().getChecksumSpec(),
@@ -71,7 +66,39 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
         return localFile;
     }
 
-    private void getFileFromPillar() {
+    /**
+     * Calls {@link #pillarRequestGetFile()} and waits for an answer from the event handler.
+     *
+     * @return Returns a {@link File} object of the unencrypted version of the file retrieved from the pillar.
+     */
+    private File requestFileFromPillar() {
+        log.debug("Attempting to get file from pillar.");
+        ensureDirectoryExists(createFileDirPath(ENCRYPTED_FILES_PATH, context.getCollectionID()));
+        if (pillarRequestGetFile().getEventType() == OperationEvent.OperationEventType.COMPLETE) {
+            try {
+                FileExchange fileExchange = getInstance().getFileExchange(context.getSettings());
+                fileExchange.getFile(new File(encryptedFilePath.toString()), fileExchange.getURL(context.getFileID()).toString());
+                return decryptAndGetFile();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            //TODO: Let JobScheduler know status
+            log.info("File Received Successfully");
+        } else {
+            //TODO: AuditTrail + Alarm
+            log.error("File was not received");
+        }
+        return null;
+    }
+
+    /**
+     * Creates a {@link GetFileClient} to communicate with an encrypted pillar.
+     * <p/>
+     * If more than one pillar is set as contributor, the method chooses the fastest one.
+     *
+     * @return Returns the {@link OperationEvent} returned by {@link CompleteEventAwaiter#getFinish()}.
+     */
+    private OperationEvent pillarRequestGetFile() {
         Settings settings = context.getSettings();
         String auditTrailInformation = "AuditTrailInfo for getFileFromPillar.";
         SecurityManager securityManager = getSecurityManager();
@@ -87,15 +114,10 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
             client.getFileFromSpecificPillar(context.getCollectionID(), context.getFileID(), context.getFilePart(),
                     context.getUrlForResult(), context.getContributors().iterator().next(), eventHandler, auditTrailInformation);
         }
+        return eventHandler.getFinish();
     }
 
-    private boolean waitForPillarToHandleRequest() {
-        OperationEventType eventType = eventHandler.getFinish().getEventType();
-
-        return eventType.equals(OperationEventType.COMPLETE);
-    }
-
-    private File getFilePart(File fileBytes) {
+    private File getFilePart(File file) {
         return null;
     }
 
