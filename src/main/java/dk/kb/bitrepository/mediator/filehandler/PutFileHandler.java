@@ -184,7 +184,6 @@ public class PutFileHandler extends OperationHandler<PutFileContext> {
                 encryptedChecksum, OffsetDateTime.now(Clock.systemUTC()));
     }
 
-    @Override
     protected void handleStateAndJobDoneHandler() {
         // TODO: Implement JobDoneHandler (sending encrypted file to encrypted pillar) and state updates
     }

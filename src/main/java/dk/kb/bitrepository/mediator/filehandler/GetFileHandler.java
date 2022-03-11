@@ -15,7 +15,10 @@ import org.bitrepository.protocol.security.SecurityManager;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 import static dk.kb.bitrepository.mediator.MediatorPillarComponentFactory.getInstance;
@@ -33,9 +36,11 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
         File file = getLocalFile();
         if (context.getFilePart() != null) {
             log.debug("Getting file part");
-            file = getFilePart(file);
+            byte[] filePart = getFilePart(file);
+            handleStateAndJobDoneHandler(filePart);
+        } else {
+            handleStateAndJobDoneHandler();
         }
-        handleStateAndJobDoneHandler();
         //TODO: handle the bytes either as a Response or delegate to JobHandler?
     }
 
@@ -117,12 +122,45 @@ public class GetFileHandler extends OperationHandler<GetFileContext> {
         return eventHandler.getFinish();
     }
 
-    private File getFilePart(File file) {
-        return null;
+    private byte[] getFilePart(File file) {
+        int offset = context.getFilePart().getPartOffSet().intValue();
+        int size = context.getFilePart().getPartLength().intValue();
+        ByteBuffer bytes = ByteBuffer.allocateDirect(size);
+
+        FileInputStream inputStream;
+        try {
+            inputStream = new FileInputStream(file);
+            inputStream.getChannel().read(bytes, offset);
+        } catch (IOException e) {
+            log.error("A problem occurred trying to get partial bytes from file: {}", file);
+        }
+
+        return bytes.array();
     }
 
-    @Override
-    protected void handleStateAndJobDoneHandler() {
+//    private InputStream getFilePart(File file) throws IOException {
+//        int offset = context.getFilePart().getPartOffSet().intValue();
+//        int size = context.getFilePart().getPartLength().intValue();
+//        byte[] partOfFile = new byte[size];
+//        InputStream inputStream = null;
+//        try {
+//            log.debug("Extracting " + size + " bytes with offset " + offset + " from " + context.getFileID());
+//            inputStream = new FileInputStream(file);
+//            inputStream.read(new byte[offset]);
+//            inputStream.read(partOfFile);
+//        } finally {
+//            if (inputStream != null) {
+//                inputStream.close();
+//            }
+//        }
+//        return new ByteArrayInputStream(partOfFile);
+//    }
+
+    protected void handleStateAndJobDoneHandler(byte[] filePart) {
         // TODO: Implement : update state, let JobHandler know the job is done (?)
+    }
+
+    protected void handleStateAndJobDoneHandler() {
+        handleStateAndJobDoneHandler(null);
     }
 }
