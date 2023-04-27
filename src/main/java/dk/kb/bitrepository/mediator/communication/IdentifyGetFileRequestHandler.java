@@ -32,7 +32,7 @@ public class IdentifyGetFileRequestHandler extends IdentifyRequestHandler<Identi
     protected void sendPositiveResponse(IdentifyPillarsForGetFileRequest request, MessageContext requestContext) {
         IdentifyPillarsForGetFileResponse response = createPartlyConfiguredResponse(request);
         response.setTimeToDeliver(
-                TimeMeasurementUtils.getTimeMeasurementFromMiliseconds(
+                TimeMeasurementUtils.getTimeMeasurementFromMilliseconds(
                         configurations.getRefPillarSettings().getReferenceSettings().getPillarSettings().getTimeToStartDeliver()));
 
         ResponseInfo irInfo = new ResponseInfo();

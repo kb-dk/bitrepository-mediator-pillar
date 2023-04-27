@@ -3,15 +3,15 @@ package dk.kb.bitrepository.mediator.communication.exception;
 import org.bitrepository.bitrepositoryelements.ResponseCode;
 import org.bitrepository.bitrepositoryelements.ResponseInfo;
 
-/**
- * The exception for the request handlers.
- */
+/** The exception for the request handlers. */
 public class RequestHandlerException extends Exception {
-    /** The ResponseInfo wrapped by this exception. Tells the reason for the exception.*/
+    /** The ResponseInfo wrapped by this exception. Tells the reason for the exception. */
     private final ResponseInfo responseInfo;
+    private static final long serialVersionUID = 1283942385;
 
     /**
      * Constructor.
+     *
      * @param responseCode The response code.
      * @param responseText The text for the response info.
      */
@@ -24,9 +24,10 @@ public class RequestHandlerException extends Exception {
 
     /**
      * Constructor.
+     *
      * @param responseCode The response code.
      * @param responseText The text for the response info.
-     * @param e The exception to wrap into the StackTrace.
+     * @param e            The exception to wrap into the StackTrace.
      */
     public RequestHandlerException(ResponseCode responseCode, String responseText, Exception e) {
         super(responseText, e);
@@ -37,6 +38,7 @@ public class RequestHandlerException extends Exception {
 
     /**
      * Constructor.
+     *
      * @param rInfo The response info.
      */
     public RequestHandlerException(ResponseInfo rInfo) {
@@ -55,4 +57,5 @@ public class RequestHandlerException extends Exception {
     public String toString() {
         return super.toString() + ", " + responseInfo.toString();
     }
+
 }
